@@ -1,0 +1,74 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-auth-schema
+      author: peter
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS auth_schema;
+  - changeSet:
+      id: 002-create-users-table
+      author: peter
+      changes:
+        - createTable:
+            schemaName: auth_schema
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: password_hash
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 003-create-user-roles-table
+      author: peter
+      changes:
+        - createTable:
+            schemaName: auth_schema
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: user_roles
+            baseTableSchemaName: auth_schema
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedTableSchemaName: auth_schema
+            referencedColumnNames: id
+            constraintName: fk_user_roles_user
+        - addUniqueConstraint:
+            constraintName: uq_user_role
+            tableName: user_roles
+            columnNames: user_id, role
+            schemaName: auth_schema

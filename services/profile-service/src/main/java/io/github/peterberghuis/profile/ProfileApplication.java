@@ -1,13 +1,11 @@
-package io.github.peterberghuis.projecttanukiback;
+package io.github.peterberghuis.profile;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ProjectTanukiBackApplication {
-
+public class ProfileApplication {
     public static void main(String[] args) {
-        SpringApplication.run(ProjectTanukiBackApplication.class, args);
+        SpringApplication.run(ProfileApplication.class, args);
     }
-
 }

@@ -6,64 +6,31 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>4.0.1</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
     <groupId>io.github.peterberghuis</groupId>
-    <artifactId>project-tanuki-back</artifactId>
+    <artifactId>project-tanuki-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>project-tanuki-back</name>
-    <description>project-tanuki-back</description>
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>services/auth-service</module>
+        <module>services/profile-service</module>
+        <module>libs/security</module>
+        <module>libs/observability</module>
+    </modules>
+
     <properties>
         <java.version>25</java.version>
         <grpc.version>1.77.1</grpc.version>
-        <protobuf-java.version>4.33.2</protobuf-java.version>
         <spring-grpc.version>1.0.1</spring-grpc.version>
     </properties>
+
+    <!-- Dependencies shared by ALL modules -->
     <dependencies>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-services</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.grpc</groupId>
-            <artifactId>spring-grpc-server-web-spring-boot-starter</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-docker-compose</artifactId>
-            <scope>runtime</scope>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -71,32 +38,8 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.grpc</groupId>
-            <artifactId>spring-grpc-test</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -127,43 +70,6 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>io.github.ascopes</groupId>
-                <artifactId>protobuf-maven-plugin</artifactId>
-                <version>4.0.3</version>
-                <configuration>
-                    <protoc>${protobuf-java.version}</protoc>
-                    <binaryMavenPlugins>
-                        <binaryMavenPlugin>
-                            <groupId>io.grpc</groupId>
-                            <artifactId>protoc-gen-grpc-java</artifactId>
-                            <version>${grpc.version}</version>
-                            <options>@generated=omit</options>
-                        </binaryMavenPlugin>
-                    </binaryMavenPlugins>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>generate</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
-
 </project>
