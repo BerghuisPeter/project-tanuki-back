@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202601182150-create-profile-schema
+      author: peter
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS profile_schema;
