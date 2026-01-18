@@ -1,0 +1,55 @@
+### Register a new test account
+POST http://localhost:8081/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Password123!"
+}
+
+> {%
+    if (response.status === 200 && response.body) {
+        client.global.set("access_token", response.body.accessToken);
+        client.global.set("refresh_token", response.body.refreshToken);
+    } else {
+        client.log("Request failed or returned empty body. Status: " + response.status);
+    }
+%}
+
+### Login with the test account
+POST http://localhost:8081/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Password123!"
+}
+
+> {%
+    if (response.status === 200 && response.body) {
+        client.global.set("access_token", response.body.accessToken);
+        client.global.set("refresh_token", response.body.refreshToken);
+    } else {
+        client.log("Request failed or returned empty body. Status: " + response.status);
+    }
+%}
+
+### Refresh the Access Token
+POST http://localhost:8081/api/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refresh_token}}"
+}
+
+> {%
+    client.global.set("access_token", response.body.accessToken);
+%}
+
+### Get current user details (Protected)
+GET http://localhost:8081/api/v1/auth/me
+Authorization: Bearer {{access_token}}
+
+### Logout (Protected)
+POST http://localhost:8081/api/v1/auth/logout
+Authorization: Bearer {{access_token}}
