@@ -23,6 +23,7 @@ databaseChangeLog:
                   name: user_id
                   type: UUID
                   constraints:
+                    unique: true
                     nullable: false
               - column:
                   name: expiry_date

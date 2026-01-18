@@ -100,6 +100,7 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("User not found"));
         refreshTokenRepository.deleteByUser(user);
+        refreshTokenRepository.flush();
     }
 
     private AuthResponse createAuthResponse(User user) {
@@ -118,6 +119,7 @@ public class AuthService {
 
     private RefreshToken createRefreshToken(User user) {
         refreshTokenRepository.deleteByUser(user);
+        refreshTokenRepository.flush();
 
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUser(user);
