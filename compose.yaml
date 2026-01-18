@@ -7,8 +7,13 @@ services:
       - 'POSTGRES_USER=myuser'
     ports:
       - '5432:5432'
+    volumes:
+      - tanuki-db-data:/var/lib/postgresql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U myuser -d tanuki-db" ]
       interval: 10s
       timeout: 5s
       retries: 5
+
+volumes:
+  tanuki-db-data:
