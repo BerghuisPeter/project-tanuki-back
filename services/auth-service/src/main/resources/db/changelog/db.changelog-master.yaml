@@ -1,3 +1,7 @@
 databaseChangeLog:
   - include:
       file: db/changelog/001-initial-schema/db.changelog-001.yaml
+  - include:
+      file: db/changelog/002-user-status/db.changelog-002.yaml
+  - include:
+      file: db/changelog/003-user-roles/db.changelog-003.yaml

@@ -1,12 +1,12 @@
 databaseChangeLog:
   - changeSet:
-      id: 001-create-auth-schema
+      id: 202601182146-create-auth-schema
       author: peter
       changes:
         - sql:
             sql: CREATE SCHEMA IF NOT EXISTS auth_schema;
   - changeSet:
-      id: 002-create-users-table
+      id: 202601182147-create-users-table
       author: peter
       changes:
         - createTable:
@@ -42,7 +42,7 @@ databaseChangeLog:
                   constraints:
                     nullable: false
   - changeSet:
-      id: 003-create-user-roles-table
+      id: 202601182148-create-user-roles-table
       author: peter
       changes:
         - createTable:

@@ -59,7 +59,7 @@ public class JwtUtils {
         String roles = claims.get("roles", String.class);
         return Arrays.stream(roles.split(","))
                 .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private Claims getClaimsFromToken(String token) {
