@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202601182200-add-user-roles-constraint
+      author: peter
+      changes:
+        - addLookupTable:
+            existingColumnName: role
+            existingTableName: user_roles
+            existingTableSchemaName: auth_schema
+            newTableName: roles
+            newTableSchemaName: auth_schema
+            newColumnName: role
+            newColumnDataType: VARCHAR(50)
+            constraintName: fk_user_role_lookup
+        - insert:
+            schemaName: auth_schema
+            tableName: roles
+            columns:
+              - column: { name: role, value: USER }
+        - insert:
+            schemaName: auth_schema
+            tableName: roles
+            columns:
+              - column: { name: role, value: PAID_USER }
+        - insert:
+            schemaName: auth_schema
+            tableName: roles
+            columns:
+              - column: { name: role, value: ADMIN }
+        - insert:
+            schemaName: auth_schema
+            tableName: roles
+            columns:
+              - column: { name: role, value: MODERATOR }
+        - insert:
+            schemaName: auth_schema
+            tableName: roles
+            columns:
+              - column: { name: role, value: SUPPORT }

@@ -1,15 +1,12 @@
 spring:
   profiles:
-    active: dev
+    active: local
   application:
     name: auth-service
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: true

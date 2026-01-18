@@ -22,9 +22,25 @@ public class JwtUtils {
     private String secret;
 
     @Value("${jwt.expiration}")
-    private Long expiration;
+    private Long jwtExpiration;
+
+    @Value("${jwt.refresh-expiration}")
+    private Long refreshExpiration;
 
     public String generateToken(String username, Collection<? extends GrantedAuthority> authorities) {
+        return generateToken(username, authorities, jwtExpiration);
+    }
+
+    public String generateRefreshToken(String username) {
+        return Jwts.builder()
+                .subject(username)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + refreshExpiration))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    private String generateToken(String username, Collection<? extends GrantedAuthority> authorities, Long expiration) {
         String roles = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));

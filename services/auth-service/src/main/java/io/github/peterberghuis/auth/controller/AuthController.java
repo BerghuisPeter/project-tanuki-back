@@ -35,9 +35,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
-        // In a stateless JWT setup, logout is typically handled on the client by deleting the token.
-        // Optionally, you could implement a token blacklist here.
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal String email) {
+        authService.logout(email);
         return ResponseEntity.noContent().build();
     }
 }

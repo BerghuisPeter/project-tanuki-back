@@ -1,1 +1,11 @@
-# Prod specific properties for profile-service
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        default_schema: profile_schema
+        dialect: org.hibernate.dialect.CockroachDBDialect

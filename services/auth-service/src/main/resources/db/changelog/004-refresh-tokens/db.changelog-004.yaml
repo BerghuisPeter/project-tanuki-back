@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202601182317-create-refresh-tokens-table
+      author: peter
+      changes:
+        - createTable:
+            schemaName: auth_schema
+            tableName: refresh_tokens
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: token
+                  type: VARCHAR(512)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expiry_date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: refresh_tokens
+            baseTableSchemaName: auth_schema
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedTableSchemaName: auth_schema
+            referencedColumnNames: id
+            constraintName: fk_refresh_token_user

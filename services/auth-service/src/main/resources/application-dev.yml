@@ -1,14 +1,16 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/tanuki-db
-    username: myuser
-    password: secret
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     properties:
       hibernate:
         default_schema: auth_schema
+        dialect: org.hibernate.dialect.CockroachDBDialect
 
 jwt:
-  secret: test-secret-key-that-needs-to-be-long-enough-to-be-secure-32-chars
-  expiration: 86400000
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:900000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}

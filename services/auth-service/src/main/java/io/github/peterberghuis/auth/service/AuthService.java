@@ -1,18 +1,23 @@
 package io.github.peterberghuis.auth.service;
 
 import io.github.peterberghuis.auth.dto.*;
+import io.github.peterberghuis.auth.entity.RefreshToken;
 import io.github.peterberghuis.auth.entity.User;
 import io.github.peterberghuis.auth.entity.UserRole;
 import io.github.peterberghuis.auth.entity.UserStatus;
 import io.github.peterberghuis.auth.exception.EmailAlreadyInUseException;
+import io.github.peterberghuis.auth.repository.RefreshTokenRepository;
 import io.github.peterberghuis.auth.repository.UserRepository;
 import io.github.peterberghuis.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Set;
 
 @Service
@@ -20,9 +25,14 @@ import java.util.Set;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
 
+    @Value("${jwt.refresh-expiration}")
+    private Long refreshExpiration;
+
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
@@ -35,9 +45,10 @@ public class AuthService {
             throw new BadCredentialsException("User account is " + user.getStatus());
         }
 
-        return new AuthResponse(generateToken(user));
+        return createAuthResponse(user);
     }
 
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new EmailAlreadyInUseException("Email already in use");
@@ -51,23 +62,24 @@ public class AuthService {
 
         userRepository.save(user);
 
-        return new AuthResponse(generateToken(user));
+        return createAuthResponse(user);
     }
 
+    @Transactional
     public AuthResponse refresh(RefreshRequest request) {
-        if (!jwtUtils.validateToken(request.getRefreshToken())) {
-            throw new BadCredentialsException("Invalid refresh token");
-        }
+        String requestRefreshToken = request.getRefreshToken();
 
-        String email = jwtUtils.getUsernameFromToken(request.getRefreshToken());
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BadCredentialsException("User not found"));
-
-        if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new BadCredentialsException("User account is " + user.getStatus());
-        }
-
-        return new AuthResponse(generateToken(user));
+        return refreshTokenRepository.findByToken(requestRefreshToken)
+                .map(this::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+                    if (user.getStatus() != UserStatus.ACTIVE) {
+                        throw new BadCredentialsException("User account is " + user.getStatus());
+                    }
+                    String accessToken = generateAccessToken(user);
+                    return new AuthResponse(accessToken, requestRefreshToken);
+                })
+                .orElseThrow(() -> new BadCredentialsException("Refresh token is not in database!"));
     }
 
     public UserResponse me(String email) {
@@ -83,11 +95,43 @@ public class AuthService {
         );
     }
 
-    private String generateToken(User user) {
+    @Transactional
+    public void logout(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadCredentialsException("User not found"));
+        refreshTokenRepository.deleteByUser(user);
+    }
+
+    private AuthResponse createAuthResponse(User user) {
+        String accessToken = generateAccessToken(user);
+        String refreshToken = createRefreshToken(user).getToken();
+        return new AuthResponse(accessToken, refreshToken);
+    }
+
+    private String generateAccessToken(User user) {
         var authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.name()))
                 .toList();
 
         return jwtUtils.generateToken(user.getEmail(), authorities);
+    }
+
+    private RefreshToken createRefreshToken(User user) {
+        refreshTokenRepository.deleteByUser(user);
+
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUser(user);
+        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshExpiration));
+        refreshToken.setToken(jwtUtils.generateRefreshToken(user.getEmail()));
+
+        return refreshTokenRepository.save(refreshToken);
+    }
+
+    private RefreshToken verifyExpiration(RefreshToken token) {
+        if (token.getExpiryDate().isBefore(Instant.now())) {
+            refreshTokenRepository.delete(token);
+            throw new BadCredentialsException("Refresh token was expired. Please make a new signin request");
+        }
+        return token;
     }
 }
