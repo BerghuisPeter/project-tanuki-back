@@ -1,4 +1,4 @@
-package io.github.peterberghuis.auth.dto;
+package io.github.peterberghuis.common.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

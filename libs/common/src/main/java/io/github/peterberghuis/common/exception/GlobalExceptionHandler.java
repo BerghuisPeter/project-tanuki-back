@@ -1,6 +1,6 @@
-package io.github.peterberghuis.auth.exception;
+package io.github.peterberghuis.common.exception;
 
-import io.github.peterberghuis.auth.dto.ErrorResponse;
+import io.github.peterberghuis.common.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -12,11 +12,6 @@ import org.springframework.web.context.request.WebRequest;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(EmailAlreadyInUseException.class)
-    public ResponseEntity<ErrorResponse> handleEmailAlreadyInUseException(EmailAlreadyInUseException ex, WebRequest request) {
-        return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
-    }
-
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
@@ -27,7 +22,7 @@ public class GlobalExceptionHandler {
         return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request);
     }
 
-    private ResponseEntity<ErrorResponse> createErrorResponse(HttpStatus status, String message, WebRequest request) {
+    protected ResponseEntity<ErrorResponse> createErrorResponse(HttpStatus status, String message, WebRequest request) {
         String path = "";
         if (request instanceof ServletWebRequest servletWebRequest) {
             path = servletWebRequest.getRequest().getRequestURI();
