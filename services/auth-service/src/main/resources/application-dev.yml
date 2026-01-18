@@ -9,12 +9,6 @@ spring:
       hibernate:
         default_schema: auth_schema
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, info
-
 jwt:
   secret: test-secret-key-that-needs-to-be-long-enough-to-be-secure-32-chars
   expiration: 86400000
