@@ -2,6 +2,7 @@ package io.github.peterberghuis.auth.service;
 
 import io.github.peterberghuis.auth.dto.AuthResponse;
 import io.github.peterberghuis.auth.dto.LoginRequest;
+import io.github.peterberghuis.auth.dto.RefreshRequest;
 import io.github.peterberghuis.auth.entity.RefreshToken;
 import io.github.peterberghuis.auth.entity.User;
 import io.github.peterberghuis.auth.entity.UserStatus;
@@ -97,5 +98,44 @@ class AuthServiceTest {
         // Assert
         verify(refreshTokenRepository).deleteByUser(user);
         verify(refreshTokenRepository).flush();
+    }
+
+    @Test
+    void refresh_ShouldReturnNewRefreshTokenAndInvalidateOldOne() {
+        // Arrange
+        String oldTokenString = "old_refresh_token";
+        String newTokenString = "new_refresh_token";
+        String email = "test@example.com";
+
+        User user = new User();
+        user.setEmail(email);
+        user.setStatus(UserStatus.ACTIVE);
+
+        RefreshToken oldToken = new RefreshToken();
+        oldToken.setToken(oldTokenString);
+        oldToken.setUser(user);
+        oldToken.setExpiryDate(java.time.Instant.now().plusSeconds(600));
+
+        RefreshRequest refreshRequest = new RefreshRequest(oldTokenString);
+
+        when(refreshTokenRepository.findByToken(oldTokenString)).thenReturn(Optional.of(oldToken));
+        when(jwtUtils.generateToken(anyString(), any())).thenReturn("new_access_token");
+        when(jwtUtils.generateRefreshToken(email)).thenReturn(newTokenString);
+
+        RefreshToken newToken = new RefreshToken();
+        newToken.setToken(newTokenString);
+        when(refreshTokenRepository.save(any(RefreshToken.class))).thenReturn(newToken);
+
+        // Act
+        AuthResponse response = authService.refresh(refreshRequest);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals("new_access_token", response.getAccessToken());
+        assertEquals(newTokenString, response.getRefreshToken());
+
+        // Verify that old tokens for user are deleted
+        verify(refreshTokenRepository).deleteByUser(user);
+        verify(refreshTokenRepository).save(any(RefreshToken.class));
     }
 }

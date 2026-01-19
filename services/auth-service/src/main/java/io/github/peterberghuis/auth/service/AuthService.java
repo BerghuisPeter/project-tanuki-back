@@ -69,17 +69,16 @@ public class AuthService {
     public AuthResponse refresh(RefreshRequest request) {
         String requestRefreshToken = request.getRefreshToken();
 
-        return refreshTokenRepository.findByToken(requestRefreshToken)
+        RefreshToken token = refreshTokenRepository.findByToken(requestRefreshToken)
                 .map(this::verifyExpiration)
-                .map(RefreshToken::getUser)
-                .map(user -> {
-                    if (user.getStatus() != UserStatus.ACTIVE) {
-                        throw new BadCredentialsException("User account is " + user.getStatus());
-                    }
-                    String accessToken = generateAccessToken(user);
-                    return new AuthResponse(accessToken, requestRefreshToken);
-                })
                 .orElseThrow(() -> new BadCredentialsException("Refresh token is not in database!"));
+
+        User user = token.getUser();
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new BadCredentialsException("User account is " + user.getStatus());
+        }
+
+        return createAuthResponse(user);
     }
 
     public UserResponse me(String email) {
