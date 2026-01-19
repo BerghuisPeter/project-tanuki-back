@@ -1,0 +1,26 @@
+openapi: 3.0.3
+info:
+  title: Profile Service API
+  description: Profile management service for Project Tanuki
+  version: 0.0.1-SNAPSHOT
+servers:
+  - url: http://localhost:8081
+    description: Local development server
+paths: { }
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
