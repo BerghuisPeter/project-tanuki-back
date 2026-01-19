@@ -9,9 +9,29 @@ This project is organized as a multi-module Maven project:
     - `profile-service`: Manages user profiles. (Port: 8082)
 - **`libs/`**: Shared infrastructure libraries.
     - `security`: Common security utilities, JWT handling, and shared security configuration.
-    - `observability`: Logging, tracing, and metrics configuration.
+  - `common`: Generic utilities, shared DTOs, and global exception handling.
+  - `observability`: Logging, tracing, and metrics configuration (Actuator).
 - **`proto/`**: Canonical gRPC contracts used for service-to-service communication.
 - **`pom.xml`**: Parent POM managing shared dependencies and versions.
+
+---
+
+## Shared Observability Library (`libs/observability`)
+
+The `observability` library provides pre-configured Spring Boot Actuator settings for monitoring and health checks.
+
+### How to use:
+
+Add the dependency to your `pom.xml`:
+
+```xml
+
+<dependency>
+    <groupId>io.github.peterberghuis</groupId>
+    <artifactId>observability</artifactId>
+    <version>${project.version}</version>
+</dependency>
+```
 
 ---
 
@@ -27,7 +47,7 @@ The `security` library provides a standardized way to handle authentication acro
 - **`SharedSecurityConfig`**: Pre-configured `SecurityFilterChain` that enables stateless sessions and JWT
   authentication.
 
-### How to use in a new service:
+### How to use:
 
 1. Add the dependency to your `pom.xml`:
    ```xml
@@ -47,6 +67,31 @@ The `security` library provides a standardized way to handle authentication acro
      secret: your-very-long-and-secure-secret-key-that-is-at-least-32-characters
      expiration: 86400000 # 1 day in ms
    ```
+
+---
+
+## Shared Common Library (`libs/common`)
+
+The `common` library provides shared DTOs and global exception handling logic to maintain consistency across services.
+
+### Key Components:
+
+- **`GlobalExceptionHandler`**: A central exception handler that ensures a consistent `ErrorResponse` format across all
+  services.
+- **`ErrorResponse`**: Standardized error DTO used by the global exception handler.
+
+### How to use:
+
+Add the dependency to your `pom.xml`:
+
+```xml
+
+<dependency>
+    <groupId>io.github.peterberghuis</groupId>
+    <artifactId>common</artifactId>
+    <version>${project.version}</version>
+</dependency>
+```
 
 ---
 
