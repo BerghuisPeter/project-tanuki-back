@@ -6,6 +6,8 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: true
+    default-schema: profile_schema
+    liquibase-schema: profile_schema
 
 server:
   port: 8082

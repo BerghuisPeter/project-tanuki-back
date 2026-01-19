@@ -6,34 +6,27 @@ databaseChangeLog:
         - addLookupTable:
             existingColumnName: status
             existingTableName: users
-            existingTableSchemaName: auth_schema
             newTableName: user_statuses
-            newTableSchemaName: auth_schema
             newColumnName: status
             newColumnDataType: VARCHAR(50)
             constraintName: fk_user_status
         - insert:
-            schemaName: auth_schema
             tableName: user_statuses
             columns:
               - column: { name: status, value: ACTIVE }
         - insert:
-            schemaName: auth_schema
             tableName: user_statuses
             columns:
               - column: { name: status, value: INACTIVE }
         - insert:
-            schemaName: auth_schema
             tableName: user_statuses
             columns:
               - column: { name: status, value: PENDING }
         - insert:
-            schemaName: auth_schema
             tableName: user_statuses
             columns:
               - column: { name: status, value: SUSPENDED }
         - insert:
-            schemaName: auth_schema
             tableName: user_statuses
             columns:
               - column: { name: status, value: DELETED }

@@ -4,7 +4,6 @@ databaseChangeLog:
       author: peter
       changes:
         - createTable:
-            schemaName: auth_schema
             tableName: refresh_tokens
             columns:
               - column:
@@ -32,9 +31,7 @@ databaseChangeLog:
                     nullable: false
         - addForeignKeyConstraint:
             baseTableName: refresh_tokens
-            baseTableSchemaName: auth_schema
             baseColumnNames: user_id
             referencedTableName: users
-            referencedTableSchemaName: auth_schema
             referencedColumnNames: id
             constraintName: fk_refresh_token_user

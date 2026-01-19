@@ -1,16 +1,9 @@
 databaseChangeLog:
   - changeSet:
-      id: 202601182146-create-auth-schema
-      author: peter
-      changes:
-        - sql:
-            sql: CREATE SCHEMA IF NOT EXISTS auth_schema;
-  - changeSet:
       id: 202601182147-create-users-table
       author: peter
       changes:
         - createTable:
-            schemaName: auth_schema
             tableName: users
             columns:
               - column:
@@ -46,7 +39,6 @@ databaseChangeLog:
       author: peter
       changes:
         - createTable:
-            schemaName: auth_schema
             tableName: user_roles
             columns:
               - column:
@@ -61,14 +53,11 @@ databaseChangeLog:
                     nullable: false
         - addForeignKeyConstraint:
             baseTableName: user_roles
-            baseTableSchemaName: auth_schema
             baseColumnNames: user_id
             referencedTableName: users
-            referencedTableSchemaName: auth_schema
             referencedColumnNames: id
             constraintName: fk_user_roles_user
         - addUniqueConstraint:
             constraintName: uq_user_role
             tableName: user_roles
             columnNames: user_id, role
-            schemaName: auth_schema

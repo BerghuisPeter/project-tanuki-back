@@ -10,6 +10,8 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: true
+    default-schema: auth_schema
+    liquibase-schema: auth_schema
 
 server:
   port: 8081
