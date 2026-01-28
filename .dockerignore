@@ -1,0 +1,13 @@
+target/
+!target/*.jar
+.git/
+.idea/
+*.iml
+.mvn/
+mvnw
+mvnw.cmd
+README.md
+api-tests/
+compose.yaml
+docker-compose.yml
+.dockerignore
