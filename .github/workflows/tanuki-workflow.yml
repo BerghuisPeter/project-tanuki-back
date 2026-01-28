@@ -38,6 +38,9 @@ jobs:
       GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
       GOOGLE_REGION: ${{ secrets.GAR_LOCATION }}
       GAR_REPOSITORY: ${{ secrets.GAR_REPOSITORY }}
+      DB_URL: ${{ secrets.DB_URL }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
     with:
       service_name: auth-service
       image_name: auth-service
@@ -52,6 +55,9 @@ jobs:
       GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
       GOOGLE_REGION: ${{ secrets.GAR_LOCATION }}
       GAR_REPOSITORY: ${{ secrets.GAR_REPOSITORY }}
+      DB_URL: ${{ secrets.DB_URL }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
     with:
       service_name: profile-service
       image_name: profile-service

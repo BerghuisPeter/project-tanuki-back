@@ -21,6 +21,12 @@ on:
         required: true
       GAR_REPOSITORY:
         required: true
+      DB_URL:
+        required: true
+      DB_USERNAME:
+        required: true
+      DB_PASSWORD:
+        required: true
 
 jobs:
   containerization:
@@ -57,12 +63,15 @@ jobs:
         with:
           credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
 
-#      - name: Deploy to Cloud Run
-#        uses: google-github-actions/deploy-cloudrun@v2
-#        with:
-#          service: ${{ inputs.image_name }}-${{ inputs.environment }}
-#          image: ${{ secrets.GOOGLE_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_PROJECT_ID }}/${{ secrets.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ inputs.environment }}-${{ github.sha }}
-#          region: ${{ secrets.GOOGLE_REGION }}
-#          suffix: ${{ github.sha }}
-#          env_vars: |
-#            SPRING_PROFILES_ACTIVE=${{ inputs.environment == 'dev' && 'dev' || 'prod' }}
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ inputs.image_name }}-${{ inputs.environment }}
+          image: ${{ secrets.GOOGLE_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_PROJECT_ID }}/${{ secrets.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ inputs.environment }}-${{ github.sha }}
+          region: ${{ secrets.GOOGLE_REGION }}
+          suffix: ${{ github.sha }}
+          env_vars: |
+            SPRING_PROFILES_ACTIVE=${{ inputs.environment == 'dev' && 'dev' || 'prod' }}
+            SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
+            SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }}
+            SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }}
