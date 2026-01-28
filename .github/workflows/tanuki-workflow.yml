@@ -1,0 +1,58 @@
+name: Tanuki-workflow
+
+on:
+  push:
+    branches: [ develop, master ]
+
+jobs:
+  # Check which files changed to optimize builds
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      auth: ${{ steps.filter.outputs.auth }}
+      profile: ${{ steps.filter.outputs.profile }}
+      common: ${{ steps.filter.outputs.common }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            auth:
+              - 'services/auth-service/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+            profile:
+              - 'services/profile-service/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+            common:
+              - 'libs/**'
+
+  auth-service:
+    needs: changes
+    if: ${{ (needs.changes.outputs.auth == 'true' || needs.changes.outputs.common == 'true') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master') }}
+    uses: ./.github/workflows/_build-push.yml
+    secrets:
+      GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+      GOOGLE_REGION: ${{ secrets.GAR_LOCATION }}
+      GAR_REPOSITORY: ${{ secrets.GAR_REPOSITORY }}
+    with:
+      service_name: auth-service
+      image_name: auth-service
+      environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
+
+  profile-service:
+    needs: changes
+    if: ${{ (needs.changes.outputs.profile == 'true' || needs.changes.outputs.common == 'true') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master') }}
+    uses: ./.github/workflows/_build-push.yml
+    secrets:
+      GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+      GOOGLE_REGION: ${{ secrets.GAR_LOCATION }}
+      GAR_REPOSITORY: ${{ secrets.GAR_REPOSITORY }}
+    with:
+      service_name: profile-service
+      image_name: profile-service
+      environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}

@@ -1,0 +1,68 @@
+name: Build and Push Service
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+      image_name:
+        required: true
+        type: string
+    secrets:
+      GOOGLE_PROJECT_ID:
+        required: true
+      GOOGLE_CREDENTIALS:
+        required: true
+      GOOGLE_REGION:
+        required: true
+      GAR_REPOSITORY:
+        required: true
+
+jobs:
+  containerization:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GAR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.GOOGLE_REGION }}-docker.pkg.dev
+          username: _json_key
+          password: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Build and push image to registry
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          build-args: |
+            SERVICE_NAME=${{ inputs.service_name }}
+          tags: |
+            ${{ secrets.GOOGLE_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_PROJECT_ID }}/${{ secrets.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ inputs.environment }}-${{ github.sha }}
+            ${{ secrets.GOOGLE_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_PROJECT_ID }}/${{ secrets.GAR_REPOSITORY }}/${{ inputs.image_name }}:latest
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+
+#      - name: Deploy to Cloud Run
+#        uses: google-github-actions/deploy-cloudrun@v2
+#        with:
+#          service: ${{ inputs.image_name }}-${{ inputs.environment }}
+#          image: ${{ secrets.GOOGLE_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_PROJECT_ID }}/${{ secrets.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ inputs.environment }}-${{ github.sha }}
+#          region: ${{ secrets.GOOGLE_REGION }}
+#          suffix: ${{ github.sha }}
+#          env_vars: |
+#            SPRING_PROFILES_ACTIVE=${{ inputs.environment == 'dev' && 'dev' || 'prod' }}
