@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+FROM maven:3.9.9-eclipse-temurin-25 AS build
 WORKDIR /app
 
 # Use an argument to specify which service to build
@@ -24,7 +24,7 @@ COPY services/ services/
 RUN mvn clean package -pl services/${SERVICE_NAME} -am -DskipTests
 
 # Stage 2: Runtime stage
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:25-jre-jammy
 WORKDIR /app
 
 # Use an argument to specify which service to run
