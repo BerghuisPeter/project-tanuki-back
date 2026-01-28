@@ -61,3 +61,67 @@ databaseChangeLog:
             constraintName: uq_user_role
             tableName: user_roles
             columnNames: user_id, role
+
+  - changeSet:
+      id: 202601182149-add-user-status-constraint
+      author: peter
+      changes:
+        - addLookupTable:
+            existingColumnName: status
+            existingTableName: users
+            newTableName: user_statuses
+            newColumnName: status
+            newColumnDataType: VARCHAR(50)
+            constraintName: fk_user_status
+        - insert:
+            tableName: user_statuses
+            columns:
+              - column: { name: status, value: ACTIVE }
+        - insert:
+            tableName: user_statuses
+            columns:
+              - column: { name: status, value: INACTIVE }
+        - insert:
+            tableName: user_statuses
+            columns:
+              - column: { name: status, value: PENDING }
+        - insert:
+            tableName: user_statuses
+            columns:
+              - column: { name: status, value: SUSPENDED }
+        - insert:
+            tableName: user_statuses
+            columns:
+              - column: { name: status, value: DELETED }
+
+  - changeSet:
+      id: 202601182200-add-user-roles-constraint
+      author: peter
+      changes:
+        - addLookupTable:
+            existingColumnName: role
+            existingTableName: user_roles
+            newTableName: roles
+            newColumnName: role
+            newColumnDataType: VARCHAR(50)
+            constraintName: fk_user_role_lookup
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: role, value: USER }
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: role, value: PAID_USER }
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: role, value: ADMIN }
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: role, value: MODERATOR }
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: role, value: SUPPORT }
