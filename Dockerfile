@@ -1,5 +1,9 @@
 # Stage 1: Build the application
-FROM maven:3.9.9-eclipse-temurin-25 AS build
+FROM eclipse-temurin:25-jdk-jammy AS build
+
+# Install Maven
+RUN apt-get update && apt-get install -y maven
+
 WORKDIR /app
 
 # Use an argument to specify which service to build
