@@ -4,7 +4,7 @@ info:
   description: Profile management service for Project Tanuki
   version: 0.0.1-SNAPSHOT
 servers:
-  - url: http://localhost:8081
+  - url: http://localhost:8082
     description: Local development server
 paths: { }
 components:

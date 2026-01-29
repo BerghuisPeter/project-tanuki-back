@@ -10,7 +10,7 @@ spring:
     liquibase-schema: profile_schema
 
 server:
-  port: 8082
+  port: ${PORT:8082}
 
 management:
   endpoints:
