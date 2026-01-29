@@ -3,6 +3,7 @@ name: Tanuki-workflow
 on:
   push:
     branches: [ develop, master ]
+  workflow_dispatch:
 
 jobs:
   # Check which files changed to optimize builds
@@ -31,7 +32,7 @@ jobs:
 
   auth-service:
     needs: changes
-    if: ${{ (needs.changes.outputs.auth == 'true' || needs.changes.outputs.common == 'true') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || ((needs.changes.outputs.auth == 'true' || needs.changes.outputs.common == 'true') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master')) }}
     uses: ./.github/workflows/_build-push.yml
     secrets:
       GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -51,7 +52,7 @@ jobs:
 
   profile-service:
     needs: changes
-    if: ${{ (needs.changes.outputs.profile == 'true' || needs.changes.outputs.common == 'true') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || ((needs.changes.outputs.profile == 'true' || needs.changes.outputs.common == 'true') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master')) }}
     uses: ./.github/workflows/_build-push.yml
     secrets:
       GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}

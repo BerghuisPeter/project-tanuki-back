@@ -1,6 +1,24 @@
 name: Build and Push Service
 
 on:
+  workflow_dispatch:
+    inputs:
+      service_name:
+        description: 'Service name (profile-service, auth-service)'
+        required: true
+        type: string
+      environment:
+        description: 'Environment (dev or prod)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+      image_name:
+        description: 'Image name (profile-service, auth-service)'
+        required: true
+        type: string
   workflow_call:
     inputs:
       service_name:
