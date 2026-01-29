@@ -10,7 +10,7 @@ spring:
     properties:
       hibernate:
         default_schema: auth_schema
-        dialect: org.hibernate.dialect.CockroachDBDialect
+        dialect: org.hibernate.dialect.CockroachDialect
 
 jwt:
   secret: ${JWT_SECRET}

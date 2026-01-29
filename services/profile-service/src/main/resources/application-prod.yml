@@ -10,4 +10,4 @@ spring:
     properties:
       hibernate:
         default_schema: profile_schema
-        dialect: org.hibernate.dialect.CockroachDBDialect
+        dialect: org.hibernate.dialect.CockroachDialect
