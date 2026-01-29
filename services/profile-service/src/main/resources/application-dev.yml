@@ -11,3 +11,6 @@ spring:
       hibernate:
         default_schema: profile_schema
         dialect: org.hibernate.dialect.CockroachDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
