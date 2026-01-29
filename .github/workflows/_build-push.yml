@@ -27,6 +27,12 @@ on:
         required: true
       DB_PASSWORD:
         required: true
+      JWT_SECRET:
+        required: true
+      JWT_EXPIRATION:
+        required: true
+      JWT_REFRESH_EXPIRATION:
+        required: true
 
 jobs:
   containerization:
@@ -66,7 +72,7 @@ jobs:
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: ${{ inputs.image_name }}-${{ inputs.environment }}
+          service: tanuki-back-${{ inputs.image_name }}-${{ inputs.environment }}
           image: ${{ secrets.GOOGLE_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_PROJECT_ID }}/${{ secrets.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ inputs.environment }}-${{ github.sha }}
           region: ${{ secrets.GOOGLE_REGION }}
           suffix: ${{ github.sha }}
@@ -75,3 +81,6 @@ jobs:
             SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
             SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }}
             SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+            JWT_REFRESH_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }}
