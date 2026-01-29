@@ -75,7 +75,6 @@ jobs:
           service: tanuki-back-${{ inputs.image_name }}-${{ inputs.environment }}
           image: ${{ secrets.GOOGLE_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_PROJECT_ID }}/${{ secrets.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ inputs.environment }}-${{ github.sha }}
           region: ${{ secrets.GOOGLE_REGION }}
-          suffix: ${{ github.sha }}
           env_vars: |
             SPRING_PROFILES_ACTIVE=${{ inputs.environment == 'dev' && 'dev' || 'prod' }}
             SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
