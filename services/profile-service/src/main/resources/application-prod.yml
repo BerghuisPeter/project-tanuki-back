@@ -14,3 +14,8 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:900000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}

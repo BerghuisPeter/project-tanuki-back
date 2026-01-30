@@ -11,3 +11,8 @@ spring:
       hibernate:
         default_schema: profile_schema
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+jwt:
+  secret: test-secret-key-that-needs-to-be-long-enough-to-be-secure-32-chars
+  expiration: 900000
+  refresh-expiration: 604800000
