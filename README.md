@@ -11,7 +11,6 @@ This project is organized as a multi-module Maven project:
     - `security`: Common security utilities, JWT handling, and shared security configuration.
   - `common`: Generic utilities, shared DTOs, and global exception handling.
   - `observability`: Logging, tracing, and metrics configuration (Actuator).
-- **`proto/`**: Canonical gRPC contracts used for service-to-service communication.
 - **`pom.xml`**: Parent POM managing shared dependencies and versions.
 
 ---
@@ -180,6 +179,5 @@ When defining foreign keys across schemas in Liquibase, use `addForeignKeyConstr
 
 * [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
 * [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/4.0.1/maven-plugin)
-* [Spring gRPC](https://docs.spring.io/spring-grpc/reference/index.html)
 * [Liquibase Documentation](https://docs.liquibase.com/home.html)
 

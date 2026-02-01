@@ -23,8 +23,9 @@
 
     <properties>
         <java.version>25</java.version>
-        <grpc.version>1.77.1</grpc.version>
-        <spring-grpc.version>1.0.1</spring-grpc.version>
+        <openapi-generator.version>7.11.0</openapi-generator.version>
+        <jackson-databind-nullable.version>0.2.6</jackson-databind-nullable.version>
+        <swagger-annotations.version>2.2.28</swagger-annotations.version>
     </properties>
 
     <!-- Dependencies shared by ALL modules -->
@@ -44,11 +45,14 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.springframework.grpc</groupId>
-                <artifactId>spring-grpc-dependencies</artifactId>
-                <version>${spring-grpc.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger-annotations.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openapitools</groupId>
+                <artifactId>jackson-databind-nullable</artifactId>
+                <version>${jackson-databind-nullable.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
