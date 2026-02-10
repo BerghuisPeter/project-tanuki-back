@@ -7,30 +7,10 @@ This project is organized as a multi-module Maven project:
 - **`services/`**: Independent Spring Boot microservices.
     - `auth-service`: Handles authentication, user management, and roles. (Port: 8081)
     - `profile-service`: Manages user profiles. (Port: 8082)
-- **`libs/`**: Shared infrastructure libraries.
-    - `security`: Common security utilities, JWT handling, and shared security configuration.
-  - `common`: Generic utilities, shared DTOs, and global exception handling.
-  - `observability`: Logging, tracing, and metrics configuration (Actuator).
-- **`pom.xml`**: Parent POM managing shared dependencies and versions.
-
----
-
-## Shared Observability Library (`libs/observability`)
-
-The `observability` library provides pre-configured Spring Boot Actuator settings for monitoring and health checks.
-
-### How to use:
-
-Add the dependency to your `pom.xml`:
-
-```xml
-
-<dependency>
-    <groupId>io.github.peterberghuis</groupId>
-    <artifactId>observability</artifactId>
-    <version>${project.version}</version>
-</dependency>
-```
+  - **`libs/`**: Shared infrastructure libraries.
+      - `security`: Common security utilities, JWT handling, and shared security configuration.
+      - `common`: Generic utilities, shared DTOs, and global exception handling.
+  - **`pom.xml`**: Parent POM managing shared dependencies and versions.
 
 ---
 

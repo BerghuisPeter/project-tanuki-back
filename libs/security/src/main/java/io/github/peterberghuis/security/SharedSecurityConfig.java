@@ -23,9 +23,11 @@ import java.util.List;
 @EnableWebSecurity
 public class SharedSecurityConfig {
 
+    private final CorsProperties corsProperties;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SharedSecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SharedSecurityConfig(CorsProperties corsProperties, JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.corsProperties = corsProperties;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
@@ -58,7 +60,7 @@ public class SharedSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://project-tanuki.net"));
+        configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);

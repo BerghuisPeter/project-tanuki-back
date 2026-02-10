@@ -17,7 +17,6 @@
         <module>services/auth-service</module>
         <module>services/profile-service</module>
         <module>libs/security</module>
-        <module>libs/observability</module>
         <module>libs/common</module>
     </modules>
 
