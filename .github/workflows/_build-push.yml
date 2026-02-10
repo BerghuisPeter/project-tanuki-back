@@ -101,4 +101,4 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
             JWT_REFRESH_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }}
-            APP_CORS_ALLOWED_ORIGINS=${{ secrets.APP_CORS_ALLOWED_ORIGINS }}
+            APP_CORS_ALLOWED_ORIGINS=${{ vars.APP_CORS_ALLOWED_ORIGINS }}
