@@ -58,7 +58,9 @@ class AuthServiceTest {
         user.setPasswordHash("hashed_password");
         user.setStatus(UserStatus.ACTIVE);
 
-        LoginRequest loginRequest = new LoginRequest(email, password);
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setEmail(email);
+        loginRequest.setPassword(password);
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(password, user.getPasswordHash())).thenReturn(true);
@@ -116,7 +118,8 @@ class AuthServiceTest {
         oldToken.setUser(user);
         oldToken.setExpiryDate(java.time.Instant.now().plusSeconds(600));
 
-        RefreshRequest refreshRequest = new RefreshRequest(oldTokenString);
+        RefreshRequest refreshRequest = new RefreshRequest();
+        refreshRequest.setRefreshToken(oldTokenString);
 
         when(refreshTokenRepository.findByToken(oldTokenString)).thenReturn(Optional.of(oldToken));
         when(jwtUtils.generateToken(anyString(), any())).thenReturn("new_access_token");

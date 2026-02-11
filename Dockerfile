@@ -13,7 +13,6 @@ ARG SERVICE_NAME
 COPY pom.xml .
 COPY libs/common/pom.xml libs/common/pom.xml
 COPY libs/security/pom.xml libs/security/pom.xml
-COPY libs/observability/pom.xml libs/observability/pom.xml
 COPY services/auth-service/pom.xml services/auth-service/pom.xml
 COPY services/profile-service/pom.xml services/profile-service/pom.xml
 
