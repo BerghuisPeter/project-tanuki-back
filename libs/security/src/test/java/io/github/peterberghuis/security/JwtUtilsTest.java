@@ -5,8 +5,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 class JwtUtilsTest {
 
@@ -30,5 +29,19 @@ class JwtUtilsTest {
 
         String token = jwtUtils.generateToken("user", Collections.emptyList());
         assertNotNull(token);
+    }
+
+    @Test
+    void testExpiredToken() {
+        JwtUtils jwtUtils = new JwtUtils();
+        ReflectionTestUtils.setField(jwtUtils, "secret", "this-is-a-very-long-secret-key-that-is-at-least-32-bytes");
+        // Set a negative expiration time to make the token immediately expired
+        ReflectionTestUtils.setField(jwtUtils, "jwtExpiration", -1000L);
+
+        String token = jwtUtils.generateToken("user", Collections.emptyList());
+        assertNotNull(token);
+
+        boolean isValid = jwtUtils.validateToken(token);
+        assertFalse(isValid);
     }
 }
