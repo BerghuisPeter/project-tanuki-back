@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -54,9 +55,12 @@ class AuthServiceTest {
         String email = "test@example.com";
         String password = "password";
         User user = new User();
+        user.setId(UUID.randomUUID());
         user.setEmail(email);
         user.setPasswordHash("hashed_password");
         user.setStatus(UserStatus.ACTIVE);
+        user.setCreatedAt(java.time.LocalDateTime.now());
+        user.setRoles(java.util.Set.of(io.github.peterberghuis.auth.entity.UserRole.USER));
 
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setEmail(email);
@@ -78,6 +82,8 @@ class AuthServiceTest {
         assertNotNull(response);
         assertEquals("access_token", response.getAccessToken());
         assertEquals("refresh_token", response.getRefreshToken());
+        assertNotNull(response.getUser());
+        assertEquals(email, response.getUser().getEmail());
 
         // Verify that old refresh tokens are deleted
         verify(refreshTokenRepository).deleteByUser(user);
@@ -110,8 +116,11 @@ class AuthServiceTest {
         String email = "test@example.com";
 
         User user = new User();
+        user.setId(UUID.randomUUID());
         user.setEmail(email);
         user.setStatus(UserStatus.ACTIVE);
+        user.setCreatedAt(java.time.LocalDateTime.now());
+        user.setRoles(java.util.Set.of(io.github.peterberghuis.auth.entity.UserRole.USER));
 
         RefreshToken oldToken = new RefreshToken();
         oldToken.setToken(oldTokenString);
@@ -136,6 +145,8 @@ class AuthServiceTest {
         assertNotNull(response);
         assertEquals("new_access_token", response.getAccessToken());
         assertEquals(newTokenString, response.getRefreshToken());
+        assertNotNull(response.getUser());
+        assertEquals(email, response.getUser().getEmail());
 
         // Verify that old tokens for user are deleted
         verify(refreshTokenRepository).deleteByUser(user);

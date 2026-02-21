@@ -85,15 +85,7 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("User not found"));
 
-        UserResponse response = new UserResponse();
-        response.setId(user.getId());
-        response.setEmail(user.getEmail());
-        response.setStatus(io.github.peterberghuis.auth.dto.UserStatus.fromValue(user.getStatus().name()));
-        response.setCreatedAt(user.getCreatedAt().atOffset(java.time.ZoneOffset.UTC));
-        response.setRoles(user.getRoles().stream()
-                .map(role -> io.github.peterberghuis.auth.dto.UserRole.fromValue(role.name()))
-                .toList());
-        return response;
+        return toUserResponse(user);
     }
 
     @Transactional
@@ -110,6 +102,19 @@ public class AuthService {
         AuthResponse response = new AuthResponse();
         response.setAccessToken(accessToken);
         response.setRefreshToken(refreshToken);
+        response.setUser(toUserResponse(user));
+        return response;
+    }
+
+    private UserResponse toUserResponse(User user) {
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());
+        response.setEmail(user.getEmail());
+        response.setStatus(io.github.peterberghuis.auth.dto.UserStatus.fromValue(user.getStatus().name()));
+        response.setCreatedAt(user.getCreatedAt().atOffset(java.time.ZoneOffset.UTC));
+        response.setRoles(user.getRoles().stream()
+                .map(role -> io.github.peterberghuis.auth.dto.UserRole.fromValue(role.name()))
+                .toList());
         return response;
     }
 

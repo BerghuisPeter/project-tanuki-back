@@ -134,13 +134,24 @@ components:
           type: string
     AuthResponse:
       type: object
+      required:
+        - accessToken
+        - refreshToken
+        - user
       properties:
         accessToken:
           type: string
         refreshToken:
           type: string
+        user:
+          $ref: '#/components/schemas/UserResponse'
     UserResponse:
       type: object
+      required:
+        - id
+        - email
+        - status
+        - createdAt
       properties:
         id:
           type: string
