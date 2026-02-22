@@ -11,6 +11,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -21,7 +22,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GoogleAuthService {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
     @Value("${app.google.client-id}")
     private String clientId;
@@ -55,6 +56,9 @@ public class GoogleAuthService {
                 return decodeIdToken(idToken);
             }
             throw new GoogleAuthException("Failed to exchange code for token: " + response.getStatusCode());
+        } catch (HttpStatusCodeException e) {
+            String errorBody = e.getResponseBodyAsString();
+            throw new GoogleAuthException("Error during Google code exchange: " + errorBody, e);
         } catch (RestClientException e) {
             throw new GoogleAuthException("Error during Google code exchange", e);
         }

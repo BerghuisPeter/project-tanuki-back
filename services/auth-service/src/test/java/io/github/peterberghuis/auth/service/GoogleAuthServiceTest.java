@@ -3,14 +3,33 @@ package io.github.peterberghuis.auth.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.peterberghuis.auth.exception.GoogleAuthException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class GoogleAuthServiceTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final GoogleAuthService googleAuthService = new GoogleAuthService();
+
+    @Mock
+    private RestTemplate restTemplate;
+
+    @InjectMocks
+    private GoogleAuthService googleAuthService;
 
     @Test
     void testGoogleUserInfoDeserialization_WithManyProperties() throws Exception {
@@ -58,5 +77,29 @@ class GoogleAuthServiceTest {
         assertThrows(GoogleAuthException.class, () -> {
             ReflectionTestUtils.invokeMethod(googleAuthService, "decodeIdToken", invalidBase64IdToken);
         });
+    }
+
+    @Test
+    void testExchangeCode_ShouldIncludeErrorBody_WhenGoogleReturnsError() {
+        // Arrange
+        String code = "invalid_code";
+        String errorBody = "{\"error\": \"invalid_grant\", \"error_description\": \"Bad Request\"}";
+
+        HttpClientErrorException exception = new HttpClientErrorException(
+                HttpStatus.BAD_REQUEST,
+                "Bad Request",
+                errorBody.getBytes(StandardCharsets.UTF_8),
+                StandardCharsets.UTF_8
+        );
+
+        when(restTemplate.postForEntity(any(String.class), any(), eq(Map.class)))
+                .thenThrow(exception);
+
+        // Act & Assert
+        GoogleAuthException googleAuthException = assertThrows(GoogleAuthException.class, () -> {
+            googleAuthService.exchangeCode(code);
+        });
+
+        assertTrue(googleAuthException.getMessage().contains("Error during Google code exchange: " + errorBody));
     }
 }
