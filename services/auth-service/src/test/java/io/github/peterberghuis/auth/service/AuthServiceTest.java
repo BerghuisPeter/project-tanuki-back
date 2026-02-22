@@ -166,7 +166,7 @@ class AuthServiceTest {
         userInfo.setSub(googleSub);
         userInfo.setEmail(email);
 
-        when(googleAuthService.getUserInfo(code)).thenReturn(userInfo);
+        when(googleAuthService.exchangeCode(code)).thenReturn(userInfo);
         when(userAuthProviderRepository.findByProviderAndProviderUserId("GOOGLE", googleSub)).thenReturn(Optional.empty());
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
@@ -209,7 +209,7 @@ class AuthServiceTest {
         existingUser.setCreatedAt(java.time.LocalDateTime.now());
         existingUser.setRoles(java.util.Set.of(io.github.peterberghuis.auth.entity.UserRole.USER));
 
-        when(googleAuthService.getUserInfo(code)).thenReturn(userInfo);
+        when(googleAuthService.exchangeCode(code)).thenReturn(userInfo);
         when(userAuthProviderRepository.findByProviderAndProviderUserId("GOOGLE", googleSub)).thenReturn(Optional.empty());
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
         when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
