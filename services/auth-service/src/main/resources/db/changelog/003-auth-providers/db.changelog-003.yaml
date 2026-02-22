@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202602221922-make-password-hash-nullable
+      author: peter
+      changes:
+        - dropNotNullConstraint:
+            columnName: password_hash
+            columnDataType: VARCHAR(255)
+            tableName: users
+  - changeSet:
+      id: 202602221923-create-user-auth-providers-table
+      author: peter
+      changes:
+        - createTable:
+            tableName: user_auth_providers
+            columns:
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider_user_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: user_auth_providers
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_user_auth_providers_user
+        - addUniqueConstraint:
+            constraintName: uq_user_provider
+            tableName: user_auth_providers
+            columnNames: user_id, provider
+        - addUniqueConstraint:
+            constraintName: uq_provider_user_id
+            tableName: user_auth_providers
+            columnNames: provider, provider_user_id
