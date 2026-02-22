@@ -49,6 +49,16 @@ public class AuthService {
     }
 
     @Transactional
+    public AuthResponse googleLogin(GoogleLoginRequest request) {
+        // TODO: Implement Google OAuth2 logic
+        // 1. Exchange code for Google tokens
+        // 2. Get user info from Google
+        // 3. Find or create user in database
+        // 4. Return AuthResponse
+        throw new UnsupportedOperationException("Google login not implemented yet");
+    }
+
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new EmailAlreadyInUseException("Email already in use");
@@ -81,6 +91,7 @@ public class AuthService {
         return createAuthResponse(user);
     }
 
+    @Transactional(readOnly = true)
     public UserResponse me(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("User not found"));
