@@ -15,6 +15,12 @@ databaseChangeLog:
             tableName: user_auth_providers
             columns:
               - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
                   name: user_id
                   type: UUID
                   constraints:

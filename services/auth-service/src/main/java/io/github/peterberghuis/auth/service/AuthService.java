@@ -1,12 +1,12 @@
 package io.github.peterberghuis.auth.service;
 
 import io.github.peterberghuis.auth.dto.*;
-import io.github.peterberghuis.auth.entity.RefreshToken;
-import io.github.peterberghuis.auth.entity.User;
+import io.github.peterberghuis.auth.entity.*;
 import io.github.peterberghuis.auth.entity.UserRole;
 import io.github.peterberghuis.auth.entity.UserStatus;
 import io.github.peterberghuis.auth.exception.EmailAlreadyInUseException;
 import io.github.peterberghuis.auth.repository.RefreshTokenRepository;
+import io.github.peterberghuis.auth.repository.UserAuthProviderRepository;
 import io.github.peterberghuis.auth.repository.UserRepository;
 import io.github.peterberghuis.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +27,8 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserAuthProviderRepository userAuthProviderRepository;
+    private final GoogleAuthService googleAuthService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
 
@@ -51,12 +53,37 @@ public class AuthService {
 
     @Transactional
     public AuthResponse googleLogin(GoogleLoginRequest request) {
-        // TODO: Implement Google OAuth2 logic
-        // 1. Exchange code for Google tokens
-        // 2. Get user info from Google
-        // 3. Find or create user in database
-        // 4. Return AuthResponse
-        throw new UnsupportedOperationException("Google login not implemented yet");
+        GoogleAuthService.GoogleUserInfo googleUserInfo = googleAuthService.exchangeCode(request.getCode());
+
+        User user = userAuthProviderRepository.findByProviderAndProviderUserId("GOOGLE", googleUserInfo.getSub())
+                .map(UserAuthProvider::getUser)
+                .orElseGet(() -> {
+                    // Check if user exists with this email but not linked to Google
+                    User existingUser = userRepository.findByEmail(googleUserInfo.getEmail())
+                            .orElseGet(() -> {
+                                // Create new user if doesn't exist
+                                User newUser = new User();
+                                newUser.setEmail(googleUserInfo.getEmail());
+                                newUser.setStatus(UserStatus.ACTIVE);
+                                newUser.setRoles(Set.of(UserRole.USER));
+                                return userRepository.save(newUser);
+                            });
+
+                    // Link to Google provider
+                    UserAuthProvider authProvider = new UserAuthProvider();
+                    authProvider.setUser(existingUser);
+                    authProvider.setProvider("GOOGLE");
+                    authProvider.setProviderUserId(googleUserInfo.getSub());
+                    userAuthProviderRepository.save(authProvider);
+
+                    return existingUser;
+                });
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new BadCredentialsException("User account is " + user.getStatus());
+        }
+
+        return createAuthResponse(user);
     }
 
     @Transactional
