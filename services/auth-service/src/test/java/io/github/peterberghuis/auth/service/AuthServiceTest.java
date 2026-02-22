@@ -23,8 +23,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -71,10 +72,6 @@ class AuthServiceTest {
         when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
 
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken("refresh_token");
-        when(refreshTokenRepository.save(any(RefreshToken.class))).thenReturn(refreshToken);
-
         // Act
         AuthResponse response = authService.login(loginRequest);
 
@@ -85,10 +82,8 @@ class AuthServiceTest {
         assertNotNull(response.getUser());
         assertEquals(email, response.getUser().getEmail());
 
-        // Verify that old refresh tokens are deleted
-        verify(refreshTokenRepository).deleteByUser(user);
-        verify(refreshTokenRepository).flush();
-        verify(refreshTokenRepository).save(any(RefreshToken.class));
+        // Verify that old refresh tokens are upserted
+        verify(refreshTokenRepository).upsertRefreshToken(any(UUID.class), eq("refresh_token"), eq(user.getId()), any());
     }
 
     @Test
@@ -134,10 +129,6 @@ class AuthServiceTest {
         when(jwtUtils.generateToken(anyString(), any())).thenReturn("new_access_token");
         when(jwtUtils.generateRefreshToken(email)).thenReturn(newTokenString);
 
-        RefreshToken newToken = new RefreshToken();
-        newToken.setToken(newTokenString);
-        when(refreshTokenRepository.save(any(RefreshToken.class))).thenReturn(newToken);
-
         // Act
         AuthResponse response = authService.refresh(refreshRequest);
 
@@ -148,8 +139,7 @@ class AuthServiceTest {
         assertNotNull(response.getUser());
         assertEquals(email, response.getUser().getEmail());
 
-        // Verify that old tokens for user are deleted
-        verify(refreshTokenRepository).deleteByUser(user);
-        verify(refreshTokenRepository).save(any(RefreshToken.class));
+        // Verify that tokens for user are upserted
+        verify(refreshTokenRepository).upsertRefreshToken(any(UUID.class), eq(newTokenString), eq(user.getId()), any());
     }
 }

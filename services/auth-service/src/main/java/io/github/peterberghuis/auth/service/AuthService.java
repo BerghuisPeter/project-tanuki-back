@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -138,15 +139,20 @@ public class AuthService {
     }
 
     private RefreshToken createRefreshToken(User user) {
-        refreshTokenRepository.deleteByUser(user);
-        refreshTokenRepository.flush();
-
         RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setId(UUID.randomUUID());
         refreshToken.setUser(user);
         refreshToken.setExpiryDate(Instant.now().plusMillis(refreshExpiration));
         refreshToken.setToken(jwtUtils.generateRefreshToken(user.getEmail()));
 
-        return refreshTokenRepository.save(refreshToken);
+        refreshTokenRepository.upsertRefreshToken(
+                refreshToken.getId(),
+                refreshToken.getToken(),
+                user.getId(),
+                refreshToken.getExpiryDate()
+        );
+
+        return refreshToken;
     }
 
     private RefreshToken verifyExpiration(RefreshToken token) {
