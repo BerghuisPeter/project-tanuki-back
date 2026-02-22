@@ -17,4 +17,9 @@ public class AuthExceptionHandler extends GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleEmailAlreadyInUseException(EmailAlreadyInUseException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
+
+    @ExceptionHandler(GoogleAuthException.class)
+    public ResponseEntity<ErrorResponse> handleGoogleAuthException(GoogleAuthException ex, WebRequest request) {
+        return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+    }
 }

@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/001-initial-schema/db.changelog-001.yaml
   - include:
       file: db/changelog/002-refresh-tokens/db.changelog-002.yaml
+  - include:
+      file: db/changelog/003-auth-providers/db.changelog-003.yaml

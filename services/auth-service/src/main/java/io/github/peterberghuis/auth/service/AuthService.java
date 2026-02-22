@@ -1,12 +1,12 @@
 package io.github.peterberghuis.auth.service;
 
 import io.github.peterberghuis.auth.dto.*;
-import io.github.peterberghuis.auth.entity.RefreshToken;
-import io.github.peterberghuis.auth.entity.User;
+import io.github.peterberghuis.auth.entity.*;
 import io.github.peterberghuis.auth.entity.UserRole;
 import io.github.peterberghuis.auth.entity.UserStatus;
 import io.github.peterberghuis.auth.exception.EmailAlreadyInUseException;
 import io.github.peterberghuis.auth.repository.RefreshTokenRepository;
+import io.github.peterberghuis.auth.repository.UserAuthProviderRepository;
 import io.github.peterberghuis.auth.repository.UserRepository;
 import io.github.peterberghuis.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +27,8 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserAuthProviderRepository userAuthProviderRepository;
+    private final GoogleAuthService googleAuthService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
 
@@ -40,6 +43,41 @@ public class AuthService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid email or password");
         }
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new BadCredentialsException("User account is " + user.getStatus());
+        }
+
+        return createAuthResponse(user);
+    }
+
+    @Transactional
+    public AuthResponse googleLogin(GoogleLoginRequest request) {
+        GoogleAuthService.GoogleUserInfo googleUserInfo = googleAuthService.exchangeCode(request.getCode());
+
+        User user = userAuthProviderRepository.findByProviderAndProviderUserId("GOOGLE", googleUserInfo.getSub())
+                .map(UserAuthProvider::getUser)
+                .orElseGet(() -> {
+                    // Check if user exists with this email but not linked to Google
+                    User existingUser = userRepository.findByEmail(googleUserInfo.getEmail())
+                            .orElseGet(() -> {
+                                // Create new user if doesn't exist
+                                User newUser = new User();
+                                newUser.setEmail(googleUserInfo.getEmail());
+                                newUser.setStatus(UserStatus.ACTIVE);
+                                newUser.setRoles(Set.of(UserRole.USER));
+                                return userRepository.save(newUser);
+                            });
+
+                    // Link to Google provider
+                    UserAuthProvider authProvider = new UserAuthProvider();
+                    authProvider.setUser(existingUser);
+                    authProvider.setProvider("GOOGLE");
+                    authProvider.setProviderUserId(googleUserInfo.getSub());
+                    userAuthProviderRepository.save(authProvider);
+
+                    return existingUser;
+                });
 
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new BadCredentialsException("User account is " + user.getStatus());
@@ -81,6 +119,7 @@ public class AuthService {
         return createAuthResponse(user);
     }
 
+    @Transactional(readOnly = true)
     public UserResponse me(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("User not found"));
@@ -127,15 +166,20 @@ public class AuthService {
     }
 
     private RefreshToken createRefreshToken(User user) {
-        refreshTokenRepository.deleteByUser(user);
-        refreshTokenRepository.flush();
-
         RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setId(UUID.randomUUID());
         refreshToken.setUser(user);
         refreshToken.setExpiryDate(Instant.now().plusMillis(refreshExpiration));
         refreshToken.setToken(jwtUtils.generateRefreshToken(user.getEmail()));
 
-        return refreshTokenRepository.save(refreshToken);
+        refreshTokenRepository.upsertRefreshToken(
+                refreshToken.getId(),
+                refreshToken.getToken(),
+                user.getId(),
+                refreshToken.getExpiryDate()
+        );
+
+        return refreshToken;
     }
 
     private RefreshToken verifyExpiration(RefreshToken token) {

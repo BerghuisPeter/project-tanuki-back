@@ -1,12 +1,15 @@
 package io.github.peterberghuis.auth.service;
 
 import io.github.peterberghuis.auth.dto.AuthResponse;
+import io.github.peterberghuis.auth.dto.GoogleLoginRequest;
 import io.github.peterberghuis.auth.dto.LoginRequest;
 import io.github.peterberghuis.auth.dto.RefreshRequest;
 import io.github.peterberghuis.auth.entity.RefreshToken;
 import io.github.peterberghuis.auth.entity.User;
+import io.github.peterberghuis.auth.entity.UserAuthProvider;
 import io.github.peterberghuis.auth.entity.UserStatus;
 import io.github.peterberghuis.auth.repository.RefreshTokenRepository;
+import io.github.peterberghuis.auth.repository.UserAuthProviderRepository;
 import io.github.peterberghuis.auth.repository.UserRepository;
 import io.github.peterberghuis.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,8 +26,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -34,6 +38,12 @@ class AuthServiceTest {
 
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
+
+    @Mock
+    private UserAuthProviderRepository userAuthProviderRepository;
+
+    @Mock
+    private GoogleAuthService googleAuthService;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -71,10 +81,6 @@ class AuthServiceTest {
         when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
 
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken("refresh_token");
-        when(refreshTokenRepository.save(any(RefreshToken.class))).thenReturn(refreshToken);
-
         // Act
         AuthResponse response = authService.login(loginRequest);
 
@@ -85,10 +91,8 @@ class AuthServiceTest {
         assertNotNull(response.getUser());
         assertEquals(email, response.getUser().getEmail());
 
-        // Verify that old refresh tokens are deleted
-        verify(refreshTokenRepository).deleteByUser(user);
-        verify(refreshTokenRepository).flush();
-        verify(refreshTokenRepository).save(any(RefreshToken.class));
+        // Verify that old refresh tokens are upserted
+        verify(refreshTokenRepository).upsertRefreshToken(any(UUID.class), eq("refresh_token"), eq(user.getId()), any());
     }
 
     @Test
@@ -134,10 +138,6 @@ class AuthServiceTest {
         when(jwtUtils.generateToken(anyString(), any())).thenReturn("new_access_token");
         when(jwtUtils.generateRefreshToken(email)).thenReturn(newTokenString);
 
-        RefreshToken newToken = new RefreshToken();
-        newToken.setToken(newTokenString);
-        when(refreshTokenRepository.save(any(RefreshToken.class))).thenReturn(newToken);
-
         // Act
         AuthResponse response = authService.refresh(refreshRequest);
 
@@ -148,8 +148,79 @@ class AuthServiceTest {
         assertNotNull(response.getUser());
         assertEquals(email, response.getUser().getEmail());
 
-        // Verify that old tokens for user are deleted
-        verify(refreshTokenRepository).deleteByUser(user);
-        verify(refreshTokenRepository).save(any(RefreshToken.class));
+        // Verify that tokens for user are upserted
+        verify(refreshTokenRepository).upsertRefreshToken(any(UUID.class), eq(newTokenString), eq(user.getId()), any());
+    }
+
+    @Test
+    void googleLogin_ShouldCreateUser_WhenNotExists() {
+        // Arrange
+        String code = "google_code";
+        String googleSub = "google_sub";
+        String email = "google@example.com";
+
+        GoogleLoginRequest request = new GoogleLoginRequest();
+        request.setCode(code);
+
+        GoogleAuthService.GoogleUserInfo userInfo = new GoogleAuthService.GoogleUserInfo();
+        userInfo.setSub(googleSub);
+        userInfo.setEmail(email);
+
+        when(googleAuthService.exchangeCode(code)).thenReturn(userInfo);
+        when(userAuthProviderRepository.findByProviderAndProviderUserId("GOOGLE", googleSub)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            user.setId(UUID.randomUUID());
+            user.setCreatedAt(java.time.LocalDateTime.now());
+            return user;
+        });
+        when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
+        when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
+
+        // Act
+        AuthResponse response = authService.googleLogin(request);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(email, response.getUser().getEmail());
+        verify(userRepository).save(any(User.class));
+        verify(userAuthProviderRepository).save(any(UserAuthProvider.class));
+    }
+
+    @Test
+    void googleLogin_ShouldLinkExistingUser_WhenNotLinked() {
+        // Arrange
+        String code = "google_code";
+        String googleSub = "google_sub";
+        String email = "existing@example.com";
+
+        GoogleLoginRequest request = new GoogleLoginRequest();
+        request.setCode(code);
+
+        GoogleAuthService.GoogleUserInfo userInfo = new GoogleAuthService.GoogleUserInfo();
+        userInfo.setSub(googleSub);
+        userInfo.setEmail(email);
+
+        User existingUser = new User();
+        existingUser.setId(UUID.randomUUID());
+        existingUser.setEmail(email);
+        existingUser.setStatus(UserStatus.ACTIVE);
+        existingUser.setCreatedAt(java.time.LocalDateTime.now());
+        existingUser.setRoles(java.util.Set.of(io.github.peterberghuis.auth.entity.UserRole.USER));
+
+        when(googleAuthService.exchangeCode(code)).thenReturn(userInfo);
+        when(userAuthProviderRepository.findByProviderAndProviderUserId("GOOGLE", googleSub)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
+        when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
+        when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
+
+        // Act
+        AuthResponse response = authService.googleLogin(request);
+
+        // Assert
+        assertNotNull(response);
+        verify(userAuthProviderRepository).save(any(UserAuthProvider.class));
+        verify(userRepository, org.mockito.Mockito.never()).save(any(User.class));
     }
 }

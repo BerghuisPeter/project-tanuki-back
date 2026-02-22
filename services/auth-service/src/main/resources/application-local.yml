@@ -21,3 +21,7 @@ jwt:
 app:
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:5173}
+  google:
+    client-id: 1091577412614-qarcph78k6jkq18jgecrlsl582pugrau.apps.googleusercontent.com
+    client-secret: ${GOOGLE_CLIENT_SECRET}
+    redirect-uri: http://localhost:4200
