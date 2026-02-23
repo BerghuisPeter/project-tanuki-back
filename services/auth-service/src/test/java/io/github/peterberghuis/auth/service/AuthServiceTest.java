@@ -188,31 +188,6 @@ class AuthServiceTest {
     }
 
     @Test
-    void createAuthResponseForUser_ShouldReturnAuthResponse_WhenUserActive() {
-        // Arrange
-        String email = "test@example.com";
-        User user = new User();
-        user.setId(UUID.randomUUID());
-        user.setEmail(email);
-        user.setStatus(UserStatus.ACTIVE);
-        user.setCreatedAt(java.time.LocalDateTime.now());
-        user.setRoles(java.util.Set.of(io.github.peterberghuis.auth.entity.UserRole.USER));
-
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
-        when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
-
-        // Act
-        AuthResponse response = authService.createAuthResponseForUser(email);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals("access_token", response.getAccessToken());
-        assertEquals("refresh_token", response.getRefreshToken());
-        assertEquals(email, response.getUser().getEmail());
-    }
-
-    @Test
     void exchangeCode_ShouldReturnAuthResponse_WhenCodeValid() {
         // Arrange
         String code = "valid_code";
@@ -241,5 +216,34 @@ class AuthServiceTest {
         assertNotNull(response);
         assertEquals("access_token", response.getAccessToken());
         verify(oauth2CodeRepository).delete(oauth2Code);
+    }
+
+    @Test
+    void exchangeCode_ShouldThrowException_WhenCodeExpired() {
+        // Arrange
+        String code = "expired_code";
+        OAuth2Code oauth2Code = new OAuth2Code();
+        oauth2Code.setCode(code);
+        oauth2Code.setExpiryDate(java.time.Instant.now().minusSeconds(60));
+
+        when(oauth2CodeRepository.findByCode(code)).thenReturn(Optional.of(oauth2Code));
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(org.springframework.security.authentication.BadCredentialsException.class, () -> {
+            authService.exchangeCode(code);
+        });
+        verify(oauth2CodeRepository).delete(oauth2Code);
+    }
+
+    @Test
+    void exchangeCode_ShouldThrowException_WhenCodeNotFound() {
+        // Arrange
+        String code = "not_found_code";
+        when(oauth2CodeRepository.findByCode(code)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(org.springframework.security.authentication.BadCredentialsException.class, () -> {
+            authService.exchangeCode(code);
+        });
     }
 }

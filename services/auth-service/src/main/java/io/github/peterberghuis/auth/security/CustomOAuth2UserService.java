@@ -69,7 +69,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         .map(role -> new SimpleGrantedAuthority(role.name()))
                         .collect(Collectors.toSet()),
                 oAuth2User.getAttributes(),
-                "sub"
+                "email"
         );
     }
 }

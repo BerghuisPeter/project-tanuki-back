@@ -53,18 +53,6 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse createAuthResponseForUser(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BadCredentialsException("User not found"));
-
-        if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new BadCredentialsException("User account is " + user.getStatus());
-        }
-
-        return createAuthResponse(user);
-    }
-
-    @Transactional
     public String generateOAuth2Code(String email) {
         String code = UUID.randomUUID().toString();
         OAuth2Code oauth2Code = new OAuth2Code();
@@ -88,7 +76,14 @@ public class AuthService {
         String email = oauth2Code.getEmail();
         oauth2CodeRepository.delete(oauth2Code);
 
-        return createAuthResponseForUser(email);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadCredentialsException("User not found"));
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new BadCredentialsException("User account is " + user.getStatus());
+        }
+
+        return createAuthResponse(user);
     }
 
     @Transactional

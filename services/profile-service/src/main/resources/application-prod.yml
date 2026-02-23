@@ -23,3 +23,10 @@ jwt:
 app:
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:https://project-tanuki.net}
+
+logging:
+  level:
+    root: INFO
+    io.github.peterberghuis: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: ERROR

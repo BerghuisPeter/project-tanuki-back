@@ -17,4 +17,10 @@ public class AuthExceptionHandler extends GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleEmailAlreadyInUseException(EmailAlreadyInUseException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
+
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentialsException(org.springframework.security.authentication.BadCredentialsException ex, WebRequest request) {
+        log.warn("Authentication failed: {}", ex.getMessage());
+        return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+    }
 }

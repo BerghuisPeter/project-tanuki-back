@@ -39,8 +39,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Token exists but invalid/expired → force 401
             if (!jwtUtils.validateToken(token)) {
+                // If it's a permitAll path, we can ignore the invalid token
+                // But OncePerRequestFilter doesn't easily know if the path is permitAll
+                // without access to the SecurityFilterChain or matching logic.
+                // However, many implementations just clear context and continue if it's not a required auth path.
+                // If we sendError here, we block even permitAll paths if they happen to have an invalid header.
                 SecurityContextHolder.clearContext();
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+                filterChain.doFilter(request, response);
                 return;
             }
 
@@ -62,7 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (Exception ex) {
             // Any JWT parsing/signature/expiration error
             SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed");
+            filterChain.doFilter(request, response);
         }
     }
 
