@@ -1,4 +1,14 @@
 spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 1091577412614-3fr0ubc3mllrfr9jc2gt0m8rue2e8n5m.apps.googleusercontent.com
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
@@ -23,7 +33,4 @@ jwt:
 app:
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:https://project-tanuki.net}
-  google:
-    client-id: 1091577412614-3fr0ubc3mllrfr9jc2gt0m8rue2e8n5m.apps.googleusercontent.com
-    client-secret: ${GOOGLE_CLIENT_SECRET}
-    redirect-uri: ${GOOGLE_REDIRECT_URI}
+  frontend-url: ${FRONTEND_URL:https://project-tanuki.net}

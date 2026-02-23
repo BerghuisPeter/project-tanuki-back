@@ -59,32 +59,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/v1/auth/google:
-    post:
-      tags:
-        - auth-controller
-      summary: Authenticate with Google
-      operationId: googleLogin
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GoogleLoginRequest'
-        required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
   /api/v1/auth/refresh:
     post:
       tags:
@@ -137,6 +111,48 @@ paths:
         '401':
           description: Unauthorized
 
+  /api/v1/auth/google/exchange:
+    post:
+      tags:
+        - auth-controller
+      summary: Exchange one-time code for AuthResponse
+      operationId: exchangeGoogleCode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /oauth2/authorization/google:
+    get:
+      tags:
+        - auth-controller
+      summary: Initiate Google OAuth2 login flow
+      description: Redirects the user to Google for authentication. This endpoint is handled automatically by Spring Security.
+      operationId: initiateGoogleLogin
+      responses:
+        '302':
+          description: Redirect to Google login page
+
 components:
   schemas:
     RegisterRequest:
@@ -152,13 +168,6 @@ components:
         email:
           type: string
         password:
-          type: string
-    GoogleLoginRequest:
-      type: object
-      required:
-        - code
-      properties:
-        code:
           type: string
     RefreshRequest:
       type: object

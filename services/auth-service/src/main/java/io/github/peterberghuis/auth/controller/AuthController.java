@@ -28,13 +28,13 @@ public class AuthController implements AuthControllerApi {
     }
 
     @Override
-    public ResponseEntity<AuthResponse> googleLogin(GoogleLoginRequest googleLoginRequest) {
-        return ResponseEntity.ok(authService.googleLogin(googleLoginRequest));
+    public ResponseEntity<AuthResponse> refresh(RefreshRequest refreshRequest) {
+        return ResponseEntity.ok(authService.refresh(refreshRequest));
     }
 
     @Override
-    public ResponseEntity<AuthResponse> refresh(RefreshRequest refreshRequest) {
-        return ResponseEntity.ok(authService.refresh(refreshRequest));
+    public ResponseEntity<AuthResponse> exchangeGoogleCode(ExchangeGoogleCodeRequest exchangeGoogleCodeRequest) {
+        return ResponseEntity.ok(authService.exchangeCode(exchangeGoogleCodeRequest.getCode()));
     }
 
     @Override
