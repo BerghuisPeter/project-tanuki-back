@@ -41,9 +41,36 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid email or password");
         }
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new BadCredentialsException("User account is " + user.getStatus());
+        }
+
+        return createAuthResponse(user);
+    }
+
+    @Transactional
+    public AuthResponse loginOrRegisterOAuth2User(String email, String name, String sub, String provider) {
+        User user = userRepository.findByEmail(email).orElseGet(() -> {
+            User newUser = new User();
+            newUser.setEmail(email);
+            newUser.setPasswordHash(null);
+            newUser.setStatus(UserStatus.ACTIVE);
+            newUser.setRoles(Set.of(UserRole.USER));
+            return userRepository.save(newUser);
+        });
+
+        userAuthProviderRepository.findByProviderAndProviderUserId(provider, sub)
+                .orElseGet(() -> {
+                    UserAuthProvider authProvider = new UserAuthProvider();
+                    authProvider.setUser(user);
+                    authProvider.setProvider(provider);
+                    authProvider.setProviderUserId(sub);
+                    return userAuthProviderRepository.save(authProvider);
+                });
 
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new BadCredentialsException("User account is " + user.getStatus());

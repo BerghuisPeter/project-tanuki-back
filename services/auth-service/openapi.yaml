@@ -111,22 +111,17 @@ paths:
         '401':
           description: Unauthorized
 
-  /api/v1/auth/google/exchange:
+  /api/v1/auth/oauth2/exchange:
     post:
       tags:
         - auth-controller
       summary: Exchange one-time code for AuthResponse
-      operationId: exchangeGoogleCode
+      operationId: exchangeOAuth2Code
       requestBody:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - code
-              properties:
-                code:
-                  type: string
+              $ref: '#/components/schemas/ExchangeOAuth2CodeRequest'
         required: true
       responses:
         '200':
@@ -155,6 +150,13 @@ paths:
 
 components:
   schemas:
+    ExchangeOAuth2CodeRequest:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
     RegisterRequest:
       type: object
       properties:

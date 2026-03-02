@@ -4,10 +4,7 @@ import io.github.peterberghuis.auth.dto.AuthResponse;
 import io.github.peterberghuis.auth.dto.LoginRequest;
 import io.github.peterberghuis.auth.dto.RefreshRequest;
 import io.github.peterberghuis.auth.dto.RegisterRequest;
-import io.github.peterberghuis.auth.entity.OAuth2Code;
-import io.github.peterberghuis.auth.entity.RefreshToken;
-import io.github.peterberghuis.auth.entity.User;
-import io.github.peterberghuis.auth.entity.UserStatus;
+import io.github.peterberghuis.auth.entity.*;
 import io.github.peterberghuis.auth.repository.OAuth2CodeRepository;
 import io.github.peterberghuis.auth.repository.RefreshTokenRepository;
 import io.github.peterberghuis.auth.repository.UserAuthProviderRepository;
@@ -28,8 +25,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -245,5 +241,63 @@ class AuthServiceTest {
         org.junit.jupiter.api.Assertions.assertThrows(org.springframework.security.authentication.BadCredentialsException.class, () -> {
             authService.exchangeCode(code);
         });
+    }
+
+    @Test
+    void loginOrRegisterOAuth2User_ShouldCreateNewUser_WhenUserDoesNotExist() {
+        // Arrange
+        String email = "google-user@example.com";
+        String name = "Google User";
+        String sub = "google-sub-123";
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            user.setId(UUID.randomUUID());
+            user.setCreatedAt(java.time.LocalDateTime.now());
+            user.setRoles(java.util.Set.of(io.github.peterberghuis.auth.entity.UserRole.USER));
+            return user;
+        });
+        when(userAuthProviderRepository.findByProviderAndProviderUserId("google", sub)).thenReturn(Optional.empty());
+        when(userAuthProviderRepository.save(any(UserAuthProvider.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
+        when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
+
+        // Act
+        AuthResponse response = authService.loginOrRegisterOAuth2User(email, name, sub, "google");
+
+        // Assert
+        assertNotNull(response);
+        assertEquals("access_token", response.getAccessToken());
+        verify(userRepository).save(any(User.class));
+        verify(userAuthProviderRepository).save(any(UserAuthProvider.class));
+    }
+
+    @Test
+    void loginOrRegisterOAuth2User_ShouldReturnExistingUser_WhenUserExists() {
+        // Arrange
+        String email = "existing@example.com";
+        String name = "Existing User";
+        String sub = "google-sub-456";
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        user.setEmail(email);
+        user.setStatus(UserStatus.ACTIVE);
+        user.setCreatedAt(java.time.LocalDateTime.now());
+        user.setRoles(java.util.Set.of(io.github.peterberghuis.auth.entity.UserRole.USER));
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(userAuthProviderRepository.findByProviderAndProviderUserId("google", sub))
+                .thenReturn(Optional.of(new UserAuthProvider(UUID.randomUUID(), user, "google", sub)));
+        when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
+        when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
+
+        // Act
+        AuthResponse response = authService.loginOrRegisterOAuth2User(email, name, sub, "google");
+
+        // Assert
+        assertNotNull(response);
+        assertEquals("access_token", response.getAccessToken());
+        verify(userRepository, never()).save(any(User.class));
     }
 }

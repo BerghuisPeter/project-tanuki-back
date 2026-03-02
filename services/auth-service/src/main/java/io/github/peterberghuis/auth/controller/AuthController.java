@@ -33,8 +33,8 @@ public class AuthController implements AuthControllerApi {
     }
 
     @Override
-    public ResponseEntity<AuthResponse> exchangeGoogleCode(ExchangeGoogleCodeRequest exchangeGoogleCodeRequest) {
-        return ResponseEntity.ok(authService.exchangeCode(exchangeGoogleCodeRequest.getCode()));
+    public ResponseEntity<AuthResponse> exchangeOAuth2Code(ExchangeOAuth2CodeRequest exchangeOAuth2CodeRequest) {
+        return ResponseEntity.ok(authService.exchangeCode(exchangeOAuth2CodeRequest.getCode()));
     }
 
     @Override
