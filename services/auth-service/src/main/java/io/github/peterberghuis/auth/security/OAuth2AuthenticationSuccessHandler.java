@@ -52,7 +52,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         String code = authService.generateOAuth2Code(email);
 
         // Redirect back to the frontend with the code
-        String redirectUrl = frontendUrl + "/oauth2-success?code=" + code;
+        String redirectUrl = frontendUrl + "/assets/oauth2-callback.html?code=" + code;
         response.sendRedirect(redirectUrl);
     }
 }
