@@ -5,21 +5,13 @@ spring:
         registration:
           google:
             client-id: 1091577412614-3fr0ubc3mllrfr9jc2gt0m8rue2e8n5m.apps.googleusercontent.com
-            client-secret: ${GOOGLE_CLIENT_SECRET}
-            scope:
-              - email
-              - profile
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      connection-init-sql: CREATE SCHEMA IF NOT EXISTS auth_schema;
   jpa:
     properties:
       hibernate:
-        default_schema: auth_schema
         dialect: org.hibernate.dialect.CockroachDialect
         jdbc:
           lob:
