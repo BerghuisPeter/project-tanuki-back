@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -56,6 +57,16 @@ class AuthServiceTest {
         ReflectionTestUtils.setField(authService, "refreshExpiration", 604800000L);
     }
 
+    private String hashToken(String token) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes());
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error hashing refresh token", e);
+        }
+    }
+
     @Test
     void login_ShouldDeleteOldRefreshToken_WhenSuccessful() {
         // Arrange
@@ -89,7 +100,8 @@ class AuthServiceTest {
         assertEquals(email, response.getUser().getEmail());
 
         // Verify that old refresh tokens are upserted
-        verify(refreshTokenRepository).upsertRefreshToken(any(UUID.class), eq("refresh_token"), eq(user.getId()), any());
+        String hashedToken = hashToken("refresh_token");
+        verify(refreshTokenRepository).upsertRefreshToken(any(UUID.class), eq(hashedToken), eq(user.getId()), any());
     }
 
     @Test
@@ -147,7 +159,9 @@ class AuthServiceTest {
     void refresh_ShouldReturnNewRefreshTokenAndInvalidateOldOne() {
         // Arrange
         String oldTokenString = "old_refresh_token";
+        String hashedOldToken = hashToken(oldTokenString);
         String newTokenString = "new_refresh_token";
+        String hashedNewToken = hashToken(newTokenString);
         String email = "test@example.com";
 
         User user = new User();
@@ -158,14 +172,14 @@ class AuthServiceTest {
         user.setRoles(java.util.Set.of(io.github.peterberghuis.auth.entity.UserRole.USER));
 
         RefreshToken oldToken = new RefreshToken();
-        oldToken.setToken(oldTokenString);
+        oldToken.setToken(hashedOldToken);
         oldToken.setUser(user);
         oldToken.setExpiryDate(java.time.Instant.now().plusSeconds(600));
 
         RefreshRequest refreshRequest = new RefreshRequest();
         refreshRequest.setRefreshToken(oldTokenString);
 
-        when(refreshTokenRepository.findByToken(oldTokenString)).thenReturn(Optional.of(oldToken));
+        when(refreshTokenRepository.findByToken(hashedOldToken)).thenReturn(Optional.of(oldToken));
         when(jwtUtils.generateToken(anyString(), any())).thenReturn("new_access_token");
         when(jwtUtils.generateRefreshToken(email)).thenReturn(newTokenString);
 
@@ -180,7 +194,7 @@ class AuthServiceTest {
         assertEquals(email, response.getUser().getEmail());
 
         // Verify that tokens for user are upserted
-        verify(refreshTokenRepository).upsertRefreshToken(any(UUID.class), eq(newTokenString), eq(user.getId()), any());
+        verify(refreshTokenRepository).upsertRefreshToken(any(UUID.class), eq(hashedNewToken), eq(user.getId()), any());
     }
 
     @Test

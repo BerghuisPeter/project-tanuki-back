@@ -18,7 +18,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Set;
 import java.util.UUID;
 
@@ -139,8 +142,9 @@ public class AuthService {
     @Transactional
     public AuthResponse refresh(RefreshRequest request) {
         String requestRefreshToken = request.getRefreshToken();
+        String hashedToken = hashToken(requestRefreshToken);
 
-        RefreshToken token = refreshTokenRepository.findByToken(requestRefreshToken)
+        RefreshToken token = refreshTokenRepository.findByToken(hashedToken)
                 .map(this::verifyExpiration)
                 .orElseThrow(() -> new BadCredentialsException("Refresh token is not in database!"));
 
@@ -199,11 +203,14 @@ public class AuthService {
     }
 
     private RefreshToken createRefreshToken(User user) {
+        String rawRefreshToken = jwtUtils.generateRefreshToken(user.getEmail());
+        String hashedToken = hashToken(rawRefreshToken);
+
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setId(UUID.randomUUID());
         refreshToken.setUser(user);
         refreshToken.setExpiryDate(Instant.now().plusMillis(refreshExpiration));
-        refreshToken.setToken(jwtUtils.generateRefreshToken(user.getEmail()));
+        refreshToken.setToken(hashedToken);
 
         refreshTokenRepository.upsertRefreshToken(
                 refreshToken.getId(),
@@ -212,7 +219,20 @@ public class AuthService {
                 refreshToken.getExpiryDate()
         );
 
-        return refreshToken;
+        // Return a temporary token object with the raw token to send back to the client
+        RefreshToken responseToken = new RefreshToken();
+        responseToken.setToken(rawRefreshToken);
+        return responseToken;
+    }
+
+    private String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes());
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error hashing refresh token", e);
+        }
     }
 
     private RefreshToken verifyExpiration(RefreshToken token) {
