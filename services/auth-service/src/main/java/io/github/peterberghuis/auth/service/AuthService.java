@@ -5,6 +5,7 @@ import io.github.peterberghuis.auth.entity.*;
 import io.github.peterberghuis.auth.entity.UserRole;
 import io.github.peterberghuis.auth.entity.UserStatus;
 import io.github.peterberghuis.auth.exception.EmailAlreadyInUseException;
+import io.github.peterberghuis.auth.repository.OAuth2CodeRepository;
 import io.github.peterberghuis.auth.repository.RefreshTokenRepository;
 import io.github.peterberghuis.auth.repository.UserAuthProviderRepository;
 import io.github.peterberghuis.auth.repository.UserRepository;
@@ -17,7 +18,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Set;
 import java.util.UUID;
 
@@ -28,7 +32,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserAuthProviderRepository userAuthProviderRepository;
-    private final GoogleAuthService googleAuthService;
+    private final OAuth2CodeRepository oauth2CodeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
 
@@ -40,7 +44,7 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid email or password");
         }
 
@@ -52,32 +56,58 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse googleLogin(GoogleLoginRequest request) {
-        GoogleAuthService.GoogleUserInfo googleUserInfo = googleAuthService.exchangeCode(request.getCode());
+    public AuthResponse loginOrRegisterOAuth2User(String email, String name, String sub, String provider) {
+        User user = userRepository.findByEmail(email).orElseGet(() -> {
+            User newUser = new User();
+            newUser.setEmail(email);
+            newUser.setPasswordHash(null);
+            newUser.setStatus(UserStatus.ACTIVE);
+            newUser.setRoles(Set.of(UserRole.USER));
+            return userRepository.save(newUser);
+        });
 
-        User user = userAuthProviderRepository.findByProviderAndProviderUserId("GOOGLE", googleUserInfo.getSub())
-                .map(UserAuthProvider::getUser)
+        userAuthProviderRepository.findByProviderAndProviderUserId(provider, sub)
                 .orElseGet(() -> {
-                    // Check if user exists with this email but not linked to Google
-                    User existingUser = userRepository.findByEmail(googleUserInfo.getEmail())
-                            .orElseGet(() -> {
-                                // Create new user if doesn't exist
-                                User newUser = new User();
-                                newUser.setEmail(googleUserInfo.getEmail());
-                                newUser.setStatus(UserStatus.ACTIVE);
-                                newUser.setRoles(Set.of(UserRole.USER));
-                                return userRepository.save(newUser);
-                            });
-
-                    // Link to Google provider
                     UserAuthProvider authProvider = new UserAuthProvider();
-                    authProvider.setUser(existingUser);
-                    authProvider.setProvider("GOOGLE");
-                    authProvider.setProviderUserId(googleUserInfo.getSub());
-                    userAuthProviderRepository.save(authProvider);
-
-                    return existingUser;
+                    authProvider.setUser(user);
+                    authProvider.setProvider(provider);
+                    authProvider.setProviderUserId(sub);
+                    return userAuthProviderRepository.save(authProvider);
                 });
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new BadCredentialsException("User account is " + user.getStatus());
+        }
+
+        return createAuthResponse(user);
+    }
+
+    @Transactional
+    public String generateOAuth2Code(String email) {
+        String code = UUID.randomUUID().toString();
+        OAuth2Code oauth2Code = new OAuth2Code();
+        oauth2Code.setCode(code);
+        oauth2Code.setEmail(email);
+        oauth2Code.setExpiryDate(Instant.now().plusSeconds(300)); // 5 minutes
+        oauth2CodeRepository.save(oauth2Code);
+        return code;
+    }
+
+    @Transactional
+    public AuthResponse exchangeCode(String code) {
+        OAuth2Code oauth2Code = oauth2CodeRepository.findByCode(code)
+                .orElseThrow(() -> new BadCredentialsException("Invalid or expired code"));
+
+        if (oauth2Code.getExpiryDate().isBefore(Instant.now())) {
+            oauth2CodeRepository.delete(oauth2Code);
+            throw new BadCredentialsException("Invalid or expired code");
+        }
+
+        String email = oauth2Code.getEmail();
+        oauth2CodeRepository.delete(oauth2Code);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadCredentialsException("User not found"));
 
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new BadCredentialsException("User account is " + user.getStatus());
@@ -100,14 +130,21 @@ public class AuthService {
 
         userRepository.save(user);
 
+        UserAuthProvider localProvider = new UserAuthProvider();
+        localProvider.setUser(user);
+        localProvider.setProvider("local");
+        localProvider.setProviderUserId(user.getEmail());
+        userAuthProviderRepository.save(localProvider);
+
         return createAuthResponse(user);
     }
 
     @Transactional
     public AuthResponse refresh(RefreshRequest request) {
         String requestRefreshToken = request.getRefreshToken();
+        String hashedToken = hashToken(requestRefreshToken);
 
-        RefreshToken token = refreshTokenRepository.findByToken(requestRefreshToken)
+        RefreshToken token = refreshTokenRepository.findByToken(hashedToken)
                 .map(this::verifyExpiration)
                 .orElseThrow(() -> new BadCredentialsException("Refresh token is not in database!"));
 
@@ -166,11 +203,14 @@ public class AuthService {
     }
 
     private RefreshToken createRefreshToken(User user) {
+        String rawRefreshToken = jwtUtils.generateRefreshToken(user.getEmail());
+        String hashedToken = hashToken(rawRefreshToken);
+
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setId(UUID.randomUUID());
         refreshToken.setUser(user);
         refreshToken.setExpiryDate(Instant.now().plusMillis(refreshExpiration));
-        refreshToken.setToken(jwtUtils.generateRefreshToken(user.getEmail()));
+        refreshToken.setToken(hashedToken);
 
         refreshTokenRepository.upsertRefreshToken(
                 refreshToken.getId(),
@@ -179,7 +219,20 @@ public class AuthService {
                 refreshToken.getExpiryDate()
         );
 
-        return refreshToken;
+        // Return a temporary token object with the raw token to send back to the client
+        RefreshToken responseToken = new RefreshToken();
+        responseToken.setToken(rawRefreshToken);
+        return responseToken;
+    }
+
+    private String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes());
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error hashing refresh token", e);
+        }
     }
 
     private RefreshToken verifyExpiration(RefreshToken token) {

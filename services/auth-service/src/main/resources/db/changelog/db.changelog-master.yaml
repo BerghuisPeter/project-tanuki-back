@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/002-refresh-tokens/db.changelog-002.yaml
   - include:
       file: db/changelog/003-auth-providers/db.changelog-003.yaml
+  - include:
+      file: db/changelog/004-oauth2-codes/db.changelog-004.yaml

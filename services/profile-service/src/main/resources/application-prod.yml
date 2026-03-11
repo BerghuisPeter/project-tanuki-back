@@ -3,13 +3,9 @@ spring:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      connection-init-sql: CREATE SCHEMA IF NOT EXISTS profile_schema;
   jpa:
     properties:
       hibernate:
-        default_schema: profile_schema
         dialect: org.hibernate.dialect.CockroachDialect
         jdbc:
           lob:
@@ -23,3 +19,10 @@ jwt:
 app:
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:https://project-tanuki.net}
+
+logging:
+  level:
+    root: INFO
+    io.github.peterberghuis: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: ERROR

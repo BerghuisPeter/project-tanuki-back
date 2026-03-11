@@ -18,8 +18,9 @@ public class AuthExceptionHandler extends GlobalExceptionHandler {
         return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
-    @ExceptionHandler(GoogleAuthException.class)
-    public ResponseEntity<ErrorResponse> handleGoogleAuthException(GoogleAuthException ex, WebRequest request) {
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentialsException(org.springframework.security.authentication.BadCredentialsException ex, WebRequest request) {
+        log.warn("Authentication failed: {}", ex.getMessage());
         return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
 }
