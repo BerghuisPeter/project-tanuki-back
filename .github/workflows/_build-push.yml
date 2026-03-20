@@ -73,5 +73,5 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: tanuki-back-${{ inputs.image_name }}
-          image: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ inputs.environment }}-${{ github.sha }}
+          image: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ github.sha }}
           region: ${{ vars.GAR_LOCATION }}
