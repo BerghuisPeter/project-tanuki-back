@@ -19,7 +19,8 @@ public class CorsProperties {
         if (allowedOrigins == null || allowedOrigins.isEmpty()) {
             return List.of();
         }
-        return Arrays.stream(allowedOrigins.split(";"))
+        // Split by semicolon OR comma
+        return Arrays.stream(allowedOrigins.split("[;,]"))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList();
