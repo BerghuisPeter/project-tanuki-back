@@ -35,9 +35,7 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || ((needs.changes.outputs.auth == 'true' || needs.changes.outputs.common == 'true') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master')) }}
     uses: ./.github/workflows/_build-push.yml
     secrets:
-      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-      GAR_REPOSITORY: ${{ secrets.GAR_REPOSITORY }}
     with:
       service_name: auth-service
       image_name: auth-service
@@ -48,9 +46,7 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || ((needs.changes.outputs.profile == 'true' || needs.changes.outputs.common == 'true') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master')) }}
     uses: ./.github/workflows/_build-push.yml
     secrets:
-      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-      GAR_REPOSITORY: ${{ secrets.GAR_REPOSITORY }}
     with:
       service_name: profile-service
       image_name: profile-service

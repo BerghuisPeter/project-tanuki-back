@@ -31,11 +31,7 @@ on:
         required: true
         type: string
     secrets:
-      GCP_PROJECT_ID:
-        required: true
       GCP_SA_KEY:
-        required: true
-      GAR_REPOSITORY:
         required: true
 
 jobs:
@@ -65,8 +61,8 @@ jobs:
           build-args: |
             SERVICE_NAME=${{ inputs.service_name }}
           tags: |
-            ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ inputs.environment }}-${{ github.sha }}
-            ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GAR_REPOSITORY }}/${{ inputs.image_name }}:latest
+            ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ github.sha }}
+            ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/${{ inputs.image_name }}:latest
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -77,5 +73,5 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: tanuki-back-${{ inputs.image_name }}
-          image: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ inputs.environment }}-${{ github.sha }}
+          image: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ inputs.environment }}-${{ github.sha }}
           region: ${{ vars.GAR_LOCATION }}
