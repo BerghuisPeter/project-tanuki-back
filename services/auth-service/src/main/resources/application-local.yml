@@ -5,6 +5,7 @@ spring:
         registration:
           google:
             client-id: ${GOOGLE_CLIENT_ID:583627204016-5o809inoo1hs877478cqtthd15h0a3hn.apps.googleusercontent.com}
+            redirect-uri: "{baseUrl}${GOOGLE_REDIRECT_URI:/login/oauth2/code/{registrationId}}"
   datasource:
     url: jdbc:postgresql://localhost:5432/tanuki-db
     username: myuser
