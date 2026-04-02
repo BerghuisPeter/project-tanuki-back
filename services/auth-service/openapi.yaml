@@ -115,13 +115,13 @@ paths:
     post:
       tags:
         - auth-controller
-      summary: Exchange one-time code for AuthResponse
-      operationId: exchangeOAuth2Code
+      summary: Exchange one-time token for AuthResponse
+      operationId: exchangeTempLoginToken
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ExchangeOAuth2CodeRequest'
+              $ref: '#/components/schemas/ExchangeTempLoginTokenRequest'
         required: true
       responses:
         '200':
@@ -150,12 +150,12 @@ paths:
 
 components:
   schemas:
-    ExchangeOAuth2CodeRequest:
+    ExchangeTempLoginTokenRequest:
       type: object
       required:
-        - code
+        - token
       properties:
-        code:
+        token:
           type: string
     RegisterRequest:
       type: object

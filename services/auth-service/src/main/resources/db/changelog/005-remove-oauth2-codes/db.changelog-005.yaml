@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-drop-oauth2-codes-table
+      author: junie
+      changes:
+        - dropTable:
+            schemaName: auth_schema
+            tableName: oauth2_codes

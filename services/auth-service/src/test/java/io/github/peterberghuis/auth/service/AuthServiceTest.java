@@ -4,8 +4,10 @@ import io.github.peterberghuis.auth.dto.AuthResponse;
 import io.github.peterberghuis.auth.dto.LoginRequest;
 import io.github.peterberghuis.auth.dto.RefreshRequest;
 import io.github.peterberghuis.auth.dto.RegisterRequest;
-import io.github.peterberghuis.auth.entity.*;
-import io.github.peterberghuis.auth.repository.OAuth2CodeRepository;
+import io.github.peterberghuis.auth.entity.RefreshToken;
+import io.github.peterberghuis.auth.entity.User;
+import io.github.peterberghuis.auth.entity.UserAuthProvider;
+import io.github.peterberghuis.auth.entity.UserStatus;
 import io.github.peterberghuis.auth.repository.RefreshTokenRepository;
 import io.github.peterberghuis.auth.repository.UserAuthProviderRepository;
 import io.github.peterberghuis.auth.repository.UserRepository;
@@ -39,9 +41,6 @@ class AuthServiceTest {
 
     @Mock
     private UserAuthProviderRepository userAuthProviderRepository;
-
-    @Mock
-    private OAuth2CodeRepository oauth2CodeRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -198,14 +197,10 @@ class AuthServiceTest {
     }
 
     @Test
-    void exchangeCode_ShouldReturnAuthResponse_WhenCodeValid() {
+    void exchangeTempLoginToken_ShouldReturnAuthResponse_WhenTokenValid() {
         // Arrange
-        String code = "valid_code";
+        String token = "valid_token";
         String email = "test@example.com";
-        OAuth2Code oauth2Code = new OAuth2Code();
-        oauth2Code.setCode(code);
-        oauth2Code.setEmail(email);
-        oauth2Code.setExpiryDate(java.time.Instant.now().plusSeconds(60));
 
         User user = new User();
         user.setId(UUID.randomUUID());
@@ -214,46 +209,43 @@ class AuthServiceTest {
         user.setCreatedAt(java.time.LocalDateTime.now());
         user.setRoles(java.util.Set.of(io.github.peterberghuis.auth.entity.UserRole.USER));
 
-        when(oauth2CodeRepository.findByCode(code)).thenReturn(Optional.of(oauth2Code));
+        when(jwtUtils.validateToken(token)).thenReturn(true);
+        when(jwtUtils.getPurposeFromToken(token)).thenReturn("oauth2_exchange");
+        when(jwtUtils.getUsernameFromToken(token)).thenReturn(email);
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
 
         // Act
-        AuthResponse response = authService.exchangeCode(code);
+        AuthResponse response = authService.exchangeTempLoginToken(token);
 
         // Assert
         assertNotNull(response);
         assertEquals("access_token", response.getAccessToken());
-        verify(oauth2CodeRepository).delete(oauth2Code);
     }
 
     @Test
-    void exchangeCode_ShouldThrowException_WhenCodeExpired() {
+    void exchangeTempLoginToken_ShouldThrowException_WhenTokenInvalid() {
         // Arrange
-        String code = "expired_code";
-        OAuth2Code oauth2Code = new OAuth2Code();
-        oauth2Code.setCode(code);
-        oauth2Code.setExpiryDate(java.time.Instant.now().minusSeconds(60));
-
-        when(oauth2CodeRepository.findByCode(code)).thenReturn(Optional.of(oauth2Code));
+        String token = "invalid_token";
+        when(jwtUtils.validateToken(token)).thenReturn(false);
 
         // Act & Assert
         org.junit.jupiter.api.Assertions.assertThrows(org.springframework.security.authentication.BadCredentialsException.class, () -> {
-            authService.exchangeCode(code);
+            authService.exchangeTempLoginToken(token);
         });
-        verify(oauth2CodeRepository).delete(oauth2Code);
     }
 
     @Test
-    void exchangeCode_ShouldThrowException_WhenCodeNotFound() {
+    void exchangeTempLoginToken_ShouldThrowException_WhenTokenPurposeInvalid() {
         // Arrange
-        String code = "not_found_code";
-        when(oauth2CodeRepository.findByCode(code)).thenReturn(Optional.empty());
+        String token = "invalid_purpose_token";
+        when(jwtUtils.validateToken(token)).thenReturn(true);
+        when(jwtUtils.getPurposeFromToken(token)).thenReturn("invalid_purpose");
 
         // Act & Assert
         org.junit.jupiter.api.Assertions.assertThrows(org.springframework.security.authentication.BadCredentialsException.class, () -> {
-            authService.exchangeCode(code);
+            authService.exchangeTempLoginToken(token);
         });
     }
 

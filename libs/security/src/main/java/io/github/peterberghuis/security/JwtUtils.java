@@ -40,6 +40,16 @@ public class JwtUtils {
                 .compact();
     }
 
+    public String generateTempLoginToken(String username) {
+        return Jwts.builder()
+                .subject(username)
+                .claim("purpose", "oauth2_exchange")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 60000)) // 60 seconds
+                .signWith(getSigningKey())
+                .compact();
+    }
+
     private String generateToken(String username, Collection<? extends GrantedAuthority> authorities, Long expiration) {
         String roles = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
@@ -68,6 +78,10 @@ public class JwtUtils {
 
     public String getUsernameFromToken(String token) {
         return getClaimsFromToken(token).getSubject();
+    }
+
+    public String getPurposeFromToken(String token) {
+        return getClaimsFromToken(token).get("purpose", String.class);
     }
 
     public Collection<? extends GrantedAuthority> getAuthoritiesFromToken(String token) {

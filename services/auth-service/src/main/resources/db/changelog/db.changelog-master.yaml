@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/003-auth-providers/db.changelog-003.yaml
   - include:
       file: db/changelog/004-oauth2-codes/db.changelog-004.yaml
+  - include:
+      file: db/changelog/005-remove-oauth2-codes/db.changelog-005.yaml
