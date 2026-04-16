@@ -1,0 +1,25 @@
+### Get User Preferences
+# Note: You must first login using auth.http to set the {{access_token}} global variable.
+GET http://localhost:8082/preferences
+Authorization: Bearer {{access_token}}
+
+### Update User Preferences (Upsert)
+PUT http://localhost:8082/preferences
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "displayName": "Junie User",
+  "color": "#FF5733",
+  "locale": "en-US",
+  "avatarUrl": "https://example.com/avatar.png"
+}
+
+### Update User Preferences (Partial/Omitted)
+PUT http://localhost:8082/preferences
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "locale": "fr-FR"
+}

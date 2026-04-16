@@ -6,9 +6,72 @@ info:
 servers:
   - url: http://localhost:8082
     description: Local development server
-paths: { }
+paths:
+  /preferences:
+    get:
+      summary: Get user preferences
+      operationId: getUserPreferences
+      tags:
+        - Preferences
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User preferences not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update user preferences (upsert)
+      operationId: updateUserPreferences
+      tags:
+        - Preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPreferences'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
+    UserPreferences:
+      type: object
+      required:
+        - locale
+      properties:
+        displayName:
+          type: string
+        color:
+          type: string
+        locale:
+          type: string
+        avatarUrl:
+          type: string
     ErrorResponse:
       type: object
       properties:
