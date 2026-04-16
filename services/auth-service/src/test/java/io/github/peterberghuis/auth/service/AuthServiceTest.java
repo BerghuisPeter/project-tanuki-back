@@ -85,7 +85,7 @@ class AuthServiceTest {
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(password, user.getPasswordHash())).thenReturn(true);
-        when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
+        when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
 
         // Act
@@ -114,7 +114,7 @@ class AuthServiceTest {
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
         when(passwordEncoder.encode(password)).thenReturn("hashed_password");
-        when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
+        when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
 
         // Mock userRepository.save to set ID and createdAt which are normally set by @PrePersist
@@ -179,7 +179,7 @@ class AuthServiceTest {
         refreshRequest.setRefreshToken(oldTokenString);
 
         when(refreshTokenRepository.findByToken(hashedOldToken)).thenReturn(Optional.of(oldToken));
-        when(jwtUtils.generateToken(anyString(), any())).thenReturn("new_access_token");
+        when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("new_access_token");
         when(jwtUtils.generateRefreshToken(email)).thenReturn(newTokenString);
 
         // Act
@@ -213,7 +213,7 @@ class AuthServiceTest {
         when(jwtUtils.getPurposeFromToken(token)).thenReturn("oauth2_exchange");
         when(jwtUtils.getUsernameFromToken(token)).thenReturn(email);
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
+        when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
 
         // Act
@@ -266,7 +266,7 @@ class AuthServiceTest {
         });
         when(userAuthProviderRepository.findByProviderAndProviderUserId("google", sub)).thenReturn(Optional.empty());
         when(userAuthProviderRepository.save(any(UserAuthProvider.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
+        when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
 
         // Act
@@ -295,7 +295,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(userAuthProviderRepository.findByProviderAndProviderUserId("google", sub))
                 .thenReturn(Optional.of(new UserAuthProvider(UUID.randomUUID(), user, "google", sub)));
-        when(jwtUtils.generateToken(anyString(), any())).thenReturn("access_token");
+        when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
 
         // Act

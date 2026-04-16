@@ -190,7 +190,7 @@ public class AuthService {
                 .map(role -> new SimpleGrantedAuthority(role.name()))
                 .toList();
 
-        return jwtUtils.generateToken(user.getEmail(), authorities);
+        return jwtUtils.generateToken(user.getId(), user.getEmail(), authorities);
     }
 
     private RefreshToken createRefreshToken(User user) {
