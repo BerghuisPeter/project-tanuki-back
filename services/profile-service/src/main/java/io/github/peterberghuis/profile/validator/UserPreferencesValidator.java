@@ -18,8 +18,9 @@ public class UserPreferencesValidator {
             }
         }
 
-        if (preferences.getAvatarUrl() != null && !preferences.getAvatarUrl().isEmpty()) {
-            if (!URL_PATTERN.matcher(preferences.getAvatarUrl()).matches()) {
+        if (preferences.getAvatarUrl() != null) {
+            String avatarUrl = preferences.getAvatarUrl().toString();
+            if (!avatarUrl.isEmpty() && !URL_PATTERN.matcher(avatarUrl).matches()) {
                 throw new IllegalArgumentException("wrong parameters: invalid avatar URL");
             }
         }

@@ -7,6 +7,16 @@ Content-Type: application/json
   "password": "Password123!"
 }
 
+> {%
+    if (response.status === 200 && response.body) {
+        client.global.set("access_token", response.body.accessToken);
+        client.global.set("refresh_token", response.body.refreshToken);
+    } else {
+        client.log("Request failed or returned empty body. Status: " + response.status);
+    }
+%}
+
+
 ### Get User Preferences
 # Note: You must first login using auth.http to set the {{access_token}} global variable.
 GET http://localhost:8082/api/v1/preferences
