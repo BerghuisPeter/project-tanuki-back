@@ -9,7 +9,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.net.URI;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,7 +48,7 @@ class UserPreferencesServiceTest {
         assertEquals("Test User", dto.getDisplayName());
         assertEquals("#FF5733", dto.getColor());
         assertEquals("en-US", dto.getLocale());
-        assertEquals(URI.create("https://example.com/avatar.png"), dto.getAvatarUrl());
+        assertEquals("https://example.com/avatar.png", dto.getAvatarUrl());
     }
 
     @Test
@@ -72,7 +71,7 @@ class UserPreferencesServiceTest {
         UserPreferences inputDto = new UserPreferences("en-US");
         inputDto.setDisplayName("New User");
         inputDto.setColor("#000000");
-        inputDto.setAvatarUrl(URI.create("https://example.com/new.png"));
+        inputDto.setAvatarUrl("https://example.com/new.png");
 
         when(userPreferencesRepository.findById(userId)).thenReturn(Optional.empty());
         when(userPreferencesRepository.save(any(UserPreferencesEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -85,7 +84,7 @@ class UserPreferencesServiceTest {
         assertEquals("New User", result.getDisplayName());
         assertEquals("#000000", result.getColor());
         assertEquals("en-US", result.getLocale());
-        assertEquals(URI.create("https://example.com/new.png"), result.getAvatarUrl());
+        assertEquals("https://example.com/new.png", result.getAvatarUrl());
 
         verify(userPreferencesRepository).save(argThat(entity ->
                 entity.getUserId().equals(userId) &&
@@ -110,7 +109,7 @@ class UserPreferencesServiceTest {
         UserPreferences updateDto = new UserPreferences("fr-FR");
         updateDto.setDisplayName("Updated Name");
         updateDto.setColor("#222222");
-        updateDto.setAvatarUrl(URI.create("https://example.com/updated.png"));
+        updateDto.setAvatarUrl("https://example.com/updated.png");
 
         when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(existingEntity));
         when(userPreferencesRepository.save(any(UserPreferencesEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -123,7 +122,7 @@ class UserPreferencesServiceTest {
         assertEquals("Updated Name", result.getDisplayName());
         assertEquals("#222222", result.getColor());
         assertEquals("fr-FR", result.getLocale());
-        assertEquals(URI.create("https://example.com/updated.png"), result.getAvatarUrl());
+        assertEquals("https://example.com/updated.png", result.getAvatarUrl());
 
         verify(userPreferencesRepository).save(argThat(entity ->
                 entity.getUserId().equals(userId) &&
@@ -161,11 +160,43 @@ class UserPreferencesServiceTest {
         assertEquals("Original Name", result.getDisplayName()); // Should remain unchanged
         assertEquals("#333333", result.getColor());           // Should remain unchanged
         assertEquals("de-DE", result.getLocale());           // Should be updated
-        assertEquals(URI.create("https://example.com/original.png"), result.getAvatarUrl()); // Should remain unchanged
+        assertEquals("https://example.com/original.png", result.getAvatarUrl()); // Should remain unchanged
 
         verify(userPreferencesRepository).save(argThat(entity ->
                 entity.getDisplayName().equals("Original Name") &&
                         entity.getLocale().equals("de-DE")
+        ));
+    }
+
+    @Test
+    void upsertPreferences_WithEmptyStrings_ShouldBeAllowed() {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        UserPreferencesEntity existingEntity = UserPreferencesEntity.builder()
+                .userId(userId)
+                .displayName("Some Name")
+                .color("#123456")
+                .locale("en-US")
+                .avatarUrl("https://example.com/some.png")
+                .build();
+
+        UserPreferences updateDto = new UserPreferences("en-US");
+        updateDto.setColor("");
+        updateDto.setAvatarUrl("");
+
+        when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(existingEntity));
+        when(userPreferencesRepository.save(any(UserPreferencesEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        UserPreferences result = userPreferencesService.upsertPreferences(userId, updateDto);
+
+        // Assert
+        assertEquals("", result.getColor());
+        assertEquals("", result.getAvatarUrl());
+
+        verify(userPreferencesRepository).save(argThat(entity ->
+                entity.getColor().equals("") &&
+                        entity.getAvatarUrl().equals("")
         ));
     }
 }

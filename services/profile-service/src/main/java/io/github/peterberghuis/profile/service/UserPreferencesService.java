@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.net.URI;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,7 +36,7 @@ public class UserPreferencesService {
         }
         entity.setLocale(dto.getLocale());
         if (dto.getAvatarUrl() != null) {
-            entity.setAvatarUrl(dto.getAvatarUrl().toString());
+            entity.setAvatarUrl(dto.getAvatarUrl());
         }
 
         UserPreferencesEntity saved = userPreferencesRepository.save(entity);
@@ -49,9 +48,7 @@ public class UserPreferencesService {
         dto.setDisplayName(entity.getDisplayName());
         dto.setColor(entity.getColor());
         dto.setLocale(entity.getLocale());
-        if (entity.getAvatarUrl() != null) {
-            dto.setAvatarUrl(URI.create(entity.getAvatarUrl()));
-        }
+        dto.setAvatarUrl(entity.getAvatarUrl());
         return dto;
     }
 }

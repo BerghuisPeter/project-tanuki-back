@@ -75,15 +75,15 @@ components:
           minLength: 1
         color:
           type: string
-          pattern: '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
-          description: "Hexadecimal color code (e.g., #FF5733)"
+          pattern: '^$|^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
+          description: "Hexadecimal color code (e.g., #FF5733) or empty string"
         locale:
           type: string
           example: "en-US"
         avatarUrl:
           type: string
-          format: uri
-          description: "Must be a valid URL"
+          pattern: '^$|^(https?|ftp)://[^\\s/$.?#].[^\\s]*$'
+          description: "Must be a valid URL or empty string"
     ErrorResponse:
       type: object
       properties:

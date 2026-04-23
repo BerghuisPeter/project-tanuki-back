@@ -43,6 +43,17 @@ Content-Type: application/json
   "locale": "fr-FR"
 }
 
+### Update User Preferences (Empty Color and URL)
+PUT http://localhost:8082/api/v1/preferences
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "locale": "en-US",
+  "color": "",
+  "avatarUrl": ""
+}
+
 ### Update User Preferences (Invalid Color)
 PUT http://localhost:8082/api/v1/preferences
 Authorization: Bearer {{access_token}}
