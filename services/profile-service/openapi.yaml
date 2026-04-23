@@ -72,7 +72,6 @@ components:
       properties:
         displayName:
           type: string
-          minLength: 1
         color:
           type: string
           pattern: '^$|^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
