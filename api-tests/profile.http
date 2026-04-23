@@ -1,10 +1,19 @@
+### Login with the test account
+POST http://localhost:8081/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Password123!"
+}
+
 ### Get User Preferences
 # Note: You must first login using auth.http to set the {{access_token}} global variable.
-GET http://localhost:8082/preferences
+GET http://localhost:8082/api/v1/preferences
 Authorization: Bearer {{access_token}}
 
 ### Update User Preferences (Upsert)
-PUT http://localhost:8082/preferences
+PUT http://localhost:8082/api/v1/preferences
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
@@ -16,10 +25,30 @@ Content-Type: application/json
 }
 
 ### Update User Preferences (Partial/Omitted)
-PUT http://localhost:8082/preferences
+PUT http://localhost:8082/api/v1/preferences
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
 {
   "locale": "fr-FR"
+}
+
+### Update User Preferences (Invalid Color)
+PUT http://localhost:8082/api/v1/preferences
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "locale": "en-US",
+  "color": "invalid-color"
+}
+
+### Update User Preferences (Invalid Avatar URL)
+PUT http://localhost:8082/api/v1/preferences
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "locale": "en-US",
+  "avatarUrl": "not-a-url"
 }

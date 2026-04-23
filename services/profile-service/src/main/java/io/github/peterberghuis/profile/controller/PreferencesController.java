@@ -3,6 +3,7 @@ package io.github.peterberghuis.profile.controller;
 import io.github.peterberghuis.profile.api.PreferencesApi;
 import io.github.peterberghuis.profile.dto.UserPreferences;
 import io.github.peterberghuis.profile.service.UserPreferencesService;
+import io.github.peterberghuis.profile.validator.UserPreferencesValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,6 +16,7 @@ import java.util.UUID;
 public class PreferencesController implements PreferencesApi {
 
     private final UserPreferencesService userPreferencesService;
+    private final UserPreferencesValidator userPreferencesValidator;
 
     @Override
     public ResponseEntity<UserPreferences> getUserPreferences() {
@@ -26,6 +28,7 @@ public class PreferencesController implements PreferencesApi {
 
     @Override
     public ResponseEntity<UserPreferences> updateUserPreferences(UserPreferences userPreferences) {
+        userPreferencesValidator.validate(userPreferences);
         UUID userId = getUserIdFromContext();
         return ResponseEntity.ok(userPreferencesService.upsertPreferences(userId, userPreferences));
     }

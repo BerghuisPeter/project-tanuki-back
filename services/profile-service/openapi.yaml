@@ -7,7 +7,7 @@ servers:
   - url: http://localhost:8082
     description: Local development server
 paths:
-  /preferences:
+  /api/v1/preferences:
     get:
       summary: Get user preferences
       operationId: getUserPreferences
@@ -50,6 +50,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserPreferences'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized
           content:
