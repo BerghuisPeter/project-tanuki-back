@@ -82,7 +82,7 @@ components:
           example: "en-US"
         avatarUrl:
           type: string
-          pattern: '^$|^(https?|ftp)://[^\\s/$.?#].[^\\s]*$'
+          pattern: '^$|^(https?|ftp)://[^\s/$.?#].[^\s]*$'
           description: "Must be a valid URL or empty string"
     ErrorResponse:
       type: object

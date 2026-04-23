@@ -73,3 +73,15 @@ Content-Type: application/json
   "locale": "en-US",
   "avatarUrl": "not-a-url"
 }
+
+### Update User Preferences (GitHub Avatar URL - Complex)
+PUT http://localhost:8082/api/v1/preferences
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "displayName": "myNewDisplayName",
+  "color": "#f40b0b",
+  "locale": "en-US",
+  "avatarUrl": "https://avatars.githubusercontent.com/u/16774669?s=96&v=4"
+}

@@ -8,8 +8,8 @@ import java.util.regex.Pattern;
 @Component
 public class UserPreferencesValidator {
 
-    private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
-    private static final Pattern URL_PATTERN = Pattern.compile("^(https?|ftp)://[^\\s/$.?#].[^\\s]*$");
+    private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("^$|^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+    private static final Pattern URL_PATTERN = Pattern.compile("^$|^(https?|ftp)://[^\\s/$.?#].[^\\s]*$");
 
     public void validate(UserPreferences preferences) {
         if (preferences.getColor() != null && !preferences.getColor().isEmpty()) {
