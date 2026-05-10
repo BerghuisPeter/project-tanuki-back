@@ -23,7 +23,7 @@ public class UserPreferencesEntity {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column(name = "display_name")
+    @Column(name = "display_name", length = 45)
     private String displayName;
 
     @Column(name = "user_color")

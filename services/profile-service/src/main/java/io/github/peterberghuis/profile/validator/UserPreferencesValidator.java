@@ -12,6 +12,10 @@ public class UserPreferencesValidator {
     private static final Pattern URL_PATTERN = Pattern.compile("^$|^(https?|ftp)://[^\\s/$.?#].[^\\s]*$");
 
     public void validate(UserPreferences preferences) {
+        if (preferences.getDisplayName() != null && preferences.getDisplayName().length() > 45) {
+            throw new IllegalArgumentException("wrong parameters: display name too long (max 45 characters)");
+        }
+
         if (preferences.getColor() != null && !preferences.getColor().isEmpty()) {
             if (!HEX_COLOR_PATTERN.matcher(preferences.getColor()).matches()) {
                 throw new IllegalArgumentException("wrong parameters: invalid color hex value");

@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202605101730-limit-display-name-length
+      author: junie
+      changes:
+        - modifyDataType:
+            schemaName: profile_schema
+            tableName: user_preferences
+            columnName: display_name
+            newDataType: VARCHAR(45)
