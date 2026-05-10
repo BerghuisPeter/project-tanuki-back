@@ -6,9 +6,84 @@ info:
 servers:
   - url: http://localhost:8082
     description: Local development server
-paths: { }
+paths:
+  /api/v1/preferences:
+    get:
+      summary: Get user preferences
+      operationId: getUserPreferences
+      tags:
+        - Preferences
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User preferences not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update user preferences (upsert)
+      operationId: updateUserPreferences
+      tags:
+        - Preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPreferences'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
+    UserPreferences:
+      type: object
+      required:
+        - locale
+      properties:
+        displayName:
+          type: string
+          maxLength: 45
+        color:
+          type: string
+          pattern: '^$|^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
+          description: "Hexadecimal color code (e.g., #FF5733) or empty string"
+        locale:
+          type: string
+          example: "en-US"
+        avatarUrl:
+          type: string
+          pattern: '^$|^(https?|ftp)://[^\s/$.?#].[^\s]*$'
+          description: "Must be a valid URL or empty string"
     ErrorResponse:
       type: object
       properties:

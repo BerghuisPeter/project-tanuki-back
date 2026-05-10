@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -27,8 +28,8 @@ public class JwtUtils {
     @Value("${jwt.refresh-expiration}")
     private Long refreshExpiration;
 
-    public String generateToken(String username, Collection<? extends GrantedAuthority> authorities) {
-        return generateToken(username, authorities, jwtExpiration);
+    public String generateToken(UUID userId, String email, Collection<? extends GrantedAuthority> authorities) {
+        return generateToken(userId, email, authorities, jwtExpiration);
     }
 
     public String generateRefreshToken(String username) {
@@ -40,13 +41,24 @@ public class JwtUtils {
                 .compact();
     }
 
-    private String generateToken(String username, Collection<? extends GrantedAuthority> authorities, Long expiration) {
+    public String generateTempLoginToken(String username) {
+        return Jwts.builder()
+                .subject(username)
+                .claim("purpose", "oauth2_exchange")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 60000)) // 60 seconds
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    private String generateToken(UUID userId, String email, Collection<? extends GrantedAuthority> authorities, Long expiration) {
         String roles = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
         return Jwts.builder()
-                .subject(username)
+                .subject(email)
+                .claim("userId", userId.toString())
                 .claim("roles", roles)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
@@ -66,8 +78,16 @@ public class JwtUtils {
         }
     }
 
+    public String getUserIdFromToken(String token) {
+        return getClaimsFromToken(token).get("userId", String.class);
+    }
+
     public String getUsernameFromToken(String token) {
         return getClaimsFromToken(token).getSubject();
+    }
+
+    public String getPurposeFromToken(String token) {
+        return getClaimsFromToken(token).get("purpose", String.class);
     }
 
     public Collection<? extends GrantedAuthority> getAuthoritiesFromToken(String token) {

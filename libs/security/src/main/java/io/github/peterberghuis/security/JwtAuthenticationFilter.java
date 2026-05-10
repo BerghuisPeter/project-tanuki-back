@@ -51,10 +51,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Valid token → authenticate
             String username = jwtUtils.getUsernameFromToken(token);
+            String userId = jwtUtils.getUserIdFromToken(token);
             var authorities = jwtUtils.getAuthoritiesFromToken(token);
 
             UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(username, null, authorities);
+                    new UsernamePasswordAuthenticationToken(username, userId, authorities);
 
             authentication.setDetails(
                     new WebAuthenticationDetailsSource().buildDetails(request)

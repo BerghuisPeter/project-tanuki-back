@@ -95,7 +95,14 @@ The database is managed via Docker Compose. Run this from the root directory:
 docker compose up -d
 ```
 
-### 2. Build and Install Shared Components
+### 2. Configure Environment Variables
+
+For local secrets management, you must manually create a `.env` file in the root directory:
+
+1. Copy `.env.example` to `.env`.
+2. Fill in your local secrets in `.env`.
+
+### 3. Build and Install Shared Components
 
 Since services depend on shared libraries, you must build the entire project once to install them into your local Maven
 repository:
@@ -104,8 +111,21 @@ repository:
 .\mvnw clean install -DskipTests
 ```
 
-### 3. Run a Specific Service
+### 4. Run Services
 
+You can run services in multiple ways:
+
+#### A. Using IntelliJ Run Configurations (Recommended)
+
+We provide pre-configured run configurations in the `.run/` directory.
+
+- **`ALL_SERVICES`**: Launches all modules at once. **Note: Ensure you have launched the database using Docker Compose
+  first.**
+- Individual configurations for `AuthService` and `ProfileService`.
+
+These should automatically appear in your IntelliJ Run/Debug menu.
+
+#### B. Using Maven Wrapper
 You can run any service using the Maven wrapper. For example, to start the **Authentication Service**:
 
 ```powershell
@@ -151,7 +171,14 @@ When defining foreign keys across schemas in Liquibase, use `addForeignKeyConstr
 
 1. Open the root `pom.xml`.
 2. Wait for Maven synchronization.
-3. Run the applications directly from their respective `*Application.java` files.
+3. **Environment Variables**: Some services require environment variables for local development (e.g.,
+   `GOOGLE_CLIENT_SECRET`).
+    - Copy `.env.example` to `.env`.
+    - Fill in your local secrets in `.env`.
+    - To use these in IntelliJ, you can use the **EnvFile** plugin or manually add them to the Run Configurations.
+4. **Shared Run Configurations**: We provide pre-configured run configurations in the `.run/` directory. These should
+   automatically appear in your IntelliJ Run/Debug menu.
+5. Run the applications directly using these configurations or from their respective `*Application.java` files.
 
 ---
 

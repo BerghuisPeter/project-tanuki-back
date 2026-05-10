@@ -5,7 +5,6 @@ import io.github.peterberghuis.auth.entity.*;
 import io.github.peterberghuis.auth.entity.UserRole;
 import io.github.peterberghuis.auth.entity.UserStatus;
 import io.github.peterberghuis.auth.exception.EmailAlreadyInUseException;
-import io.github.peterberghuis.auth.repository.OAuth2CodeRepository;
 import io.github.peterberghuis.auth.repository.RefreshTokenRepository;
 import io.github.peterberghuis.auth.repository.UserAuthProviderRepository;
 import io.github.peterberghuis.auth.repository.UserRepository;
@@ -32,7 +31,6 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserAuthProviderRepository userAuthProviderRepository;
-    private final OAuth2CodeRepository oauth2CodeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
 
@@ -82,29 +80,22 @@ public class AuthService {
         return createAuthResponse(user);
     }
 
-    @Transactional
-    public String generateOAuth2Code(String email) {
-        String code = UUID.randomUUID().toString();
-        OAuth2Code oauth2Code = new OAuth2Code();
-        oauth2Code.setCode(code);
-        oauth2Code.setEmail(email);
-        oauth2Code.setExpiryDate(Instant.now().plusSeconds(300)); // 5 minutes
-        oauth2CodeRepository.save(oauth2Code);
-        return code;
+    public String generateOAuth2TempLoginToken(String email) {
+        return jwtUtils.generateTempLoginToken(email);
     }
 
     @Transactional
-    public AuthResponse exchangeCode(String code) {
-        OAuth2Code oauth2Code = oauth2CodeRepository.findByCode(code)
-                .orElseThrow(() -> new BadCredentialsException("Invalid or expired code"));
-
-        if (oauth2Code.getExpiryDate().isBefore(Instant.now())) {
-            oauth2CodeRepository.delete(oauth2Code);
-            throw new BadCredentialsException("Invalid or expired code");
+    public AuthResponse exchangeTempLoginToken(String token) {
+        if (!jwtUtils.validateToken(token)) {
+            throw new BadCredentialsException("Invalid or expired token");
         }
 
-        String email = oauth2Code.getEmail();
-        oauth2CodeRepository.delete(oauth2Code);
+        String purpose = jwtUtils.getPurposeFromToken(token);
+        if (!"oauth2_exchange".equals(purpose)) {
+            throw new BadCredentialsException("Invalid token purpose");
+        }
+
+        String email = jwtUtils.getUsernameFromToken(token);
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("User not found"));
@@ -199,7 +190,7 @@ public class AuthService {
                 .map(role -> new SimpleGrantedAuthority(role.name()))
                 .toList();
 
-        return jwtUtils.generateToken(user.getEmail(), authorities);
+        return jwtUtils.generateToken(user.getId(), user.getEmail(), authorities);
     }
 
     private RefreshToken createRefreshToken(User user) {

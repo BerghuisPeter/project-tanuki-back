@@ -48,11 +48,11 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         // Provision the user in our database
         authService.loginOrRegisterOAuth2User(email, name, sub, providerId);
 
-        // Generate a temporary one-time code for the frontend to exchange for tokens
-        String code = authService.generateOAuth2Code(email);
+        // Generate a temporary one-time token for the frontend to exchange for tokens
+        String token = authService.generateOAuth2TempLoginToken(email);
 
-        // Redirect back to the frontend with the code
-        String redirectUrl = frontendUrl + "/assets/oauth2-callback.html?code=" + code;
+        // Redirect back to the frontend with the token
+        String redirectUrl = frontendUrl + "/assets/oauth2-callback.html?token=" + token;
         response.sendRedirect(redirectUrl);
     }
 }

@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202604161641-create-user-preferences-table
+      author: peter
+      changes:
+        - createTable:
+            tableName: user_preferences
+            columns:
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: display_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: user_color
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: locale
+                  type: VARCHAR(10)
+                  defaultValue: "en-US"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: avatar_url
+                  type: VARCHAR(2048)
+                  constraints:
+                    nullable: true

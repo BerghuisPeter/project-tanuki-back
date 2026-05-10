@@ -1,0 +1,87 @@
+### Login with the test account
+POST http://localhost:8081/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Password123!"
+}
+
+> {%
+    if (response.status === 200 && response.body) {
+        client.global.set("access_token", response.body.accessToken);
+        client.global.set("refresh_token", response.body.refreshToken);
+    } else {
+        client.log("Request failed or returned empty body. Status: " + response.status);
+    }
+%}
+
+
+### Get User Preferences
+# Note: You must first login using auth.http to set the {{access_token}} global variable.
+GET http://localhost:8082/api/v1/preferences
+Authorization: Bearer {{access_token}}
+
+### Update User Preferences (Upsert)
+PUT http://localhost:8082/api/v1/preferences
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "displayName": "Junie User",
+  "color": "#FF5733",
+  "locale": "en-US",
+  "avatarUrl": "https://example.com/avatar.png"
+}
+
+### Update User Preferences (Partial/Omitted)
+PUT http://localhost:8082/api/v1/preferences
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "locale": "fr-FR"
+}
+
+### Update User Preferences (Empty Color and URL)
+PUT http://localhost:8082/api/v1/preferences
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "locale": "en-US",
+  "color": "",
+  "avatarUrl": ""
+}
+
+### Update User Preferences (Invalid Color)
+PUT http://localhost:8082/api/v1/preferences
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "locale": "en-US",
+  "color": "invalid-color"
+}
+
+### Update User Preferences (Invalid Avatar URL)
+PUT http://localhost:8082/api/v1/preferences
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "locale": "en-US",
+  "avatarUrl": "not-a-url"
+}
+
+### Update User Preferences (GitHub Avatar URL - Complex)
+PUT http://localhost:8082/api/v1/preferences
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "displayName": "myNewDisplayName",
+  "color": "#f40b0b",
+  "locale": "en-US",
+  "avatarUrl": "https://avatars.githubusercontent.com/u/16774669?s=96&v=4"
+}

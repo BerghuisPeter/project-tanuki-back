@@ -33,8 +33,8 @@ public class AuthController implements AuthControllerApi {
     }
 
     @Override
-    public ResponseEntity<AuthResponse> exchangeOAuth2Code(ExchangeOAuth2CodeRequest exchangeOAuth2CodeRequest) {
-        return ResponseEntity.ok(authService.exchangeCode(exchangeOAuth2CodeRequest.getCode()));
+    public ResponseEntity<AuthResponse> exchangeTempLoginToken(ExchangeTempLoginTokenRequest exchangeTempLoginTokenRequest) {
+        return ResponseEntity.ok(authService.exchangeTempLoginToken(exchangeTempLoginTokenRequest.getToken()));
     }
 
     @Override
