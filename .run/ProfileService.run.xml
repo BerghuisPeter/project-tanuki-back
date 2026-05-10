@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+    <configuration default="false" name="ProfileService" type="SpringBootApplicationConfigurationType"
+                   factoryName="Spring Boot">
+        <option name="ACTIVE_PROFILES" value="local"/>
+        <module name="profile-service"/>
+        <option name="SPRING_BOOT_MAIN_CLASS" value="io.github.peterberghuis.profile.ProfileApplication"/>
+        <method v="2">
+            <option name="Make" enabled="true"/>
+        </method>
+    </configuration>
+</component>

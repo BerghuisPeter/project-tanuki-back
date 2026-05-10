@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+    <configuration default="false" name="ALL_SERVICES" type="CompoundRunConfigurationType">
+        <toRun name="AuthService" type="SpringBootApplicationConfigurationType"/>
+        <toRun name="ProfileService" type="SpringBootApplicationConfigurationType"/>
+        <method v="2"/>
+    </configuration>
+</component>
