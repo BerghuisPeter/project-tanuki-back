@@ -16,16 +16,14 @@ public class UserPreferencesValidator {
             throw new IllegalArgumentException("wrong parameters: display name too long (max 45 characters)");
         }
 
-        if (preferences.getColor() != null && !preferences.getColor().isEmpty()) {
-            if (!HEX_COLOR_PATTERN.matcher(preferences.getColor()).matches()) {
-                throw new IllegalArgumentException("wrong parameters: invalid color hex value");
-            }
+        if (preferences.getColor() != null && !preferences.getColor().isEmpty() && !HEX_COLOR_PATTERN.matcher(preferences.getColor()).matches()) {
+            throw new IllegalArgumentException("wrong parameters: invalid color hex value");
         }
 
-        if (preferences.getAvatarUrl() != null && !preferences.getAvatarUrl().isEmpty()) {
-            if (!URL_PATTERN.matcher(preferences.getAvatarUrl()).matches()) {
-                throw new IllegalArgumentException("wrong parameters: invalid avatar URL");
-            }
+
+        if (preferences.getAvatarUrl() != null && !preferences.getAvatarUrl().isEmpty() && !URL_PATTERN.matcher(preferences.getAvatarUrl()).matches()) {
+            throw new IllegalArgumentException("wrong parameters: invalid avatar URL");
         }
+
     }
 }
