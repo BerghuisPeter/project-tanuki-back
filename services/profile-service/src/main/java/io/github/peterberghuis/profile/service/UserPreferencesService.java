@@ -10,10 +10,13 @@ import io.github.peterberghuis.profile.entity.UserPreferencesEntity;
 import io.github.peterberghuis.profile.repository.UserPreferencesRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +30,12 @@ public class UserPreferencesService {
 
     @Value("${gcp.storage.bucket-name}")
     private String bucketName;
+
+    @Value("${gcp.storage.avatar.allowed-content-types}")
+    private List<String> allowedContentTypes;
+
+    @Value("${gcp.storage.avatar.max-size-bytes}")
+    private long maxSizeBytes;
 
     @Transactional(readOnly = true)
     public Optional<UserPreferences> getPreferences(UUID userId) {
@@ -56,16 +65,25 @@ public class UserPreferencesService {
     }
 
     public UploadUrlResponse getAvatarUploadUrl(UUID userId, String contentType) {
+        if (contentType == null || !allowedContentTypes.contains(contentType)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid content type. Allowed: " + allowedContentTypes);
+        }
+
         String fileName = "avatars/" + userId + "-" + UUID.randomUUID();
         BlobInfo blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, fileName))
                 .setContentType(contentType)
                 .build();
 
-        URL url = storage.signUrl(blobInfo, 15, TimeUnit.MINUTES, Storage.SignUrlOption.httpMethod(HttpMethod.PUT), Storage.SignUrlOption.withExtHeaders(java.util.Collections.singletonMap("Content-Type", contentType)), Storage.SignUrlOption.withV4Signature());
+        URL url = storage.signUrl(blobInfo, 15, TimeUnit.MINUTES,
+                Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
+                Storage.SignUrlOption.withExtHeaders(java.util.Collections.singletonMap("Content-Type", contentType)),
+                Storage.SignUrlOption.withV4Signature());
 
         UploadUrlResponse response = new UploadUrlResponse();
         response.setUploadUrl(url.toString());
         response.setFileName(fileName);
+        response.setMaxSizeBytes(maxSizeBytes);
+        response.setAllowedContentTypes(allowedContentTypes);
         return response;
     }
 

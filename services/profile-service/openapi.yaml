@@ -98,6 +98,15 @@ components:
           type: string
         fileName:
           type: string
+        maxSizeBytes:
+          type: integer
+          format: int64
+          example: 5242880
+        allowedContentTypes:
+          type: array
+          items:
+            type: string
+          example: [ "image/jpeg", "image/png", "image/webp" ]
     UserPreferences:
       type: object
       required:

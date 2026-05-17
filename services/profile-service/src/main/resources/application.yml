@@ -24,6 +24,12 @@ gcp:
   storage:
     bucket-name: ${GCP_STORAGE_BUCKET_NAME}
     credentials-json: ${GCP_STORAGE_CREDENTIALS_JSON:}
+    avatar:
+      max-size-bytes: 5242880 # 5MB
+      allowed-content-types:
+        - image/jpeg
+        - image/png
+        - image/webp
 
 server:
   port: ${PORT:8082}

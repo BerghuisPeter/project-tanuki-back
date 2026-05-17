@@ -1,14 +1,19 @@
 package io.github.peterberghuis.profile.service;
 
+import io.github.peterberghuis.profile.dto.UploadUrlResponse;
 import io.github.peterberghuis.profile.dto.UserPreferences;
 import io.github.peterberghuis.profile.entity.UserPreferencesEntity;
 import io.github.peterberghuis.profile.repository.UserPreferencesRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,6 +29,16 @@ class UserPreferencesServiceTest {
 
     @InjectMocks
     private UserPreferencesService userPreferencesService;
+
+    @Mock
+    private com.google.cloud.storage.Storage storage;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(userPreferencesService, "bucketName", "test-bucket");
+        ReflectionTestUtils.setField(userPreferencesService, "allowedContentTypes", List.of("image/jpeg", "image/png"));
+        ReflectionTestUtils.setField(userPreferencesService, "maxSizeBytes", 5242880L);
+    }
 
     @Test
     void getPreferences_WhenExists_ShouldReturnDto() {
@@ -198,5 +213,36 @@ class UserPreferencesServiceTest {
                 entity.getColor().equals("") &&
                         entity.getAvatarUrl().equals("")
         ));
+    }
+
+    @Test
+    void getAvatarUploadUrl_WithValidContentType_ShouldReturnUrl() throws java.net.MalformedURLException {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        String contentType = "image/jpeg";
+        java.net.URL mockUrl = new java.net.URL("https://storage.googleapis.com/test-bucket/avatars/test");
+        when(storage.signUrl(any(), anyLong(), any(), any(), any(), any())).thenReturn(mockUrl);
+
+        // Act
+        UploadUrlResponse result = userPreferencesService.getAvatarUploadUrl(userId, contentType);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(mockUrl.toString(), result.getUploadUrl());
+        assertTrue(result.getFileName().startsWith("avatars/" + userId));
+        assertEquals(5242880L, result.getMaxSizeBytes());
+        assertEquals(List.of("image/jpeg", "image/png"), result.getAllowedContentTypes());
+    }
+
+    @Test
+    void getAvatarUploadUrl_WithInvalidContentType_ShouldThrowException() {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        String contentType = "application/pdf";
+
+        // Act & Assert
+        assertThrows(ResponseStatusException.class, () ->
+                userPreferencesService.getAvatarUploadUrl(userId, contentType)
+        );
     }
 }
