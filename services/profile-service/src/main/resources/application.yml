@@ -23,6 +23,7 @@ spring:
 gcp:
   storage:
     bucket-name: ${GCP_STORAGE_BUCKET_NAME}
+    credentials-json: ${GCP_STORAGE_CREDENTIALS_JSON:}
 
 server:
   port: ${PORT:8082}
