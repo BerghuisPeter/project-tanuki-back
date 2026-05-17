@@ -1,17 +1,17 @@
 package io.github.peterberghuis.profile.validator;
 
-import io.github.peterberghuis.profile.dto.UserPreferences;
+import io.github.peterberghuis.profile.dto.UserProfile;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;
 
 @Component
-public class UserPreferencesValidator {
+public class UserProfileValidator {
 
     private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("^$|^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
     private static final Pattern URL_PATTERN = Pattern.compile("^$|^(https?|ftp)://[^\\s/$.?#].[^\\s]*$");
 
-    public void validate(UserPreferences preferences) {
+    public void validate(UserProfile preferences) {
         if (preferences.getDisplayName() != null && preferences.getDisplayName().length() > 45) {
             throw new IllegalArgumentException("wrong parameters: display name too long (max 45 characters)");
         }

@@ -1,10 +1,10 @@
 package io.github.peterberghuis.profile.controller;
 
-import io.github.peterberghuis.profile.api.PreferencesApi;
+import io.github.peterberghuis.profile.api.ProfileApi;
 import io.github.peterberghuis.profile.dto.UploadUrlResponse;
-import io.github.peterberghuis.profile.dto.UserPreferences;
-import io.github.peterberghuis.profile.service.UserPreferencesService;
-import io.github.peterberghuis.profile.validator.UserPreferencesValidator;
+import io.github.peterberghuis.profile.dto.UserProfile;
+import io.github.peterberghuis.profile.service.UserProfileService;
+import io.github.peterberghuis.profile.validator.UserProfileValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,30 +14,30 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-public class PreferencesController implements PreferencesApi {
+public class ProfileController implements ProfileApi {
 
-    private final UserPreferencesService userPreferencesService;
-    private final UserPreferencesValidator userPreferencesValidator;
+    private final UserProfileService userProfileService;
+    private final UserProfileValidator userPreferencesValidator;
 
     @Override
-    public ResponseEntity<UserPreferences> getUserPreferences() {
+    public ResponseEntity<UserProfile> getUserProfile() {
         UUID userId = getUserIdFromContext();
-        return userPreferencesService.getPreferences(userId)
+        return userProfileService.getProfile(userId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @Override
-    public ResponseEntity<UserPreferences> updateUserPreferences(UserPreferences userPreferences) {
-        userPreferencesValidator.validate(userPreferences);
+    public ResponseEntity<UserProfile> updateUserProfile(UserProfile userProfile) {
+        userPreferencesValidator.validate(userProfile);
         UUID userId = getUserIdFromContext();
-        return ResponseEntity.ok(userPreferencesService.upsertPreferences(userId, userPreferences));
+        return ResponseEntity.ok(userProfileService.upsertProfile(userId, userProfile));
     }
 
     @Override
     public ResponseEntity<UploadUrlResponse> getAvatarUploadUrl(String contentType) {
         UUID userId = getUserIdFromContext();
-        return ResponseEntity.ok(userPreferencesService.getAvatarUploadUrl(userId, contentType));
+        return ResponseEntity.ok(userProfileService.getAvatarUploadUrl(userId, contentType));
     }
 
     private UUID getUserIdFromContext() {

@@ -17,13 +17,13 @@ Content-Type: application/json
 %}
 
 
-### Get User Preferences
+### Get User Profile
 # Note: You must first login using auth.http to set the {{access_token}} global variable.
-GET http://localhost:8082/api/v1/preferences
+GET http://localhost:8082/api/v1/profile
 Authorization: Bearer {{access_token}}
 
-### Update User Preferences (Upsert)
-PUT http://localhost:8082/api/v1/preferences
+### Update User Profile (Upsert)
+PUT http://localhost:8082/api/v1/profile
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
@@ -34,8 +34,8 @@ Content-Type: application/json
   "avatarUrl": "https://example.com/avatar.png"
 }
 
-### Update User Preferences (Partial/Omitted)
-PUT http://localhost:8082/api/v1/preferences
+### Update User Profile (Partial/Omitted)
+PUT http://localhost:8082/api/v1/profile
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
@@ -43,8 +43,8 @@ Content-Type: application/json
   "locale": "fr-FR"
 }
 
-### Update User Preferences (Empty Color and URL)
-PUT http://localhost:8082/api/v1/preferences
+### Update User Profile (Empty Color and URL)
+PUT http://localhost:8082/api/v1/profile
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
@@ -54,8 +54,8 @@ Content-Type: application/json
   "avatarUrl": ""
 }
 
-### Update User Preferences (Invalid Color)
-PUT http://localhost:8082/api/v1/preferences
+### Update User Profile (Invalid Color)
+PUT http://localhost:8082/api/v1/profile
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
@@ -64,8 +64,8 @@ Content-Type: application/json
   "color": "invalid-color"
 }
 
-### Update User Preferences (Invalid Avatar URL)
-PUT http://localhost:8082/api/v1/preferences
+### Update User Profile (Invalid Avatar URL)
+PUT http://localhost:8082/api/v1/profile
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
@@ -74,8 +74,8 @@ Content-Type: application/json
   "avatarUrl": "not-a-url"
 }
 
-### Update User Preferences (GitHub Avatar URL - Complex)
-PUT http://localhost:8082/api/v1/preferences
+### Update User Profile (GitHub Avatar URL - Complex)
+PUT http://localhost:8082/api/v1/profile
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 

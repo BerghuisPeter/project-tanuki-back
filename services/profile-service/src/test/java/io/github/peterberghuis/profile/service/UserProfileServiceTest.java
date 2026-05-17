@@ -1,9 +1,10 @@
 package io.github.peterberghuis.profile.service;
 
+import io.github.peterberghuis.profile.config.GcpStorageProperties;
 import io.github.peterberghuis.profile.dto.UploadUrlResponse;
-import io.github.peterberghuis.profile.dto.UserPreferences;
-import io.github.peterberghuis.profile.entity.UserPreferencesEntity;
-import io.github.peterberghuis.profile.repository.UserPreferencesRepository;
+import io.github.peterberghuis.profile.dto.UserProfile;
+import io.github.peterberghuis.profile.entity.UserProfileEntity;
+import io.github.peterberghuis.profile.repository.UserProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,29 +23,34 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class UserPreferencesServiceTest {
+class UserProfileServiceTest {
 
     @Mock
-    private UserPreferencesRepository userPreferencesRepository;
+    private UserProfileRepository userPreferencesRepository;
 
     @InjectMocks
-    private UserPreferencesService userPreferencesService;
+    private UserProfileService userProfileService;
 
     @Mock
     private com.google.cloud.storage.Storage storage;
 
+    private GcpStorageProperties gcpStorageProperties;
+
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(userPreferencesService, "bucketName", "test-bucket");
-        ReflectionTestUtils.setField(userPreferencesService, "allowedContentTypes", List.of("image/jpeg", "image/png"));
-        ReflectionTestUtils.setField(userPreferencesService, "maxSizeBytes", 5242880L);
+        gcpStorageProperties = new GcpStorageProperties();
+        gcpStorageProperties.setBucketName("test-bucket");
+        gcpStorageProperties.getAvatar().setAllowedContentTypes(List.of("image/jpeg", "image/png"));
+        gcpStorageProperties.getAvatar().setMaxSizeBytes(5242880L);
+
+        ReflectionTestUtils.setField(userProfileService, "gcpStorageProperties", gcpStorageProperties);
     }
 
     @Test
-    void getPreferences_WhenExists_ShouldReturnDto() {
+    void getProfile_WhenExists_ShouldReturnDto() {
         // Arrange
         UUID userId = UUID.randomUUID();
-        UserPreferencesEntity entity = UserPreferencesEntity.builder()
+        UserProfileEntity entity = UserProfileEntity.builder()
                 .userId(userId)
                 .displayName("Test User")
                 .color("#FF5733")
@@ -55,11 +61,11 @@ class UserPreferencesServiceTest {
         when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(entity));
 
         // Act
-        Optional<UserPreferences> result = userPreferencesService.getPreferences(userId);
+        Optional<UserProfile> result = userProfileService.getProfile(userId);
 
         // Assert
         assertTrue(result.isPresent());
-        UserPreferences dto = result.get();
+        UserProfile dto = result.get();
         assertEquals("Test User", dto.getDisplayName());
         assertEquals("#FF5733", dto.getColor());
         assertEquals("en-US", dto.getLocale());
@@ -67,32 +73,32 @@ class UserPreferencesServiceTest {
     }
 
     @Test
-    void getPreferences_WhenNotExists_ShouldReturnEmpty() {
+    void getProfile_WhenNotExists_ShouldReturnEmpty() {
         // Arrange
         UUID userId = UUID.randomUUID();
         when(userPreferencesRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Act
-        Optional<UserPreferences> result = userPreferencesService.getPreferences(userId);
+        Optional<UserProfile> result = userProfileService.getProfile(userId);
 
         // Assert
         assertTrue(result.isEmpty());
     }
 
     @Test
-    void upsertPreferences_WhenNew_ShouldCreateAndReturnDto() {
+    void upsertProfile_WhenNew_ShouldCreateAndReturnDto() {
         // Arrange
         UUID userId = UUID.randomUUID();
-        UserPreferences inputDto = new UserPreferences("en-US");
+        UserProfile inputDto = new UserProfile("en-US");
         inputDto.setDisplayName("New User");
         inputDto.setColor("#000000");
         inputDto.setAvatarUrl("https://example.com/new.png");
 
         when(userPreferencesRepository.findById(userId)).thenReturn(Optional.empty());
-        when(userPreferencesRepository.save(any(UserPreferencesEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        UserPreferences result = userPreferencesService.upsertPreferences(userId, inputDto);
+        UserProfile result = userProfileService.upsertProfile(userId, inputDto);
 
         // Assert
         assertNotNull(result);
@@ -111,26 +117,26 @@ class UserPreferencesServiceTest {
     }
 
     @Test
-    void upsertPreferences_WhenExists_ShouldUpdateAndReturnDto() {
+    void upsertProfile_WhenExists_ShouldUpdateAndReturnDto() {
         // Arrange
         UUID userId = UUID.randomUUID();
-        UserPreferencesEntity existingEntity = UserPreferencesEntity.builder()
+        UserProfileEntity existingEntity = UserProfileEntity.builder()
                 .userId(userId)
                 .displayName("Old Name")
                 .color("#111111")
                 .locale("en-GB")
                 .build();
 
-        UserPreferences updateDto = new UserPreferences("fr-FR");
+        UserProfile updateDto = new UserProfile("fr-FR");
         updateDto.setDisplayName("Updated Name");
         updateDto.setColor("#222222");
         updateDto.setAvatarUrl("https://example.com/updated.png");
 
         when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(existingEntity));
-        when(userPreferencesRepository.save(any(UserPreferencesEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        UserPreferences result = userPreferencesService.upsertPreferences(userId, updateDto);
+        UserProfile result = userProfileService.upsertProfile(userId, updateDto);
 
         // Assert
         assertNotNull(result);
@@ -148,10 +154,10 @@ class UserPreferencesServiceTest {
     }
 
     @Test
-    void upsertPreferences_PartialUpdate_ShouldOnlyUpdateProvidedFields() {
+    void upsertProfile_PartialUpdate_ShouldOnlyUpdateProvidedFields() {
         // Arrange
         UUID userId = UUID.randomUUID();
-        UserPreferencesEntity existingEntity = UserPreferencesEntity.builder()
+        UserProfileEntity existingEntity = UserProfileEntity.builder()
                 .userId(userId)
                 .displayName("Original Name")
                 .color("#333333")
@@ -160,16 +166,16 @@ class UserPreferencesServiceTest {
                 .build();
 
         // DTO with only locale changed, other fields null
-        UserPreferences updateDto = new UserPreferences("de-DE");
+        UserProfile updateDto = new UserProfile("de-DE");
         updateDto.setDisplayName(null);
         updateDto.setColor(null);
         updateDto.setAvatarUrl(null);
 
         when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(existingEntity));
-        when(userPreferencesRepository.save(any(UserPreferencesEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        UserPreferences result = userPreferencesService.upsertPreferences(userId, updateDto);
+        UserProfile result = userProfileService.upsertProfile(userId, updateDto);
 
         // Assert
         assertEquals("Original Name", result.getDisplayName()); // Should remain unchanged
@@ -184,10 +190,10 @@ class UserPreferencesServiceTest {
     }
 
     @Test
-    void upsertPreferences_WithEmptyStrings_ShouldBeAllowed() {
+    void upsertProfile_WithEmptyStrings_ShouldBeAllowed() {
         // Arrange
         UUID userId = UUID.randomUUID();
-        UserPreferencesEntity existingEntity = UserPreferencesEntity.builder()
+        UserProfileEntity existingEntity = UserProfileEntity.builder()
                 .userId(userId)
                 .displayName("Some Name")
                 .color("#123456")
@@ -195,15 +201,15 @@ class UserPreferencesServiceTest {
                 .avatarUrl("https://example.com/some.png")
                 .build();
 
-        UserPreferences updateDto = new UserPreferences("en-US");
+        UserProfile updateDto = new UserProfile("en-US");
         updateDto.setColor("");
         updateDto.setAvatarUrl("");
 
         when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(existingEntity));
-        when(userPreferencesRepository.save(any(UserPreferencesEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        UserPreferences result = userPreferencesService.upsertPreferences(userId, updateDto);
+        UserProfile result = userProfileService.upsertProfile(userId, updateDto);
 
         // Assert
         assertEquals("", result.getColor());
@@ -224,7 +230,7 @@ class UserPreferencesServiceTest {
         when(storage.signUrl(any(), anyLong(), any(), any(), any(), any())).thenReturn(mockUrl);
 
         // Act
-        UploadUrlResponse result = userPreferencesService.getAvatarUploadUrl(userId, contentType);
+        UploadUrlResponse result = userProfileService.getAvatarUploadUrl(userId, contentType);
 
         // Assert
         assertNotNull(result);
@@ -242,7 +248,7 @@ class UserPreferencesServiceTest {
 
         // Act & Assert
         assertThrows(ResponseStatusException.class, () ->
-                userPreferencesService.getAvatarUploadUrl(userId, contentType)
+                userProfileService.getAvatarUploadUrl(userId, contentType)
         );
     }
 }

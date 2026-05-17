@@ -12,12 +12,12 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "user_preferences", schema = "profile_schema")
+@Table(name = "user_profile", schema = "profile_schema")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserPreferencesEntity {
+public class UserProfileEntity {
 
     @Id
     @Column(name = "user_id", nullable = false)
