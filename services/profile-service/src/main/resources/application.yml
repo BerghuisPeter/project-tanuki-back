@@ -20,6 +20,10 @@ spring:
     default-schema: profile_schema
     liquibase-schema: profile_schema
 
+gcp:
+  storage:
+    bucket-name: ${GCP_STORAGE_BUCKET_NAME}
+
 server:
   port: ${PORT:8082}
 

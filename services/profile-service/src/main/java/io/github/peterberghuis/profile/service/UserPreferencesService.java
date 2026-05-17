@@ -1,20 +1,32 @@
 package io.github.peterberghuis.profile.service;
 
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.HttpMethod;
+import com.google.cloud.storage.Storage;
+import io.github.peterberghuis.profile.dto.UploadUrlResponse;
 import io.github.peterberghuis.profile.dto.UserPreferences;
 import io.github.peterberghuis.profile.entity.UserPreferencesEntity;
 import io.github.peterberghuis.profile.repository.UserPreferencesRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URL;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class UserPreferencesService {
 
     private final UserPreferencesRepository userPreferencesRepository;
+    private final Storage storage;
+
+    @Value("${gcp.storage.bucket-name}")
+    private String bucketName;
 
     @Transactional(readOnly = true)
     public Optional<UserPreferences> getPreferences(UUID userId) {
@@ -41,6 +53,20 @@ public class UserPreferencesService {
 
         UserPreferencesEntity saved = userPreferencesRepository.save(entity);
         return toDto(saved);
+    }
+
+    public UploadUrlResponse getAvatarUploadUrl(UUID userId, String contentType) {
+        String fileName = "avatars/" + userId + "-" + UUID.randomUUID();
+        BlobInfo blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, fileName))
+                .setContentType(contentType)
+                .build();
+
+        URL url = storage.signUrl(blobInfo, 15, TimeUnit.MINUTES, Storage.SignUrlOption.httpMethod(HttpMethod.PUT), Storage.SignUrlOption.withExtHeaders(java.util.Collections.singletonMap("Content-Type", contentType)), Storage.SignUrlOption.withV4Signature());
+
+        UploadUrlResponse response = new UploadUrlResponse();
+        response.setUploadUrl(url.toString());
+        response.setFileName(fileName);
+        return response;
     }
 
     private UserPreferences toDto(UserPreferencesEntity entity) {

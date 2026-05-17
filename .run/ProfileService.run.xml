@@ -2,7 +2,13 @@
     <configuration default="false" name="ProfileService" type="SpringBootApplicationConfigurationType"
                    factoryName="Spring Boot">
         <option name="ACTIVE_PROFILES" value="local"/>
+        <option name="envFilePaths">
+            <option value="$PROJECT_DIR$/.env"/>
+        </option>
         <module name="profile-service"/>
+        <selectedOptions>
+            <option name="environmentVariables"/>
+        </selectedOptions>
         <option name="SPRING_BOOT_MAIN_CLASS" value="io.github.peterberghuis.profile.ProfileApplication"/>
         <method v="2">
             <option name="Make" enabled="true"/>

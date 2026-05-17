@@ -62,9 +62,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/preferences/upload-url:
+    get:
+      summary: Get a signed URL for avatar upload
+      operationId: getAvatarUploadUrl
+      tags:
+        - Preferences
+      parameters:
+        - name: contentType
+          in: query
+          required: true
+          schema:
+            type: string
+          example: "image/jpeg"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   schemas:
+    UploadUrlResponse:
+      type: object
+      properties:
+        uploadUrl:
+          type: string
+        fileName:
+          type: string
     UserPreferences:
       type: object
       required:

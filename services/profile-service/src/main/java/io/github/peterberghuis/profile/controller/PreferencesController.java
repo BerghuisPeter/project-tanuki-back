@@ -1,6 +1,7 @@
 package io.github.peterberghuis.profile.controller;
 
 import io.github.peterberghuis.profile.api.PreferencesApi;
+import io.github.peterberghuis.profile.dto.UploadUrlResponse;
 import io.github.peterberghuis.profile.dto.UserPreferences;
 import io.github.peterberghuis.profile.service.UserPreferencesService;
 import io.github.peterberghuis.profile.validator.UserPreferencesValidator;
@@ -31,6 +32,12 @@ public class PreferencesController implements PreferencesApi {
         userPreferencesValidator.validate(userPreferences);
         UUID userId = getUserIdFromContext();
         return ResponseEntity.ok(userPreferencesService.upsertPreferences(userId, userPreferences));
+    }
+
+    @Override
+    public ResponseEntity<UploadUrlResponse> getAvatarUploadUrl(String contentType) {
+        UUID userId = getUserIdFromContext();
+        return ResponseEntity.ok(userPreferencesService.getAvatarUploadUrl(userId, contentType));
     }
 
     private UUID getUserIdFromContext() {

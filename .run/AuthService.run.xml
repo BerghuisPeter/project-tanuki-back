@@ -2,8 +2,13 @@
     <configuration default="false" name="AuthService" type="SpringBootApplicationConfigurationType"
                    factoryName="Spring Boot">
         <option name="ACTIVE_PROFILES" value="local"/>
-        <envs/>
+        <option name="envFilePaths">
+            <option value="$PROJECT_DIR$/.env"/>
+        </option>
         <module name="auth-service"/>
+        <selectedOptions>
+            <option name="environmentVariables"/>
+        </selectedOptions>
         <option name="SPRING_BOOT_MAIN_CLASS" value="io.github.peterberghuis.auth.AuthApplication"/>
         <method v="2">
             <option name="Make" enabled="true"/>
