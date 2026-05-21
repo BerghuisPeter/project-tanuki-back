@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: junie
+      changes:
+        - renameTable:
+            oldTableName: user_preferences
+            newTableName: user_profile
+            schemaName: profile_schema

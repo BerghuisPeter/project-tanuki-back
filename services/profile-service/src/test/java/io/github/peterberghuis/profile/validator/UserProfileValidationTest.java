@@ -1,6 +1,6 @@
 package io.github.peterberghuis.profile.validator;
 
-import io.github.peterberghuis.profile.dto.UserPreferences;
+import io.github.peterberghuis.profile.dto.UserProfile;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -12,7 +12,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class PreferencesValidationTest {
+public class UserProfileValidationTest {
 
     private Validator validator;
 
@@ -24,20 +24,20 @@ public class PreferencesValidationTest {
 
     @Test
     void whenDisplayNameIsEmpty_thenValidationPasses() {
-        UserPreferences preferences = new UserPreferences("en-US");
+        UserProfile preferences = new UserProfile();
         preferences.setDisplayName("");
 
-        Set<ConstraintViolation<UserPreferences>> violations = validator.validate(preferences);
+        Set<ConstraintViolation<UserProfile>> violations = validator.validate(preferences);
 
         assertTrue(violations.isEmpty(), "Validation should pass for empty displayName");
     }
 
     @Test
     void whenDisplayNameIsNotEmpty_thenValidationPasses() {
-        UserPreferences preferences = new UserPreferences("en-US");
+        UserProfile preferences = new UserProfile();
         preferences.setDisplayName("User");
 
-        Set<ConstraintViolation<UserPreferences>> violations = validator.validate(preferences);
+        Set<ConstraintViolation<UserProfile>> violations = validator.validate(preferences);
 
         assertTrue(violations.isEmpty(), "Validation should pass for non-empty displayName");
     }

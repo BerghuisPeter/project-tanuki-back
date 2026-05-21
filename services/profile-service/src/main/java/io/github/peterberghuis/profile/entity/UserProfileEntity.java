@@ -12,12 +12,12 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "user_preferences", schema = "profile_schema")
+@Table(name = "user_profile", schema = "profile_schema")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserPreferencesEntity {
+public class UserProfileEntity {
 
     @Id
     @Column(name = "user_id", nullable = false)
@@ -29,7 +29,7 @@ public class UserPreferencesEntity {
     @Column(name = "user_color")
     private String color;
 
-    @Column(name = "locale", nullable = false)
+    @Column(name = "locale")
     private String locale;
 
     @Column(name = "avatar_url")
