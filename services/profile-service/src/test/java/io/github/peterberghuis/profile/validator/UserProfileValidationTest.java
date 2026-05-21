@@ -25,7 +25,6 @@ public class UserProfileValidationTest {
     @Test
     void whenDisplayNameIsEmpty_thenValidationPasses() {
         UserProfile preferences = new UserProfile();
-        preferences.setLocale("en-US");
         preferences.setDisplayName("");
 
         Set<ConstraintViolation<UserProfile>> violations = validator.validate(preferences);
@@ -36,7 +35,6 @@ public class UserProfileValidationTest {
     @Test
     void whenDisplayNameIsNotEmpty_thenValidationPasses() {
         UserProfile preferences = new UserProfile();
-        preferences.setLocale("en-US");
         preferences.setDisplayName("User");
 
         Set<ConstraintViolation<UserProfile>> violations = validator.validate(preferences);

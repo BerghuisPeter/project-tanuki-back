@@ -29,7 +29,7 @@ public class UserProfileEntity {
     @Column(name = "user_color")
     private String color;
 
-    @Column(name = "locale", nullable = false)
+    @Column(name = "locale")
     private String locale;
 
     @Column(name = "avatar_url")

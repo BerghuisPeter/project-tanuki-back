@@ -89,9 +89,10 @@ class UserProfileServiceTest {
     void upsertProfile_WhenNew_ShouldCreateAndReturnDto() {
         // Arrange
         UUID userId = UUID.randomUUID();
-        UserProfile inputDto = new UserProfile("en-US");
+        UserProfile inputDto = new UserProfile();
         inputDto.setDisplayName("New User");
         inputDto.setColor("#000000");
+        inputDto.setLocale("en-US");
         inputDto.setAvatarUrl("https://example.com/new.png");
 
         when(userPreferencesRepository.findById(userId)).thenReturn(Optional.empty());
@@ -124,12 +125,12 @@ class UserProfileServiceTest {
                 .userId(userId)
                 .displayName("Old Name")
                 .color("#111111")
-                .locale("en-GB")
                 .build();
 
-        UserProfile updateDto = new UserProfile("fr-FR");
+        UserProfile updateDto = new UserProfile();
         updateDto.setDisplayName("Updated Name");
         updateDto.setColor("#222222");
+        updateDto.setLocale("fr-FR");
         updateDto.setAvatarUrl("https://example.com/updated.png");
 
         when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(existingEntity));
@@ -148,8 +149,8 @@ class UserProfileServiceTest {
         verify(userPreferencesRepository).save(argThat(entity ->
                 entity.getUserId().equals(userId) &&
                         entity.getDisplayName().equals("Updated Name") &&
-                        entity.getColor().equals("#222222") &&
-                        entity.getLocale().equals("fr-FR")
+                        entity.getLocale().equals("fr-FR") &&
+                        entity.getColor().equals("#222222")
         ));
     }
 
@@ -161,12 +162,11 @@ class UserProfileServiceTest {
                 .userId(userId)
                 .displayName("Original Name")
                 .color("#333333")
-                .locale("en-US")
                 .avatarUrl("https://example.com/original.png")
                 .build();
 
-        // DTO with only locale changed, other fields null
-        UserProfile updateDto = new UserProfile("de-DE");
+        // DTO with no fields changed, all null
+        UserProfile updateDto = new UserProfile();
         updateDto.setDisplayName(null);
         updateDto.setColor(null);
         updateDto.setAvatarUrl(null);
@@ -180,12 +180,10 @@ class UserProfileServiceTest {
         // Assert
         assertEquals("Original Name", result.getDisplayName()); // Should remain unchanged
         assertEquals("#333333", result.getColor());           // Should remain unchanged
-        assertEquals("de-DE", result.getLocale());           // Should be updated
         assertEquals("https://example.com/original.png", result.getAvatarUrl()); // Should remain unchanged
 
         verify(userPreferencesRepository).save(argThat(entity ->
-                entity.getDisplayName().equals("Original Name") &&
-                        entity.getLocale().equals("de-DE")
+                entity.getDisplayName().equals("Original Name")
         ));
     }
 
@@ -197,11 +195,10 @@ class UserProfileServiceTest {
                 .userId(userId)
                 .displayName("Some Name")
                 .color("#123456")
-                .locale("en-US")
                 .avatarUrl("https://example.com/some.png")
                 .build();
 
-        UserProfile updateDto = new UserProfile("en-US");
+        UserProfile updateDto = new UserProfile();
         updateDto.setColor("");
         updateDto.setAvatarUrl("");
 

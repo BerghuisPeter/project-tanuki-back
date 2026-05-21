@@ -14,7 +14,6 @@ class UserProfileValidatorTest {
     void validate_WhenDisplayNameTooLong_ShouldThrowException() {
         UserProfile preferences = new UserProfile();
         preferences.setDisplayName("a".repeat(46));
-        preferences.setLocale("en-US");
 
         assertThrows(IllegalArgumentException.class, () -> validator.validate(preferences));
     }
@@ -23,7 +22,6 @@ class UserProfileValidatorTest {
     void validate_WhenDisplayNameIs45Characters_ShouldNotThrow() {
         UserProfile preferences = new UserProfile();
         preferences.setDisplayName("a".repeat(45));
-        preferences.setLocale("en-US");
 
         assertDoesNotThrow(() -> validator.validate(preferences));
     }

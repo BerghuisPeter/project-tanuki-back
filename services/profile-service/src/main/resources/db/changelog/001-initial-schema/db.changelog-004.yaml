@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202605211412-make-locale-nullable
+      author: junie
+      changes:
+        - dropNotNullConstraint:
+            schemaName: profile_schema
+            tableName: user_profile
+            columnName: locale
+            columnDataType: VARCHAR(10)

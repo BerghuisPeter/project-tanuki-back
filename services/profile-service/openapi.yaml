@@ -109,8 +109,6 @@ components:
           example: [ "image/jpeg", "image/png", "image/webp" ]
     UserProfile:
       type: object
-      required:
-        - locale
       properties:
         displayName:
           type: string

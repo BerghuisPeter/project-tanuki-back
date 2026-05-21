@@ -47,7 +47,9 @@ public class UserProfileService {
         if (dto.getColor() != null) {
             entity.setColor(dto.getColor());
         }
-        entity.setLocale(dto.getLocale());
+        if (dto.getLocale() != null) {
+            entity.setLocale(dto.getLocale());
+        }
         if (dto.getAvatarUrl() != null) {
             entity.setAvatarUrl(dto.getAvatarUrl());
         }
