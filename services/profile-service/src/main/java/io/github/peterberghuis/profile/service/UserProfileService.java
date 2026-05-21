@@ -8,8 +8,10 @@ import io.github.peterberghuis.profile.config.GcpStorageProperties;
 import io.github.peterberghuis.profile.dto.UploadUrlResponse;
 import io.github.peterberghuis.profile.dto.UserProfile;
 import io.github.peterberghuis.profile.entity.UserProfileEntity;
+import io.github.peterberghuis.profile.event.AvatarChangedEvent;
 import io.github.peterberghuis.profile.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,10 +26,10 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class UserProfileService {
-
     private final UserProfileRepository userPreferencesRepository;
     private final Storage storage;
     private final GcpStorageProperties gcpStorageProperties;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public Optional<UserProfile> getProfile(UUID userId) {
@@ -40,6 +42,19 @@ public class UserProfileService {
         UserProfileEntity entity = userPreferencesRepository.findById(userId)
                 .orElse(new UserProfileEntity());
 
+        if (dto.getAvatarUrl() != null) {
+            String oldAvatarUrl = entity.getAvatarUrl();
+            String newAvatarUrl = dto.getAvatarUrl();
+
+            if (shouldDeleteOldAvatar(oldAvatarUrl, newAvatarUrl)) {
+                String blobName = extractBlobName(oldAvatarUrl);
+                if (blobName != null) {
+                    eventPublisher.publishEvent(new AvatarChangedEvent(gcpStorageProperties.getBucketName(), blobName));
+                }
+            }
+            entity.setAvatarUrl(newAvatarUrl);
+        }
+
         entity.setUserId(userId);
         if (dto.getDisplayName() != null) {
             entity.setDisplayName(dto.getDisplayName());
@@ -50,12 +65,37 @@ public class UserProfileService {
         if (dto.getLocale() != null) {
             entity.setLocale(dto.getLocale());
         }
-        if (dto.getAvatarUrl() != null) {
-            entity.setAvatarUrl(dto.getAvatarUrl());
-        }
 
         UserProfileEntity saved = userPreferencesRepository.save(entity);
         return toDto(saved);
+    }
+
+    private boolean shouldDeleteOldAvatar(String oldAvatarUrl, String newAvatarUrl) {
+        if (oldAvatarUrl == null || oldAvatarUrl.isEmpty()) {
+            return false;
+        }
+        // If new URL is empty, we definitely delete old one
+        if (newAvatarUrl.isEmpty()) {
+            return true;
+        }
+        // If they are different, we delete the old one
+        return !oldAvatarUrl.equals(newAvatarUrl);
+    }
+
+    private String extractBlobName(String avatarUrl) {
+        // Expected format: avatars/userId-uuid
+        // The avatarUrl could be a full GCP URL or just the path if we decided so.
+        // Looking at getAvatarUploadUrl, fileName is "avatars/" + userId + "-" + UUID.randomUUID()
+        // If the avatarUrl stored is the fileName or contains it.
+        if (avatarUrl.contains("avatars/")) {
+            String blobName = avatarUrl.substring(avatarUrl.indexOf("avatars/"));
+            // Strip query parameters if present (e.g. signed URLs)
+            if (blobName.contains("?")) {
+                blobName = blobName.substring(0, blobName.indexOf("?"));
+            }
+            return blobName;
+        }
+        return null;
     }
 
     public UploadUrlResponse getAvatarUploadUrl(UUID userId, String contentType) {

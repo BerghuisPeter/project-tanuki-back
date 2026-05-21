@@ -4,13 +4,16 @@ import io.github.peterberghuis.profile.config.GcpStorageProperties;
 import io.github.peterberghuis.profile.dto.UploadUrlResponse;
 import io.github.peterberghuis.profile.dto.UserProfile;
 import io.github.peterberghuis.profile.entity.UserProfileEntity;
+import io.github.peterberghuis.profile.event.AvatarChangedEvent;
 import io.github.peterberghuis.profile.repository.UserProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -33,6 +36,9 @@ class UserProfileServiceTest {
 
     @Mock
     private com.google.cloud.storage.Storage storage;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     private GcpStorageProperties gcpStorageProperties;
 
@@ -216,6 +222,167 @@ class UserProfileServiceTest {
                 entity.getColor().equals("") &&
                         entity.getAvatarUrl().equals("")
         ));
+    }
+
+    @Test
+    void upsertProfile_WhenAvatarUrlChanged_ShouldPublishAvatarChangedEvent() {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        String oldAvatarUrl = "https://storage.googleapis.com/test-bucket/avatars/" + userId + "-old";
+        String newAvatarUrl = "https://storage.googleapis.com/test-bucket/avatars/" + userId + "-new";
+
+        UserProfileEntity existingEntity = UserProfileEntity.builder()
+                .userId(userId)
+                .avatarUrl(oldAvatarUrl)
+                .build();
+
+        UserProfile updateDto = new UserProfile();
+        updateDto.setAvatarUrl(newAvatarUrl);
+
+        when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(existingEntity));
+        when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        userProfileService.upsertProfile(userId, updateDto);
+
+        // Assert
+        ArgumentCaptor<AvatarChangedEvent> eventCaptor = ArgumentCaptor.forClass(AvatarChangedEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        AvatarChangedEvent event = eventCaptor.getValue();
+        assertEquals("test-bucket", event.getBucketName());
+        assertEquals("avatars/" + userId + "-old", event.getBlobName());
+    }
+
+    @Test
+    void upsertProfile_WhenAvatarUrlSetToEmpty_ShouldPublishAvatarChangedEvent() {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        String oldAvatarUrl = "https://storage.googleapis.com/test-bucket/avatars/" + userId + "-old";
+
+        UserProfileEntity existingEntity = UserProfileEntity.builder()
+                .userId(userId)
+                .avatarUrl(oldAvatarUrl)
+                .build();
+
+        UserProfile updateDto = new UserProfile();
+        updateDto.setAvatarUrl("");
+
+        when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(existingEntity));
+        when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        userProfileService.upsertProfile(userId, updateDto);
+
+        // Assert
+        ArgumentCaptor<AvatarChangedEvent> eventCaptor = ArgumentCaptor.forClass(AvatarChangedEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        AvatarChangedEvent event = eventCaptor.getValue();
+        assertEquals("test-bucket", event.getBucketName());
+        assertEquals("avatars/" + userId + "-old", event.getBlobName());
+    }
+
+    @Test
+    void upsertProfile_WhenAvatarUrlSame_ShouldNotPublishEvent() {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        String avatarUrl = "https://storage.googleapis.com/test-bucket/avatars/" + userId + "-same";
+
+        UserProfileEntity existingEntity = UserProfileEntity.builder()
+                .userId(userId)
+                .avatarUrl(avatarUrl)
+                .build();
+
+        UserProfile updateDto = new UserProfile();
+        updateDto.setAvatarUrl(avatarUrl);
+
+        when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(existingEntity));
+        when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        userProfileService.upsertProfile(userId, updateDto);
+
+        // Assert
+        verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    void upsertProfile_WhenOldAvatarUrlIsNull_ShouldNotPublishEvent() {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        String newAvatarUrl = "https://storage.googleapis.com/test-bucket/avatars/" + userId + "-new";
+
+        UserProfileEntity existingEntity = UserProfileEntity.builder()
+                .userId(userId)
+                .avatarUrl(null)
+                .build();
+
+        UserProfile updateDto = new UserProfile();
+        updateDto.setAvatarUrl(newAvatarUrl);
+
+        when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(existingEntity));
+        when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        userProfileService.upsertProfile(userId, updateDto);
+
+        // Assert
+        verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    void upsertProfile_WhenAvatarUrlAbsent_ShouldStillFetchAndHandleOtherFields() {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        UserProfileEntity existingEntity = UserProfileEntity.builder()
+                .userId(userId)
+                .displayName("Old Name")
+                .avatarUrl("https://example.com/avatar.png")
+                .build();
+
+        UserProfile updateDto = new UserProfile();
+        updateDto.setDisplayName("Updated Name");
+        updateDto.setAvatarUrl(null); // Explicitly null (absent)
+
+        when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(existingEntity));
+        when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        UserProfile result = userProfileService.upsertProfile(userId, updateDto);
+
+        // Assert
+        assertEquals("Updated Name", result.getDisplayName());
+        assertEquals("https://example.com/avatar.png", result.getAvatarUrl()); // Preserved
+        verify(userPreferencesRepository).findById(userId);
+        verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    void upsertProfile_WhenAvatarUrlHasQueryParameters_ShouldExtractCorrectBlobName() {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        String oldAvatarUrl = "https://storage.googleapis.com/test-bucket/avatars/" + userId + "-old?token=123&expiry=456";
+        String newAvatarUrl = "https://storage.googleapis.com/test-bucket/avatars/" + userId + "-new";
+
+        UserProfileEntity existingEntity = UserProfileEntity.builder()
+                .userId(userId)
+                .avatarUrl(oldAvatarUrl)
+                .build();
+
+        UserProfile updateDto = new UserProfile();
+        updateDto.setAvatarUrl(newAvatarUrl);
+
+        when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(existingEntity));
+        when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        userProfileService.upsertProfile(userId, updateDto);
+
+        // Assert
+        // Should publish event with "avatars/userId-old", NOT including the query params
+        ArgumentCaptor<AvatarChangedEvent> eventCaptor = ArgumentCaptor.forClass(AvatarChangedEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        AvatarChangedEvent event = eventCaptor.getValue();
+        assertEquals("avatars/" + userId + "-old", event.getBlobName());
     }
 
     @Test
