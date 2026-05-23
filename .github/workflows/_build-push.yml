@@ -17,7 +17,7 @@ on:
         required: true
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -30,16 +30,29 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Run tests
-        run: ./mvnw test -pl services/${{ inputs.service_name }} -am
+      - name: Build and test with Maven
+        run: ./mvnw clean package -pl services/${{ inputs.service_name }} -am
 
-  build-and-push:
-    needs: test
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.service_name }}-jar
+          path: services/${{ inputs.service_name }}/target/*.jar
+          retention-days: 1
+
+  push:
+    needs: build-and-test
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.service_name }}-jar
+          path: services/${{ inputs.service_name }}/target/
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -63,7 +76,7 @@ jobs:
             ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/${{ inputs.image_name }}:latest
 
   deploy:
-    needs: build-and-push
+    needs: push
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
