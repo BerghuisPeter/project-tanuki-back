@@ -15,7 +15,7 @@ spring:
     hikari:
       connection-init-sql: CREATE SCHEMA IF NOT EXISTS profile_schema;
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
+    change-log: classpath:db/changelog/profile-service/db.changelog-master.yaml
     enabled: true
     default-schema: profile_schema
     liquibase-schema: profile_schema

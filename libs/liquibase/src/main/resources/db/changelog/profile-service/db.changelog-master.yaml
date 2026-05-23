@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/profile-service/001-initial-schema/db.changelog-001.yaml
+  - include:
+      file: db/changelog/profile-service/001-initial-schema/db.changelog-002.yaml
+  - include:
+      file: db/changelog/profile-service/001-initial-schema/db.changelog-003.yaml
+  - include:
+      file: db/changelog/profile-service/001-initial-schema/db.changelog-004.yaml
