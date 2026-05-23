@@ -17,10 +17,26 @@ on:
         required: true
 
 jobs:
-  containerization:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run tests
+        run: ./mvnw test -pl services/${{ inputs.service_name }} -am
+
+  build-and-push:
+    needs: test
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -46,6 +62,11 @@ jobs:
             ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ github.sha }}
             ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/${{ inputs.image_name }}:latest
 
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
