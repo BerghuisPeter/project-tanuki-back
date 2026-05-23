@@ -9,6 +9,8 @@ spring:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
+  liquibase:
+    enabled: false
   jpa:
     properties:
       hibernate:

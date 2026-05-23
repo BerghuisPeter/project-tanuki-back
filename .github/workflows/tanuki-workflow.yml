@@ -12,6 +12,7 @@ jobs:
     outputs:
       services: ${{ steps.filter.outputs.changes }}
       global: ${{ steps.filter.outputs.global }}
+      liquibase: ${{ steps.filter.outputs.liquibase }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -19,18 +20,78 @@ jobs:
         with:
           filters: |
             global:
-              - 'libs/**'
+              - 'libs/common/**'
+              - 'libs/security/**'
               - 'pom.xml'
               - 'Dockerfile'
               - '.github/workflows/**'
+            liquibase:
+              - 'libs/liquibase/**'
+            liquibase-auth-service:
+              - 'libs/liquibase/src/main/resources/db/changelog/auth-service/**'
+            liquibase-profile-service:
+              - 'libs/liquibase/src/main/resources/db/changelog/profile-service/**'
             auth-service:
               - 'services/auth-service/**'
             profile-service:
               - 'services/profile-service/**'
 
+  liquibase-build:
+    needs: [ changes ]
+    # Only build the migration image if any liquibase files changed, or if it's a manual dispatch/global change
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      needs.changes.outputs.global == 'true' || 
+      needs.changes.outputs.liquibase == 'true'
+    uses: ./.github/workflows/_liquibase-build.yml
+    secrets:
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+    with:
+      service_name: "liquibase"
+      image_name: "liquibase-migration"
+      environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
+
+  liquibase-migrate:
+    needs: [ changes, liquibase-build ]
+    # Run if liquibase files changed OR manual dispatch.
+    # We use always() and check results to handle the case where liquibase-build was skipped but we still want to migrate on manual dispatch
+    if: |
+      always() && 
+      (github.event_name == 'workflow_dispatch' || needs.changes.outputs.liquibase == 'true' || needs.changes.outputs.global == 'true') &&
+      (needs.liquibase-build.result == 'success' || needs.liquibase-build.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
+    strategy:
+      matrix:
+        service: [ auth-service, profile-service ]
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Execute Liquibase Migration Job
+        # Only run migration for the service if its specific liquibase files changed, or if it's a manual dispatch/global change
+        if: |
+          github.event_name == 'workflow_dispatch' || 
+          needs.changes.outputs.global == 'true' || 
+          needs.changes.outputs[format('liquibase-{0}', matrix.service)] == 'true'
+        run: |
+          ENVIRONMENT=${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
+          
+          gcloud run jobs execute liquibase-migration-${ENVIRONMENT} \
+            --region=${{ vars.GAR_LOCATION }} \
+            --update-env-vars SERVICE_NAME=${{ matrix.service }} \
+            --wait
+
   build-and-deploy:
-    needs: changes
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.global == 'true' || needs.changes.outputs.services != '[]' }}
+    needs: [ changes, liquibase-migrate ]
+    # services build if services changed OR global changed OR manual dispatch.
+    # Wait for migrations to finish (success or skipped).
+    if: |
+      always() &&
+      (github.event_name == 'workflow_dispatch' || needs.changes.outputs.global == 'true' || needs.changes.outputs.services != '[]') &&
+      (needs.liquibase-migrate.result == 'success' || needs.liquibase-migrate.result == 'skipped')
     strategy:
       matrix:
         service: ${{ fromJson((github.event_name == 'workflow_dispatch' || needs.changes.outputs.global == 'true') && '["auth-service", "profile-service"]' || needs.changes.outputs.services) }}
