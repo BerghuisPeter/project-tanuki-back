@@ -78,7 +78,14 @@ jobs:
           needs.changes.outputs[format('liquibase-{0}', matrix.service)] == 'true'
         run: |
           ENVIRONMENT=${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
+          IMAGE="${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/liquibase-migration:${{ github.sha }}"
           
+          # Update the job image to ensure it uses the latest build
+          gcloud run jobs update liquibase-migration-${ENVIRONMENT} \
+            --image=$IMAGE \
+            --region=${{ vars.GAR_LOCATION }}
+
+          # Execute the migration
           gcloud run jobs execute liquibase-migration-${ENVIRONMENT} \
             --region=${{ vars.GAR_LOCATION }} \
             --update-env-vars SERVICE_NAME=${{ matrix.service }} \
