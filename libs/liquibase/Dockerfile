@@ -1,5 +1,8 @@
 FROM liquibase/liquibase:latest
 
+# Install the PostgreSQL driver as it is no longer included by default in 5.0+
+RUN lpm add postgresql --global
+
 # Copy all changelogs to the image so it can be used for any service
 COPY libs/liquibase/src/main/resources/db/changelog /liquibase/changelog
 
