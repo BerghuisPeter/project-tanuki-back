@@ -1,4 +1,4 @@
-name: Tanuki-workflow
+name: Tanuki CI/CD
 
 on:
   push:
@@ -10,44 +10,35 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      auth: ${{ steps.filter.outputs.auth }}
-      profile: ${{ steps.filter.outputs.profile }}
-      common: ${{ steps.filter.outputs.common }}
+      services: ${{ steps.filter.outputs.changes }}
+      global: ${{ steps.filter.outputs.global }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
-            auth:
-              - 'services/auth-service/**'
-              - 'pom.xml'
-              - 'Dockerfile'
-            profile:
-              - 'services/profile-service/**'
-              - 'pom.xml'
-              - 'Dockerfile'
-            common:
+            global:
               - 'libs/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+              - '.github/workflows/**'
+            auth-service:
+              - 'services/auth-service/**'
+            profile-service:
+              - 'services/profile-service/**'
 
-  auth-service:
+  build-and-deploy:
     needs: changes
-    if: ${{ github.event_name == 'workflow_dispatch' || ((needs.changes.outputs.auth == 'true' || needs.changes.outputs.common == 'true') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master')) }}
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.global == 'true' || needs.changes.outputs.services != '[]' }}
+    strategy:
+      matrix:
+        service: ${{ fromJson((github.event_name == 'workflow_dispatch' || needs.changes.outputs.global == 'true') && '["auth-service", "profile-service"]' || needs.changes.outputs.services) }}
+      fail-fast: false
     uses: ./.github/workflows/_build-push.yml
     secrets:
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
     with:
-      service_name: auth-service
-      image_name: auth-service
-      environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
-
-  profile-service:
-    needs: changes
-    if: ${{ github.event_name == 'workflow_dispatch' || ((needs.changes.outputs.profile == 'true' || needs.changes.outputs.common == 'true') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master')) }}
-    uses: ./.github/workflows/_build-push.yml
-    secrets:
-      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-    with:
-      service_name: profile-service
-      image_name: profile-service
+      service_name: ${{ matrix.service }}
+      image_name: ${{ matrix.service }}
       environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}

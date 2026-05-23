@@ -1,24 +1,6 @@
 name: Build and Push Service
 
 on:
-  workflow_dispatch:
-    inputs:
-      service_name:
-        description: 'Service name (profile-service, auth-service)'
-        required: true
-        type: string
-      environment:
-        description: 'Environment (dev or prod)'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - prod
-      image_name:
-        description: 'Image name (profile-service, auth-service)'
-        required: true
-        type: string
   workflow_call:
     inputs:
       service_name:
@@ -35,13 +17,42 @@ on:
         required: true
 
 jobs:
-  containerization:
+  build-and-test:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build and test with Maven
+        run: ./mvnw clean package -pl services/${{ inputs.service_name }} -am
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.service_name }}-jar
+          path: services/${{ inputs.service_name }}/target/*.jar
+          retention-days: 1
+
+  push:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.service_name }}-jar
+          path: services/${{ inputs.service_name }}/target/
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -64,6 +75,11 @@ jobs:
             ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/${{ inputs.image_name }}:${{ github.sha }}
             ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/${{ inputs.image_name }}:latest
 
+  deploy:
+    needs: push
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
