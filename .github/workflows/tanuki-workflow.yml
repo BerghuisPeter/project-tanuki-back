@@ -51,14 +51,38 @@ jobs:
       image_name: "liquibase-migration"
       environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
 
-  liquibase-migrate:
+  liquibase-update-job:
     needs: [ changes, liquibase-build ]
-    # Run if liquibase files changed OR manual dispatch.
-    # We use always() and check results to handle the case where liquibase-build was skipped but we still want to migrate on manual dispatch
+    # Update the job image once before executing parallel migrations
     if: |
       always() && 
       (github.event_name == 'workflow_dispatch' || needs.changes.outputs.liquibase == 'true' || needs.changes.outputs.global == 'true') &&
       (needs.liquibase-build.result == 'success' || needs.liquibase-build.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Update Cloud Run Job Image
+        run: |
+          ENVIRONMENT=${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
+          IMAGE="${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/liquibase-migration:${{ github.sha }}"
+          
+          gcloud run jobs update liquibase-migration-${ENVIRONMENT} \
+            --image=$IMAGE \
+            --region=${{ vars.GAR_LOCATION }}
+
+  liquibase-migrate:
+    needs: [ changes, liquibase-build, liquibase-update-job ]
+    # Run if liquibase files changed OR manual dispatch.
+    if: |
+      always() && 
+      (github.event_name == 'workflow_dispatch' || needs.changes.outputs.liquibase == 'true' || needs.changes.outputs.global == 'true') &&
+      (needs.liquibase-build.result == 'success' || needs.liquibase-build.result == 'skipped') &&
+      (needs.liquibase-update-job.result == 'success' || needs.liquibase-update-job.result == 'skipped')
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
     strategy:
@@ -78,13 +102,7 @@ jobs:
           needs.changes.outputs[format('liquibase-{0}', matrix.service)] == 'true'
         run: |
           ENVIRONMENT=${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
-          IMAGE="${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/liquibase-migration:${{ github.sha }}"
           
-          # Update the job image to ensure it uses the latest build
-          gcloud run jobs update liquibase-migration-${ENVIRONMENT} \
-            --image=$IMAGE \
-            --region=${{ vars.GAR_LOCATION }}
-
           # Execute the migration
           gcloud run jobs execute liquibase-migration-${ENVIRONMENT} \
             --region=${{ vars.GAR_LOCATION }} \
