@@ -7,4 +7,6 @@ COPY libs/liquibase/src/main/resources/db/changelog /liquibase/changelog
 # This will be overridden at runtime by the GCP Job or gcloud execution
 ENV LIQUIBASE_CHANGELOG_FILE=/liquibase/changelog/${SERVICE_NAME}/db.changelog-master.yaml
 
-# The entrypoint is already set in the base image
+# The entrypoint is already set in the base image.
+# We add "update" as the default command to apply migrations.
+CMD ["update"]
