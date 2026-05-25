@@ -106,7 +106,7 @@ jobs:
           # Execute the migration with the corrected path to the master changelog
           gcloud run jobs execute liquibase-migration-${ENVIRONMENT} \
             --region=${{ vars.GAR_LOCATION }} \
-            --update-env-vars SERVICE_NAME=${{ matrix.service }},LIQUIBASE_COMMAND_CHANGELOG_FILE=/liquibase/changelog/db/changelog/${{ matrix.service }}/db.changelog-master.yaml \
+            --update-env-vars SERVICE_NAME=${{ matrix.service }},LIQUIBASE_COMMAND_CHANGELOG_FILE=db/changelog/${{ matrix.service }}/db.changelog-master.yaml \
             --wait
 
   build-and-deploy:
