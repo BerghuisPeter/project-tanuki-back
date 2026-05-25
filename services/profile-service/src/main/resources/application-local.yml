@@ -3,6 +3,8 @@ spring:
     url: jdbc:postgresql://localhost:5432/tanuki-db
     username: myuser
     password: secret
+  liquibase:
+    enabled: true
   jpa:
     properties:
       hibernate:

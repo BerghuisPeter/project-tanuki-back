@@ -30,7 +30,7 @@ spring:
       connection-init-sql: CREATE SCHEMA IF NOT EXISTS auth_schema;
   liquibase:
     change-log: classpath:db/changelog/auth-service/db.changelog-master.yaml
-    enabled: true
+    enabled: false
     default-schema: auth_schema
     liquibase-schema: auth_schema
 
