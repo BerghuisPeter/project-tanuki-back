@@ -1,0 +1,59 @@
+openapi: 3.0.3
+info:
+  title: Goshuin Service API
+  description: Goshuin management service for Project Tanuki
+  version: 0.0.1-SNAPSHOT
+servers:
+  - url: http://localhost:8083
+    description: Local development server
+paths:
+  /api/v1/goshuin:
+    get:
+      summary: Get all goshuins
+      operationId: getGoshuins
+      tags:
+        - Goshuin
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Goshuin'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Goshuin:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        shrineName:
+          type: string
+        date:
+          type: string
+          format: date
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

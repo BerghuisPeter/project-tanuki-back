@@ -16,6 +16,7 @@
     <modules>
         <module>services/auth-service</module>
         <module>services/profile-service</module>
+        <module>services/goshuin-service</module>
         <module>libs/security</module>
         <module>libs/common</module>
         <module>libs/liquibase</module>
