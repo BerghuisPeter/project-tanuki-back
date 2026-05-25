@@ -103,10 +103,17 @@ jobs:
         run: |
           ENVIRONMENT=${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
           
-          # Execute the migration with the corrected path to the master changelog
+          # Map service to its specific schema
+          if [ "${{ matrix.service }}" == "auth-service" ]; then
+            SCHEMA="auth_schema"
+          else
+            SCHEMA="profile_schema"
+          fi
+
+          # Execute the migration with the corrected path to the master changelog and specify the schema
           gcloud run jobs execute liquibase-migration-${ENVIRONMENT} \
             --region=${{ vars.GAR_LOCATION }} \
-            --update-env-vars SERVICE_NAME=${{ matrix.service }},LIQUIBASE_COMMAND_CHANGELOG_FILE=db/changelog/${{ matrix.service }}/db.changelog-master.yaml \
+            --update-env-vars SERVICE_NAME=${{ matrix.service }},LIQUIBASE_COMMAND_CHANGELOG_FILE=db/changelog/${{ matrix.service }}/db.changelog-master.yaml,LIQUIBASE_COMMAND_DEFAULT_SCHEMA_NAME=$SCHEMA \
             --wait
 
   build-and-deploy:
