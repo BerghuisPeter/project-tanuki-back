@@ -1,5 +1,6 @@
 package io.github.peterberghuis.auth.service;
 
+import io.github.peterberghuis.auth.client.ProfileClient;
 import io.github.peterberghuis.auth.dto.*;
 import io.github.peterberghuis.auth.entity.*;
 import io.github.peterberghuis.auth.entity.UserRole;
@@ -33,6 +34,7 @@ public class AuthService {
     private final UserAuthProviderRepository userAuthProviderRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final ProfileClient profileClient;
 
     @Value("${jwt.refresh-expiration}")
     private Long refreshExpiration;
@@ -50,7 +52,8 @@ public class AuthService {
             throw new BadCredentialsException("User account is " + user.getStatus());
         }
 
-        return createAuthResponse(user);
+        UserProfile userProfile = profileClient.getInternalProfile(user.getId());
+        return createAuthResponse(user, userProfile);
     }
 
     @Transactional
@@ -77,7 +80,8 @@ public class AuthService {
             throw new BadCredentialsException("User account is " + user.getStatus());
         }
 
-        return createAuthResponse(user);
+        UserProfile createdProfile = profileClient.createInternalProfile(user.getId(), null);
+        return createAuthResponse(user, createdProfile);
     }
 
     public String generateOAuth2TempLoginToken(String email) {
@@ -104,7 +108,8 @@ public class AuthService {
             throw new BadCredentialsException("User account is " + user.getStatus());
         }
 
-        return createAuthResponse(user);
+        UserProfile userProfile = profileClient.getInternalProfile(user.getId());
+        return createAuthResponse(user, userProfile);
     }
 
     @Transactional
@@ -127,7 +132,11 @@ public class AuthService {
         localProvider.setProviderUserId(user.getEmail());
         userAuthProviderRepository.save(localProvider);
 
-        return createAuthResponse(user);
+        UserProfile profileData = new UserProfile();
+        profileData.setLocale(request.getLocale());
+        UserProfile createdProfile = profileClient.createInternalProfile(user.getId(), profileData);
+
+        return createAuthResponse(user, createdProfile);
     }
 
     @Transactional
@@ -143,8 +152,7 @@ public class AuthService {
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new BadCredentialsException("User account is " + user.getStatus());
         }
-
-        return createAuthResponse(user);
+        return createAuthResponse(user, null);
     }
 
     @Transactional(readOnly = true)
@@ -152,7 +160,8 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("User not found"));
 
-        return toUserResponse(user);
+        UserProfile userProfile = profileClient.getInternalProfile(user.getId());
+        return toUserResponse(user, userProfile);
     }
 
     @Transactional
@@ -163,25 +172,29 @@ public class AuthService {
         refreshTokenRepository.flush();
     }
 
-    private AuthResponse createAuthResponse(User user) {
+    private AuthResponse createAuthResponse(User user, UserProfile userProfile) {
         String accessToken = generateAccessToken(user);
         String refreshToken = createRefreshToken(user).getToken();
         AuthResponse response = new AuthResponse();
         response.setAccessToken(accessToken);
         response.setRefreshToken(refreshToken);
-        response.setUser(toUserResponse(user));
+        response.setUser(toUserResponse(user, userProfile));
         return response;
     }
 
-    private UserResponse toUserResponse(User user) {
+    private UserResponse toUserResponse(User user, UserProfile userProfile) {
         UserResponse response = new UserResponse();
         response.setId(user.getId());
         response.setEmail(user.getEmail());
-        response.setStatus(io.github.peterberghuis.auth.dto.UserStatus.fromValue(user.getStatus().name()));
         response.setCreatedAt(user.getCreatedAt().atOffset(java.time.ZoneOffset.UTC));
         response.setRoles(user.getRoles().stream()
                 .map(role -> io.github.peterberghuis.auth.dto.UserRole.fromValue(role.name()))
                 .toList());
+
+        if (userProfile != null) {
+            response.setProfile(userProfile);
+        }
+
         return response;
     }
 
@@ -234,3 +247,4 @@ public class AuthService {
         return token;
     }
 }
+

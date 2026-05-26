@@ -1,9 +1,7 @@
 package io.github.peterberghuis.auth.service;
 
-import io.github.peterberghuis.auth.dto.AuthResponse;
-import io.github.peterberghuis.auth.dto.LoginRequest;
-import io.github.peterberghuis.auth.dto.RefreshRequest;
-import io.github.peterberghuis.auth.dto.RegisterRequest;
+import io.github.peterberghuis.auth.client.ProfileClient;
+import io.github.peterberghuis.auth.dto.*;
 import io.github.peterberghuis.auth.entity.RefreshToken;
 import io.github.peterberghuis.auth.entity.User;
 import io.github.peterberghuis.auth.entity.UserAuthProvider;
@@ -48,6 +46,9 @@ class AuthServiceTest {
     @Mock
     private JwtUtils jwtUtils;
 
+    @Mock
+    private ProfileClient profileClient;
+
     @InjectMocks
     private AuthService authService;
 
@@ -87,6 +88,7 @@ class AuthServiceTest {
         when(passwordEncoder.matches(password, user.getPasswordHash())).thenReturn(true);
         when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
+        when(profileClient.getInternalProfile(any(UUID.class))).thenReturn(new UserProfile());
 
         // Act
         AuthResponse response = authService.login(loginRequest);
@@ -108,14 +110,17 @@ class AuthServiceTest {
         // Arrange
         String email = "newuser@example.com";
         String password = "password";
+        String locale = "en-US";
         RegisterRequest registerRequest = new RegisterRequest();
         registerRequest.setEmail(email);
         registerRequest.setPassword(password);
+        registerRequest.setLocale(locale);
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
         when(passwordEncoder.encode(password)).thenReturn("hashed_password");
         when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
+        when(profileClient.createInternalProfile(any(UUID.class), any(UserProfile.class))).thenReturn(new UserProfile());
 
         // Mock userRepository.save to set ID and createdAt which are normally set by @PrePersist
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
@@ -181,6 +186,7 @@ class AuthServiceTest {
         when(refreshTokenRepository.findByToken(hashedOldToken)).thenReturn(Optional.of(oldToken));
         when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("new_access_token");
         when(jwtUtils.generateRefreshToken(email)).thenReturn(newTokenString);
+        when(profileClient.getInternalProfile(any(UUID.class))).thenReturn(new UserProfile());
 
         // Act
         AuthResponse response = authService.refresh(refreshRequest);
@@ -215,6 +221,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
+        when(profileClient.getInternalProfile(any(UUID.class))).thenReturn(new UserProfile());
 
         // Act
         AuthResponse response = authService.exchangeTempLoginToken(token);
@@ -268,6 +275,7 @@ class AuthServiceTest {
         when(userAuthProviderRepository.save(any(UserAuthProvider.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
+        when(profileClient.getInternalProfile(any(UUID.class))).thenReturn(new UserProfile());
 
         // Act
         AuthResponse response = authService.loginOrRegisterOAuth2User(email, name, sub, "google");
@@ -297,6 +305,7 @@ class AuthServiceTest {
                 .thenReturn(Optional.of(new UserAuthProvider(UUID.randomUUID(), user, "google", sub)));
         when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
+        when(profileClient.getInternalProfile(any(UUID.class))).thenReturn(new UserProfile());
 
         // Act
         AuthResponse response = authService.loginOrRegisterOAuth2User(email, name, sub, "google");

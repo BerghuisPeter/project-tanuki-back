@@ -33,6 +33,14 @@ spring:
     enabled: false
     default-schema: auth_schema
     liquibase-schema: auth_schema
+  cloud:
+    openfeign:
+      client:
+        config:
+          profile-service:
+            url: ${PROFILE_SERVICE_URL:http://localhost:8082}
+            connectTimeout: 2000
+            readTimeout: 3000
 
 server:
   port: ${PORT:8081}
