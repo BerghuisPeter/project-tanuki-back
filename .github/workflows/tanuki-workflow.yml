@@ -31,10 +31,14 @@ jobs:
               - 'libs/liquibase/src/main/resources/db/changelog/auth-service/**'
             liquibase-profile-service:
               - 'libs/liquibase/src/main/resources/db/changelog/profile-service/**'
+            liquibase-goshuin-service:
+              - 'libs/liquibase/src/main/resources/db/changelog/goshuin-service/**'
             auth-service:
               - 'services/auth-service/**'
             profile-service:
               - 'services/profile-service/**'
+            goshuin-service:
+              - 'services/goshuin-service/**'
 
   liquibase-build:
     needs: [ changes ]
@@ -87,7 +91,7 @@ jobs:
     environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
     strategy:
       matrix:
-        service: [ auth-service, profile-service ]
+        service: [ auth-service, profile-service, goshuin-service ]
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -106,8 +110,10 @@ jobs:
           # Map service to its specific schema
           if [ "${{ matrix.service }}" == "auth-service" ]; then
             SCHEMA="auth_schema"
-          else
+          elif [ "${{ matrix.service }}" == "profile-service" ]; then
             SCHEMA="profile_schema"
+          else
+            SCHEMA="goshuin_schema"
           fi
 
           # Execute the migration with the corrected path to the master changelog and specify the schema
@@ -126,7 +132,7 @@ jobs:
       (needs.liquibase-migrate.result == 'success' || needs.liquibase-migrate.result == 'skipped')
     strategy:
       matrix:
-        service: ${{ fromJson((github.event_name == 'workflow_dispatch' || needs.changes.outputs.global == 'true') && '["auth-service", "profile-service"]' || needs.changes.outputs.services) }}
+        service: ${{ fromJson((github.event_name == 'workflow_dispatch' || needs.changes.outputs.global == 'true') && '["auth-service", "profile-service", "goshuin-service"]' || needs.changes.outputs.services) }}
       fail-fast: false
     uses: ./.github/workflows/_build-push.yml
     secrets:
