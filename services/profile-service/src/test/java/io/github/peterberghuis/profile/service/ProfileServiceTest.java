@@ -26,13 +26,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class UserProfileServiceTest {
+class ProfileServiceTest {
 
     @Mock
     private UserProfileRepository userPreferencesRepository;
 
     @InjectMocks
-    private UserProfileService userProfileService;
+    private ProfileService profileService;
 
     @Mock
     private com.google.cloud.storage.Storage storage;
@@ -49,7 +49,7 @@ class UserProfileServiceTest {
         gcpStorageProperties.getAvatar().setAllowedContentTypes(List.of("image/jpeg", "image/png"));
         gcpStorageProperties.getAvatar().setMaxSizeBytes(5242880L);
 
-        ReflectionTestUtils.setField(userProfileService, "gcpStorageProperties", gcpStorageProperties);
+        ReflectionTestUtils.setField(profileService, "gcpStorageProperties", gcpStorageProperties);
     }
 
     @Test
@@ -67,7 +67,7 @@ class UserProfileServiceTest {
         when(userPreferencesRepository.findById(userId)).thenReturn(Optional.of(entity));
 
         // Act
-        Optional<UserProfile> result = userProfileService.getProfile(userId);
+        Optional<UserProfile> result = profileService.getProfile(userId);
 
         // Assert
         assertTrue(result.isPresent());
@@ -85,7 +85,7 @@ class UserProfileServiceTest {
         when(userPreferencesRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Act
-        Optional<UserProfile> result = userProfileService.getProfile(userId);
+        Optional<UserProfile> result = profileService.getProfile(userId);
 
         // Assert
         assertTrue(result.isEmpty());
@@ -105,7 +105,7 @@ class UserProfileServiceTest {
         when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        UserProfile result = userProfileService.upsertProfile(userId, inputDto);
+        UserProfile result = profileService.upsertProfile(userId, inputDto);
 
         // Assert
         assertNotNull(result);
@@ -143,7 +143,7 @@ class UserProfileServiceTest {
         when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        UserProfile result = userProfileService.upsertProfile(userId, updateDto);
+        UserProfile result = profileService.upsertProfile(userId, updateDto);
 
         // Assert
         assertNotNull(result);
@@ -181,7 +181,7 @@ class UserProfileServiceTest {
         when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        UserProfile result = userProfileService.upsertProfile(userId, updateDto);
+        UserProfile result = profileService.upsertProfile(userId, updateDto);
 
         // Assert
         assertEquals("Original Name", result.getDisplayName()); // Should remain unchanged
@@ -212,7 +212,7 @@ class UserProfileServiceTest {
         when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        UserProfile result = userProfileService.upsertProfile(userId, updateDto);
+        UserProfile result = profileService.upsertProfile(userId, updateDto);
 
         // Assert
         assertEquals("", result.getColor());
@@ -243,7 +243,7 @@ class UserProfileServiceTest {
         when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        userProfileService.upsertProfile(userId, updateDto);
+        profileService.upsertProfile(userId, updateDto);
 
         // Assert
         ArgumentCaptor<AvatarChangedEvent> eventCaptor = ArgumentCaptor.forClass(AvatarChangedEvent.class);
@@ -271,7 +271,7 @@ class UserProfileServiceTest {
         when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        userProfileService.upsertProfile(userId, updateDto);
+        profileService.upsertProfile(userId, updateDto);
 
         // Assert
         ArgumentCaptor<AvatarChangedEvent> eventCaptor = ArgumentCaptor.forClass(AvatarChangedEvent.class);
@@ -299,7 +299,7 @@ class UserProfileServiceTest {
         when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        userProfileService.upsertProfile(userId, updateDto);
+        profileService.upsertProfile(userId, updateDto);
 
         // Assert
         verify(eventPublisher, never()).publishEvent(any());
@@ -323,7 +323,7 @@ class UserProfileServiceTest {
         when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        userProfileService.upsertProfile(userId, updateDto);
+        profileService.upsertProfile(userId, updateDto);
 
         // Assert
         verify(eventPublisher, never()).publishEvent(any());
@@ -347,7 +347,7 @@ class UserProfileServiceTest {
         when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        UserProfile result = userProfileService.upsertProfile(userId, updateDto);
+        UserProfile result = profileService.upsertProfile(userId, updateDto);
 
         // Assert
         assertEquals("Updated Name", result.getDisplayName());
@@ -375,7 +375,7 @@ class UserProfileServiceTest {
         when(userPreferencesRepository.save(any(UserProfileEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        userProfileService.upsertProfile(userId, updateDto);
+        profileService.upsertProfile(userId, updateDto);
 
         // Assert
         // Should publish event with "avatars/userId-old", NOT including the query params
@@ -394,7 +394,7 @@ class UserProfileServiceTest {
         when(storage.signUrl(any(), anyLong(), any(), any(), any(), any())).thenReturn(mockUrl);
 
         // Act
-        UploadUrlResponse result = userProfileService.getAvatarUploadUrl(userId, contentType);
+        UploadUrlResponse result = profileService.getAvatarUploadUrl(userId, contentType);
 
         // Assert
         assertNotNull(result);
@@ -412,7 +412,7 @@ class UserProfileServiceTest {
 
         // Act & Assert
         assertThrows(ResponseStatusException.class, () ->
-                userProfileService.getAvatarUploadUrl(userId, contentType)
+                profileService.getAvatarUploadUrl(userId, contentType)
         );
     }
 }

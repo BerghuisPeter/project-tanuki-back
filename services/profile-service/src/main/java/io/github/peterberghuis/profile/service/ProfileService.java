@@ -25,21 +25,21 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
-public class UserProfileService {
-    private final UserProfileRepository userPreferencesRepository;
+public class ProfileService {
+    private final UserProfileRepository userProfileRepository;
     private final Storage storage;
     private final GcpStorageProperties gcpStorageProperties;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public Optional<UserProfile> getProfile(UUID userId) {
-        return userPreferencesRepository.findById(userId)
+        return userProfileRepository.findById(userId)
                 .map(this::toDto);
     }
 
     @Transactional
     public UserProfile upsertProfile(UUID userId, UserProfile dto) {
-        UserProfileEntity entity = userPreferencesRepository.findById(userId)
+        UserProfileEntity entity = userProfileRepository.findById(userId)
                 .orElse(new UserProfileEntity());
 
         if (dto.getAvatarUrl() != null) {
@@ -66,7 +66,7 @@ public class UserProfileService {
             entity.setLocale(dto.getLocale());
         }
 
-        UserProfileEntity saved = userPreferencesRepository.save(entity);
+        UserProfileEntity saved = userProfileRepository.save(entity);
         return toDto(saved);
     }
 

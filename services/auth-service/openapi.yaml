@@ -159,11 +159,18 @@ components:
           type: string
     RegisterRequest:
       type: object
+      required:
+        - email
+        - password
+        - locale
       properties:
         email:
           type: string
         password:
           type: string
+        locale:
+          type: string
+          minLength: 5
     LoginRequest:
       type: object
       properties:
@@ -207,10 +214,23 @@ components:
         createdAt:
           type: string
           format: date-time
+        profile:
+          $ref: '#/components/schemas/UserProfile'
         roles:
           type: array
           items:
             $ref: '#/components/schemas/UserRole'
+    UserProfile:
+      type: object
+      properties:
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+        color:
+          type: string
+        locale:
+          type: string
     ErrorResponse:
       type: object
       properties:
@@ -247,3 +267,4 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
