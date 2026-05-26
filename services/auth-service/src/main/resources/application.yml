@@ -38,7 +38,7 @@ spring:
       client:
         config:
           profile-service:
-            url: ${PROFILE_SERVICE_URL:http://localhost:8082}
+            url: https://${PROFILE_SERVICE_URL}
             connectTimeout: 2000
             readTimeout: 3000
 
