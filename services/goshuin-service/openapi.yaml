@@ -22,6 +22,36 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Goshuin'
+    post:
+      summary: Add a new goshuin
+      operationId: addGoshuin
+      tags:
+        - Goshuin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoshuinCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Goshuin'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/temples:
     get:
@@ -174,6 +204,38 @@ components:
           type: string
         temple:
           $ref: '#/components/schemas/TempleLite'
+        pages:
+          type: integer
+          format: int32
+          default: 1
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        translations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/GoshuinTranslation'
+        imageUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+    GoshuinCreate:
+      type: object
+      required:
+        - type
+        - templeId
+        - pages
+        - translations
+      properties:
+        type:
+          type: string
+        templeId:
+          type: string
+          format: uuid
         pages:
           type: integer
           format: int32

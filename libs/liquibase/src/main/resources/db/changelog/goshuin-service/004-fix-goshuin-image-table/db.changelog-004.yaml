@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202605281850-remove-id-from-goshuin-image
+      author: junie
+      changes:
+        - dropColumn:
+            tableName: goshuin_image
+            columnName: id

@@ -71,3 +71,29 @@ Content-Type: application/json
   "latitude": 35.6764,
   "templeType": "Shinto Shrine"
 }
+
+### Add a new goshuin (Protected)
+POST {{goshuin_service_url}}/api/v1/goshuin
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "type": "written",
+  "templeId": "44fff09e-b423-40e0-b215-17ec7f67791d",
+  "pages": 1,
+  "startDate": "2024-05-01",
+  "endDate": "2024-05-31",
+  "translations": {
+    "en": {
+      "label": "Spring Special Goshuin",
+      "description": "Special goshuin for the cherry blossom season."
+    },
+    "ja": {
+      "label": "春限定御朱印",
+      "description": "桜の季節限定の御朱印です。"
+    }
+  },
+  "imageUrls": [
+    "https://example.com/goshuin/spring2024.jpg"
+  ]
+}
