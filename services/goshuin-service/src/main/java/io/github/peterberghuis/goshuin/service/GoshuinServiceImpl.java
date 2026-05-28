@@ -1,7 +1,7 @@
 package io.github.peterberghuis.goshuin.service;
 
 import io.github.peterberghuis.goshuin.dto.Goshuin;
-import io.github.peterberghuis.goshuin.dto.TempleSummary;
+import io.github.peterberghuis.goshuin.dto.TempleLite;
 import io.github.peterberghuis.goshuin.dto.TempleTranslation;
 import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
 import io.github.peterberghuis.goshuin.entity.TempleEntity;
@@ -36,10 +36,12 @@ public class GoshuinServiceImpl implements GoshuinService {
         return dto;
     }
 
-    private TempleSummary mapToSummaryDto(TempleEntity entity) {
+    private TempleLite mapToSummaryDto(TempleEntity entity) {
         if (entity == null) return null;
-        TempleSummary dto = new TempleSummary();
+        TempleLite dto = new TempleLite();
         dto.setId(entity.getId());
+        dto.setLongitude(entity.getLongitude().doubleValue());
+        dto.setLatitude(entity.getLatitude().doubleValue());
 
         Map<String, TempleTranslation> translations = new HashMap<>();
         for (TempleI18nEntity translationEntity : entity.getTranslations()) {

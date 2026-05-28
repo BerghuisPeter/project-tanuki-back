@@ -10,3 +10,8 @@ spring:
       ddl-auto: create-drop
   liquibase:
     enabled: false
+
+jwt:
+  secret: test-secret-key-that-needs-to-be-long-enough-to-be-secure-32-chars
+  expiration: 900000
+  refresh-expiration: 604800000

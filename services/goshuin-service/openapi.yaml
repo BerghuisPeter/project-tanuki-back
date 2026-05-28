@@ -165,15 +165,17 @@ components:
           type: string
           format: uuid
         temple:
-          $ref: '#/components/schemas/TempleSummary'
+          $ref: '#/components/schemas/TempleLite'
         date:
           type: string
           format: date
-    TempleSummary:
+    TempleLite:
       type: object
       required:
         - id
         - translations
+        - longitude
+        - latitude
       properties:
         id:
           type: string
@@ -182,6 +184,12 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/TempleTranslation'
+        longitude:
+          type: number
+          format: double
+        latitude:
+          type: number
+          format: double
     ErrorResponse:
       type: object
       properties:
