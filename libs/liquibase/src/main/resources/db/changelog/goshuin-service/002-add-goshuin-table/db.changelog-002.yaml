@@ -1,0 +1,148 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202605281630-create-goshuin-tables
+      author: junie
+      changes:
+        - createTable:
+            tableName: goshuin
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: temple_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_goshuin_temple
+                    referencedTableName: temple
+                    referencedColumnNames: id
+              - column:
+                  name: pages
+                  type: INT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: goshuin_image
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: goshuin_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_goshuin_image_goshuin
+                    referencedTableName: goshuin
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: image_url
+                  type: VARCHAR(2048)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: goshuin_i18n
+            columns:
+              - column:
+                  name: goshuin_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_goshuin_i18n
+                    foreignKeyName: fk_goshuin_i18n_goshuin
+                    referencedTableName: goshuin
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: locale
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_goshuin_i18n
+              - column:
+                  name: label
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: description
+                  type: TEXT
+                  constraints:
+                    nullable: true
+
+        - createTable:
+            tableName: goshuin_comment
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: goshuin_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_goshuin_comment_goshuin
+                    referencedTableName: goshuin
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false

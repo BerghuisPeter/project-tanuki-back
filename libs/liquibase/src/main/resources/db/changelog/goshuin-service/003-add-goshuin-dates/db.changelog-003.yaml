@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202605281651-add-goshuin-dates
+      author: junie
+      changes:
+        - addColumn:
+            tableName: goshuin
+            columns:
+              - column:
+                  name: start_date
+                  type: DATE
+                  constraints:
+                    nullable: true
+              - column:
+                  name: end_date
+                  type: DATE
+                  constraints:
+                    nullable: true

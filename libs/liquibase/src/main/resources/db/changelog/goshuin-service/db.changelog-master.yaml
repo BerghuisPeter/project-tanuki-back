@@ -1,3 +1,7 @@
 databaseChangeLog:
   - include:
       file: db/changelog/goshuin-service/001-initial-schema/db.changelog-001.yaml
+  - include:
+      file: db/changelog/goshuin-service/002-add-goshuin-table/db.changelog-002.yaml
+  - include:
+      file: db/changelog/goshuin-service/003-add-goshuin-dates/db.changelog-003.yaml
