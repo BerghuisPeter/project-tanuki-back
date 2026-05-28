@@ -2,17 +2,21 @@ package io.github.peterberghuis.goshuin.controller;
 
 import io.github.peterberghuis.goshuin.api.GoshuinApi;
 import io.github.peterberghuis.goshuin.dto.Goshuin;
+import io.github.peterberghuis.goshuin.service.GoshuinService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collections;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class GoshuinController implements GoshuinApi {
+
+    private final GoshuinService goshuinService;
 
     @Override
     public ResponseEntity<List<Goshuin>> getGoshuins() {
-        return ResponseEntity.ok(Collections.emptyList());
+        return ResponseEntity.ok(goshuinService.getAllGoshuins());
     }
 }

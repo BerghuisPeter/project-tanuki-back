@@ -1,0 +1,11 @@
+package io.github.peterberghuis.goshuin.repository;
+
+import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.UUID;
+
+@Repository
+public interface GoshuinRepository extends JpaRepository<GoshuinEntity, UUID> {
+}

@@ -164,11 +164,24 @@ components:
         id:
           type: string
           format: uuid
-        shrineName:
-          type: string
+        temple:
+          $ref: '#/components/schemas/TempleSummary'
         date:
           type: string
           format: date
+    TempleSummary:
+      type: object
+      required:
+        - id
+        - translations
+      properties:
+        id:
+          type: string
+          format: uuid
+        translations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/TempleTranslation'
     ErrorResponse:
       type: object
       properties:
