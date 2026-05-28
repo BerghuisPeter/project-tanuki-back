@@ -15,6 +15,9 @@ jobs:
       goshuin-service: ${{ steps.filter.outputs.goshuin-service }}
       global: ${{ steps.filter.outputs.global }}
       liquibase: ${{ steps.filter.outputs.liquibase }}
+      liquibase-auth-service: ${{ steps.filter.outputs.liquibase-auth-service }}
+      liquibase-profile-service: ${{ steps.filter.outputs.liquibase-profile-service }}
+      liquibase-goshuin-service: ${{ steps.filter.outputs.liquibase-goshuin-service }}
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
