@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.UUID;
 
-@FeignClient(name = "profile-service")
+@FeignClient(name = "profile-service", fallbackFactory = ProfileClientFallbackFactory.class)
 public interface ProfileClient {
 
     @GetMapping("/internal/profiles/{userId}")

@@ -80,7 +80,7 @@ public class AuthService {
             throw new BadCredentialsException("User account is " + user.getStatus());
         }
 
-        UserProfile createdProfile = profileClient.createInternalProfile(user.getId(), null);
+        UserProfile createdProfile = profileClient.createInternalProfile(user.getId(), new UserProfile());
         return createAuthResponse(user, createdProfile);
     }
 

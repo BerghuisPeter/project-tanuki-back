@@ -274,7 +274,7 @@ class AuthServiceTest {
         when(userAuthProviderRepository.save(any(UserAuthProvider.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
-        when(profileClient.createInternalProfile(any(UUID.class), isNull())).thenReturn(new UserProfile());
+        when(profileClient.createInternalProfile(any(UUID.class), any())).thenReturn(new UserProfile());
 
         // Act
         AuthResponse response = authService.loginOrRegisterOAuth2User(email, name, sub, "google");
@@ -304,7 +304,7 @@ class AuthServiceTest {
                 .thenReturn(Optional.of(new UserAuthProvider(UUID.randomUUID(), user, "google", sub)));
         when(jwtUtils.generateToken(any(UUID.class), anyString(), any())).thenReturn("access_token");
         when(jwtUtils.generateRefreshToken(anyString())).thenReturn("refresh_token");
-        when(profileClient.createInternalProfile(any(UUID.class), isNull())).thenReturn(new UserProfile());
+        when(profileClient.createInternalProfile(any(UUID.class), any())).thenReturn(new UserProfile());
 
         // Act
         AuthResponse response = authService.loginOrRegisterOAuth2User(email, name, sub, "google");
