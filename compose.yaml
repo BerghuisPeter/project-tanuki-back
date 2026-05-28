@@ -15,5 +15,10 @@ services:
       timeout: 5s
       retries: 5
 
+  tileserver:
+    image: 'maptiler/tileserver-gl:latest'
+    ports:
+      - '8083:8080'
+
 volumes:
   tanuki-db-data:
