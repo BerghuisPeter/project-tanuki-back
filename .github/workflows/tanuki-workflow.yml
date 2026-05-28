@@ -10,9 +10,12 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      services: ${{ steps.filter.outputs.changes }}
+      auth-service: ${{ steps.filter.outputs.auth-service }}
+      profile-service: ${{ steps.filter.outputs.profile-service }}
+      goshuin-service: ${{ steps.filter.outputs.goshuin-service }}
       global: ${{ steps.filter.outputs.global }}
       liquibase: ${{ steps.filter.outputs.liquibase }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -39,6 +42,23 @@ jobs:
               - 'services/profile-service/**'
             goshuin-service:
               - 'services/goshuin-service/**'
+
+      - name: Calculate service matrix
+        id: set-matrix
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" || "${{ steps.filter.outputs.global }}" == "true" ]]; then
+            echo "matrix=[\"auth-service\", \"profile-service\", \"goshuin-service\"]" >> $GITHUB_OUTPUT
+          else
+            SERVICES=()
+            [[ "${{ steps.filter.outputs.auth-service }}" == "true" ]] && SERVICES+=("\"auth-service\"")
+            [[ "${{ steps.filter.outputs.profile-service }}" == "true" ]] && SERVICES+=("\"profile-service\"")
+            [[ "${{ steps.filter.outputs.goshuin-service }}" == "true" ]] && SERVICES+=("\"goshuin-service\"")
+          
+            # Join array with commas
+            IFS=,
+            echo "matrix=[${SERVICES[*]}]" >> $GITHUB_OUTPUT
+          fi
 
   liquibase-build:
     needs: [ changes ]
@@ -122,17 +142,35 @@ jobs:
             --update-env-vars SERVICE_NAME=${{ matrix.service }},LIQUIBASE_COMMAND_CHANGELOG_FILE=db/changelog/${{ matrix.service }}/db.changelog-master.yaml,LIQUIBASE_COMMAND_DEFAULT_SCHEMA_NAME=$SCHEMA \
             --wait
 
+      - name: Calculate service matrix
+        id: set-matrix
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" || "${{ needs.changes.outputs.global }}" == "true" ]]; then
+            echo "matrix=[\"auth-service\", \"profile-service\", \"goshuin-service\"]" >> $GITHUB_OUTPUT
+          else
+            SERVICES=()
+            [[ "${{ needs.changes.outputs.auth-service }}" == "true" ]] && SERVICES+=("\"auth-service\"")
+            [[ "${{ needs.changes.outputs.profile-service }}" == "true" ]] && SERVICES+=("\"profile-service\"")
+            [[ "${{ needs.changes.outputs.goshuin-service }}" == "true" ]] && SERVICES+=("\"goshuin-service\"")
+          
+            # Join array with commas
+            IFS=,
+            echo "matrix=[${SERVICES[*]}]" >> $GITHUB_OUTPUT
+          fi
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
   build-and-deploy:
     needs: [ changes, liquibase-migrate ]
-    # services build if services changed OR global changed OR manual dispatch.
+    # services build if matrix is not empty.
     # Wait for migrations to finish (success or skipped).
     if: |
       always() &&
-      (github.event_name == 'workflow_dispatch' || needs.changes.outputs.global == 'true' || needs.changes.outputs.services != '[]') &&
+      needs.changes.outputs.matrix != '[]' &&
       (needs.liquibase-migrate.result == 'success' || needs.liquibase-migrate.result == 'skipped')
     strategy:
       matrix:
-        service: ${{ fromJson((github.event_name == 'workflow_dispatch' || needs.changes.outputs.global == 'true') && '["auth-service", "profile-service", "goshuin-service"]' || needs.changes.outputs.services) }}
+        service: ${{ fromJson(needs.changes.outputs.matrix) }}
       fail-fast: false
     uses: ./.github/workflows/_build-push.yml
     secrets:
