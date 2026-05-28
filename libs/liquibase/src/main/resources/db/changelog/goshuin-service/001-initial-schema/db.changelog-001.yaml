@@ -1,0 +1,138 @@
+﻿databaseChangeLog:
+  - changeSet:
+      id: 202605281505-create-temple-tables
+      author: junie
+      changes:
+        - createTable:
+            tableName: temple
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: longitude
+                  type: DECIMAL(9,6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: latitude
+                  type: DECIMAL(9,6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: temple_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: website_url
+                  type: VARCHAR(2048)
+              - column:
+                  name: phone_number
+                  type: VARCHAR(50)
+              - column:
+                  name: goshuin_type
+                  type: VARCHAR(50)
+              - column:
+                  name: goshuin_service_open_until
+                  type: TIME
+              - column:
+                  name: image_url
+                  type: VARCHAR(2048)
+              - column:
+                  name: is_active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: temple_i18n
+            columns:
+              - column:
+                  name: temple_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_temple_i18n
+                    foreignKeyName: fk_temple_i18n_temple
+                    referencedTableName: temple
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: locale
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_temple_i18n
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: address
+                  type: VARCHAR(512)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: TEXT
+
+        - createTable:
+            tableName: temple_comment
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: temple_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_temple_comment_temple
+                    referencedTableName: temple
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
