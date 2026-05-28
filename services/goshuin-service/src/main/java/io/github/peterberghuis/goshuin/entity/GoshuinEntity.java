@@ -7,7 +7,6 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,9 +32,6 @@ public class GoshuinEntity {
 
     @Column(nullable = false)
     private Integer pages = 1;
-
-    @Column(name = "receiving_date")
-    private LocalDate receivingDate;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
