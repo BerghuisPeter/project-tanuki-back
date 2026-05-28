@@ -51,8 +51,6 @@ public class GoshuinEntity {
     @OneToMany(mappedBy = "goshuin", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GoshuinI18nEntity> translations = new ArrayList<>();
 
-    @ElementCollection
-    @CollectionTable(name = "goshuin_image", joinColumns = @JoinColumn(name = "goshuin_id"))
-    @Column(name = "image_url")
-    private List<String> imageUrls = new ArrayList<>();
+    @OneToMany(mappedBy = "goshuin", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GoshuinImageEntity> images = new ArrayList<>();
 }

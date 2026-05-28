@@ -1,10 +1,7 @@
 package io.github.peterberghuis.goshuin.service;
 
 import io.github.peterberghuis.goshuin.dto.*;
-import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
-import io.github.peterberghuis.goshuin.entity.GoshuinI18nEntity;
-import io.github.peterberghuis.goshuin.entity.TempleEntity;
-import io.github.peterberghuis.goshuin.entity.TempleI18nEntity;
+import io.github.peterberghuis.goshuin.entity.*;
 import io.github.peterberghuis.goshuin.repository.GoshuinRepository;
 import io.github.peterberghuis.goshuin.repository.TempleRepository;
 import lombok.RequiredArgsConstructor;
@@ -42,10 +39,13 @@ public class GoshuinServiceImpl implements GoshuinService {
                 .orElseThrow(() -> new RuntimeException("Temple not found"));
         entity.setTemple(temple);
 
-        if (goshuinCreate.getImageUrls() != null) {
-            entity.setImageUrls(goshuinCreate.getImageUrls().stream()
-                    .map(URI::toString)
-                    .collect(Collectors.toList()));
+        if (goshuinCreate.getImages() != null) {
+            for (GoshuinImage imageDto : goshuinCreate.getImages()) {
+                if (imageDto.getUrl() != null) {
+                    GoshuinImageEntity imageEntity = new GoshuinImageEntity(entity, imageDto.getUrl().toString());
+                    entity.getImages().add(imageEntity);
+                }
+            }
         }
 
         if (goshuinCreate.getTranslations() != null) {
@@ -81,8 +81,13 @@ public class GoshuinServiceImpl implements GoshuinService {
             translations.put(translationEntity.getId().getLocale(), translationDto);
         }
         dto.setTranslations(translations);
-        dto.setImageUrls(entity.getImageUrls().stream()
-                .map(URI::create)
+        dto.setImages(entity.getImages().stream()
+                .map(imageEntity -> {
+                    GoshuinImage imageDto = new GoshuinImage();
+                    imageDto.setId(imageEntity.getId());
+                    imageDto.setUrl(URI.create(imageEntity.getImageUrl()));
+                    return imageDto;
+                })
                 .collect(Collectors.toList()));
 
         return dto;

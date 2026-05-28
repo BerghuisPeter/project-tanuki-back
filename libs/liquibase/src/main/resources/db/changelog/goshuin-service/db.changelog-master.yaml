@@ -5,5 +5,3 @@ databaseChangeLog:
       file: db/changelog/goshuin-service/002-add-goshuin-table/db.changelog-002.yaml
   - include:
       file: db/changelog/goshuin-service/003-add-goshuin-dates/db.changelog-003.yaml
-  - include:
-      file: db/changelog/goshuin-service/004-fix-goshuin-image-table/db.changelog-004.yaml

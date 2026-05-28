@@ -218,11 +218,10 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/GoshuinTranslation'
-        imageUrls:
+        images:
           type: array
           items:
-            type: string
-            format: uri
+            $ref: '#/components/schemas/GoshuinImage'
     GoshuinCreate:
       type: object
       required:
@@ -250,11 +249,10 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/GoshuinTranslation'
-        imageUrls:
+        images:
           type: array
           items:
-            type: string
-            format: uri
+            $ref: '#/components/schemas/GoshuinImage'
     GoshuinTranslation:
       type: object
       properties:
@@ -262,6 +260,15 @@ components:
           type: string
         description:
           type: string
+    GoshuinImage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          format: uri
     TempleLite:
       type: object
       required:
