@@ -22,6 +22,46 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Goshuin'
+
+  /api/v1/temples:
+    get:
+      summary: Get all temples
+      operationId: getTemples
+      tags:
+        - Temple
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Temple'
+    post:
+      summary: Add a new temple
+      operationId: addTemple
+      tags:
+        - Temple
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TempleCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Temple'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized
           content:
@@ -31,6 +71,93 @@ paths:
 
 components:
   schemas:
+    Temple:
+      type: object
+      required:
+        - id
+        - translations
+        - longitude
+        - latitude
+        - templeType
+      properties:
+        id:
+          type: string
+          format: uuid
+        translations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/TempleTranslation'
+        longitude:
+          type: number
+          format: double
+        latitude:
+          type: number
+          format: double
+        templeType:
+          type: string
+        websiteUrl:
+          type: string
+          format: uri
+        phoneNumber:
+          type: string
+        goshuinType:
+          type: string
+        goshuinServiceOpenUntil:
+          type: string
+          format: partial-time
+          example: "16:00"
+        imageUrl:
+          type: string
+          format: uri
+
+    TempleCreate:
+      type: object
+      required:
+        - translations
+        - longitude
+        - latitude
+        - templeType
+      properties:
+        translations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/TempleTranslation'
+        longitude:
+          type: number
+          format: double
+        latitude:
+          type: number
+          format: double
+        templeType:
+          type: string
+        websiteUrl:
+          type: string
+          format: uri
+        phoneNumber:
+          type: string
+        goshuinType:
+          type: string
+        goshuinServiceOpenUntil:
+          type: string
+          format: partial-time
+          example: "16:00"
+        imageUrl:
+          type: string
+          format: uri
+
+    TempleTranslation:
+      type: object
+      required:
+        - name
+        - address
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        description:
+          type: string
+
     Goshuin:
       type: object
       properties:
