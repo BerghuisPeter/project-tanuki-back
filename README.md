@@ -89,11 +89,17 @@ If you are opening this repository for the first time, follow these steps:
 
 ### 1. Start the Infrastructure
 
-The database is managed via Docker Compose. Run this from the root directory:
+The database and map tile server are managed via Docker Compose. Run this from the root directory:
 
 ```powershell
 docker compose up -d
 ```
+
+- **PostgreSQL**: Accessible on `localhost:5432`.
+- **Map Tile Server (TileServer-GL)**: Accessible on `localhost:8083`.
+    - **Note**: By default, it only contains a preview dataset for **Zurich, Switzerland**.
+    - To use your own data (e.g., Japan), place your `.mbtiles` file in the `./tileserver-data` directory and restart
+      the service.
 
 ### 2. Configure Environment Variables
 
