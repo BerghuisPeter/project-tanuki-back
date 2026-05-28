@@ -35,6 +35,8 @@ spring:
     liquibase-schema: auth_schema
   cloud:
     openfeign:
+      circuitbreaker:
+        enabled: true
       client:
         config:
           profile-service:
