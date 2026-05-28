@@ -160,15 +160,46 @@ components:
 
     Goshuin:
       type: object
+      required:
+        - id
+        - type
+        - temple
+        - pages
+        - translations
       properties:
         id:
           type: string
           format: uuid
+        type:
+          type: string
         temple:
           $ref: '#/components/schemas/TempleLite'
-        date:
+        pages:
+          type: integer
+          format: int32
+          default: 1
+        startDate:
           type: string
           format: date
+        endDate:
+          type: string
+          format: date
+        translations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/GoshuinTranslation'
+        imageUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+    GoshuinTranslation:
+      type: object
+      properties:
+        label:
+          type: string
+        description:
+          type: string
     TempleLite:
       type: object
       required:

@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,12 @@ public class GoshuinEntity {
     @Column(nullable = false)
     private Integer pages = 1;
 
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
@@ -43,4 +50,9 @@ public class GoshuinEntity {
 
     @OneToMany(mappedBy = "goshuin", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GoshuinI18nEntity> translations = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "goshuin_image", joinColumns = @JoinColumn(name = "goshuin_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrls = new ArrayList<>();
 }

@@ -1,15 +1,18 @@
 package io.github.peterberghuis.goshuin.service;
 
 import io.github.peterberghuis.goshuin.dto.Goshuin;
+import io.github.peterberghuis.goshuin.dto.GoshuinTranslation;
 import io.github.peterberghuis.goshuin.dto.TempleLite;
 import io.github.peterberghuis.goshuin.dto.TempleTranslation;
 import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
+import io.github.peterberghuis.goshuin.entity.GoshuinI18nEntity;
 import io.github.peterberghuis.goshuin.entity.TempleEntity;
 import io.github.peterberghuis.goshuin.entity.TempleI18nEntity;
 import io.github.peterberghuis.goshuin.repository.GoshuinRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +34,24 @@ public class GoshuinServiceImpl implements GoshuinService {
     private Goshuin mapToDto(GoshuinEntity entity) {
         Goshuin dto = new Goshuin();
         dto.setId(entity.getId());
-        dto.setDate(entity.getReceivingDate());
+        dto.setType(entity.getType());
         dto.setTemple(mapToSummaryDto(entity.getTemple()));
+        dto.setPages(entity.getPages());
+        dto.setStartDate(entity.getStartDate());
+        dto.setEndDate(entity.getEndDate());
+
+        Map<String, GoshuinTranslation> translations = new HashMap<>();
+        for (GoshuinI18nEntity translationEntity : entity.getTranslations()) {
+            GoshuinTranslation translationDto = new GoshuinTranslation();
+            translationDto.setLabel(translationEntity.getLabel());
+            translationDto.setDescription(translationEntity.getDescription());
+            translations.put(translationEntity.getId().getLocale(), translationDto);
+        }
+        dto.setTranslations(translations);
+        dto.setImageUrls(entity.getImageUrls().stream()
+                .map(URI::create)
+                .collect(Collectors.toList()));
+
         return dto;
     }
 
