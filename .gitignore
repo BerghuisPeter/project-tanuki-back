@@ -34,4 +34,4 @@ build/
 
 ### Local Environment Secrets ###
 .env
-/tileserver-data/osm-2020-02-10-v3.11_asia_japan.mbtiles
+/tileserver-data/data/osm-2020-02-10-v3.11_asia_japan.mbtiles
