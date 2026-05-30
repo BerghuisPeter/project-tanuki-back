@@ -17,7 +17,7 @@
   "sources": {
     "openmaptiles": {
       "type": "vector",
-      "url": "/data/japan.json"
+      "url": "mbtiles://{japan}"
     }
   },
   "glyphs": "{fontstack}/{range}.pbf",
