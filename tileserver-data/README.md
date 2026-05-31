@@ -11,7 +11,7 @@ The MBTiles data file (`osm-2020-02-10-v3.11_asia_japan.mbtiles`) is **excluded*
 
 ## How to build and push
 
-1. Place the `osm-2020-02-10-v3.11_asia_japan.mbtiles` file in this directory.
+1. Place the `osm-2020-02-10-v3.11_asia_japan.mbtiles` file in the data directory.
 2. Build the image:
    ```bash
    docker build -t tanuki-tile-server .

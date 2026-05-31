@@ -15,14 +15,10 @@ services:
       timeout: 5s
       retries: 5
 
-  #  tile-server:
-  #    image: 'maptiler/tileserver-gl:latest'
-  #    ports:
-  #      - '8083:8080'
   tile-server:
-    build:
-      context: tileserver-data/
-      dockerfile: Dockerfile
+    image: 'maptiler/tileserver-gl:latest'
+    volumes:
+      - ./tileserver-data:/data # Map your local folder to the container
     ports:
       - '8083:8080'
 
