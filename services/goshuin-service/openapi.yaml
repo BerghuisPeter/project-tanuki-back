@@ -9,10 +9,41 @@ servers:
 paths:
   /api/v1/goshuin:
     get:
-      summary: Get all goshuins
-      operationId: getGoshuins
+      summary: Search goshuins
+      operationId: searchGoshuins
       tags:
         - Goshuin
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/GoshuinFormat'
+        - name: pages
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int32
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: affiliation
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AffiliationType'
       responses:
         '200':
           description: OK

@@ -47,7 +47,7 @@ Content-Type: application/json
   },
   "longitude": 139.7967,
   "latitude": 35.7148,
-  "affiliation": "Buddhist",
+  "affiliation": "buddhist",
   "websiteUrl": "https://www.senso-ji.jp/",
   "phoneNumber": "03-3842-0181",
   "goshuinType": "Write-in",
@@ -67,7 +67,7 @@ Content-Type: application/json
       "address": "1-1 Yoyogikamizonocho, Shibuya City, Tokyo"
     }
   },
-  "affiliation": "Shinto",
+  "affiliation": "shinto",
   "longitude": 139.6993,
   "latitude": 35.6764
 }
