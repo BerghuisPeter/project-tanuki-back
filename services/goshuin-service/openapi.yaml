@@ -108,7 +108,7 @@ components:
         - translations
         - longitude
         - latitude
-        - templeType
+        - affiliationType
       properties:
         id:
           type: string
@@ -123,8 +123,8 @@ components:
         latitude:
           type: number
           format: double
-        templeType:
-          type: string
+        affiliationType:
+          $ref: '#/components/schemas/AffiliationType'
         websiteUrl:
           type: string
           format: uri
@@ -146,7 +146,7 @@ components:
         - translations
         - longitude
         - latitude
-        - templeType
+        - affiliationType
       properties:
         translations:
           type: object
@@ -158,8 +158,8 @@ components:
         latitude:
           type: number
           format: double
-        templeType:
-          type: string
+        affiliationType:
+          $ref: '#/components/schemas/AffiliationType'
         websiteUrl:
           type: string
           format: uri
@@ -188,11 +188,25 @@ components:
         description:
           type: string
 
+    AffiliationType:
+      type: string
+      enum:
+        - buddhist
+        - shinto
+
+    GoshuinFormat:
+      type: string
+      enum:
+        - written
+        - paper
+        - cut
+        - other
+
     Goshuin:
       type: object
       required:
         - id
-        - type
+        - format
         - temple
         - pages
         - translations
@@ -200,8 +214,8 @@ components:
         id:
           type: string
           format: uuid
-        type:
-          type: string
+        format:
+          $ref: '#/components/schemas/GoshuinFormat'
         temple:
           $ref: '#/components/schemas/TempleLite'
         pages:
@@ -225,13 +239,13 @@ components:
     GoshuinCreate:
       type: object
       required:
-        - type
+        - format
         - templeId
         - pages
         - translations
       properties:
-        type:
-          type: string
+        format:
+          $ref: '#/components/schemas/GoshuinFormat'
         templeId:
           type: string
           format: uuid
@@ -273,6 +287,7 @@ components:
       type: object
       required:
         - id
+        - affiliationType
         - translations
         - longitude
         - latitude
@@ -280,6 +295,8 @@ components:
         id:
           type: string
           format: uuid
+        affiliationType:
+          $ref: '#/components/schemas/AffiliationType'
         translations:
           type: object
           additionalProperties:

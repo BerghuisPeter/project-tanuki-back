@@ -20,7 +20,7 @@ services:
     volumes:
       - ./tileserver-data:/data # Map your local folder to the container
     ports:
-      - '8083:8080'
+      - '8084:8080'
 
 volumes:
   tanuki-db-data:

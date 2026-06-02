@@ -29,8 +29,8 @@ public class TempleEntity {
     @Column(nullable = false, precision = 9, scale = 6)
     private BigDecimal latitude;
 
-    @Column(name = "temple_type", nullable = false, length = 50)
-    private String templeType;
+    @Column(name = "affiliation_type", nullable = false, length = 50)
+    private String affiliationType;
 
     @Column(name = "website_url", length = 2048)
     private String websiteUrl;

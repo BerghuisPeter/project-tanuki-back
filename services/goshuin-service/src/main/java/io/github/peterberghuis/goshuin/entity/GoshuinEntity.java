@@ -25,7 +25,7 @@ public class GoshuinEntity {
     private UUID id;
 
     @Column(nullable = false, length = 50)
-    private String type;
+    private String format;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "temple_id", nullable = false)

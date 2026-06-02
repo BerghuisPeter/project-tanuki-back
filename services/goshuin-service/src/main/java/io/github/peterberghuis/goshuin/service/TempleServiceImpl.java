@@ -36,7 +36,7 @@ public class TempleServiceImpl implements TempleService {
         TempleEntity entity = new TempleEntity();
         entity.setLongitude(BigDecimal.valueOf(templeCreate.getLongitude()));
         entity.setLatitude(BigDecimal.valueOf(templeCreate.getLatitude()));
-        entity.setTempleType(templeCreate.getTempleType());
+        entity.setAffiliationType(templeCreate.getAffiliationType().toString());
         entity.setWebsiteUrl(templeCreate.getWebsiteUrl() != null ? templeCreate.getWebsiteUrl().toString() : null);
         entity.setPhoneNumber(templeCreate.getPhoneNumber());
         entity.setGoshuinType(templeCreate.getGoshuinType());
@@ -67,7 +67,7 @@ public class TempleServiceImpl implements TempleService {
         dto.setId(entity.getId());
         dto.setLongitude(entity.getLongitude().doubleValue());
         dto.setLatitude(entity.getLatitude().doubleValue());
-        dto.setTempleType(entity.getTempleType());
+        dto.setAffiliationType(io.github.peterberghuis.goshuin.dto.AffiliationType.fromValue(entity.getAffiliationType()));
         dto.setWebsiteUrl(entity.getWebsiteUrl() != null ? java.net.URI.create(entity.getWebsiteUrl()) : null);
         dto.setPhoneNumber(entity.getPhoneNumber());
         dto.setGoshuinType(entity.getGoshuinType());

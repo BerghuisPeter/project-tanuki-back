@@ -30,7 +30,7 @@ public class GoshuinServiceImpl implements GoshuinService {
     @Override
     public Goshuin createGoshuin(GoshuinCreate goshuinCreate) {
         GoshuinEntity entity = new GoshuinEntity();
-        entity.setType(goshuinCreate.getType());
+        entity.setFormat(goshuinCreate.getFormat().toString());
         entity.setPages(goshuinCreate.getPages());
         entity.setStartDate(goshuinCreate.getStartDate());
         entity.setEndDate(goshuinCreate.getEndDate());
@@ -67,7 +67,7 @@ public class GoshuinServiceImpl implements GoshuinService {
     private Goshuin mapToDto(GoshuinEntity entity) {
         Goshuin dto = new Goshuin();
         dto.setId(entity.getId());
-        dto.setType(entity.getType());
+        dto.setFormat(GoshuinFormat.fromValue(entity.getFormat()));
         dto.setTemple(mapToSummaryDto(entity.getTemple()));
         dto.setPages(entity.getPages());
         dto.setStartDate(entity.getStartDate());
@@ -97,6 +97,7 @@ public class GoshuinServiceImpl implements GoshuinService {
         if (entity == null) return null;
         TempleLite dto = new TempleLite();
         dto.setId(entity.getId());
+        dto.setAffiliationType(AffiliationType.fromValue(entity.getAffiliationType()));
         dto.setLongitude(entity.getLongitude().doubleValue());
         dto.setLatitude(entity.getLatitude().doubleValue());
 

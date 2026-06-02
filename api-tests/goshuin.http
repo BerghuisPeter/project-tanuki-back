@@ -69,7 +69,7 @@ Content-Type: application/json
   },
   "longitude": 139.6993,
   "latitude": 35.6764,
-  "templeType": "Shinto Shrine"
+  "templeType": "Shinto"
 }
 
 ### Add a new goshuin (Protected)
@@ -79,7 +79,7 @@ Content-Type: application/json
 
 {
   "type": "written",
-  "templeId": "44fff09e-b423-40e0-b215-17ec7f67791d",
+  "templeId": "b981ec39-2381-47dc-a3fa-22f19f842c67",
   "pages": 1,
   "startDate": "2024-05-01",
   "endDate": "2024-05-31",
@@ -107,7 +107,7 @@ Content-Type: application/json
 
 {
   "type": "written",
-  "templeId": "44fff09e-b423-40e0-b215-17ec7f67791d",
+  "templeId": "b981ec39-2381-47dc-a3fa-22f19f842c67",
   "pages": 1,
   "startDate": "2024-05-01",
   "endDate": "2024-05-31",
