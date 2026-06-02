@@ -162,7 +162,7 @@ components:
         phoneNumber:
           type: string
         goshuinType:
-          type: string
+          $ref: '#/components/schemas/GoshuinFormat'
         goshuinServiceOpenUntil:
           type: string
           format: partial-time
@@ -197,7 +197,7 @@ components:
         phoneNumber:
           type: string
         goshuinType:
-          type: string
+          $ref: '#/components/schemas/GoshuinFormat'
         goshuinServiceOpenUntil:
           type: string
           format: partial-time
@@ -353,3 +353,6 @@ components:
         timestamp:
           type: string
           format: date-time
+
+
+

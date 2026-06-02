@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202606021850-remove-temple-goshuin-type
+      author: junie
+      changes:
+        - dropColumn:
+            tableName: temple
+            columnName: goshuin_type

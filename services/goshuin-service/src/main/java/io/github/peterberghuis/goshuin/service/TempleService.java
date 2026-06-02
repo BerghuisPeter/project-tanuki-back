@@ -37,7 +37,6 @@ public class TempleService {
         entity.setAffiliationType(templeCreate.getAffiliationType().toString());
         entity.setWebsiteUrl(templeCreate.getWebsiteUrl() != null ? templeCreate.getWebsiteUrl().toString() : null);
         entity.setPhoneNumber(templeCreate.getPhoneNumber());
-        entity.setGoshuinType(templeCreate.getGoshuinType());
         if (templeCreate.getGoshuinServiceOpenUntil() != null) {
             entity.setGoshuinServiceOpenUntil(LocalTime.parse(templeCreate.getGoshuinServiceOpenUntil()));
         }
@@ -68,7 +67,6 @@ public class TempleService {
         dto.setAffiliationType(io.github.peterberghuis.goshuin.dto.AffiliationType.fromValue(entity.getAffiliationType()));
         dto.setWebsiteUrl(entity.getWebsiteUrl() != null ? java.net.URI.create(entity.getWebsiteUrl()) : null);
         dto.setPhoneNumber(entity.getPhoneNumber());
-        dto.setGoshuinType(entity.getGoshuinType());
         if (entity.getGoshuinServiceOpenUntil() != null) {
             dto.setGoshuinServiceOpenUntil(entity.getGoshuinServiceOpenUntil().toString());
         }

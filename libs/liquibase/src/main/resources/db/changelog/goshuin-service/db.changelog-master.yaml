@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/goshuin-service/003-add-goshuin-dates/db.changelog-003.yaml
   - include:
       file: db/changelog/goshuin-service/004-rename-type-columns/db.changelog-004.yaml
+  - include:
+      file: db/changelog/goshuin-service/005-remove-temple-goshuin-type/db.changelog-005.yaml

@@ -38,8 +38,6 @@ public class TempleEntity {
     @Column(name = "phone_number", length = 50)
     private String phoneNumber;
 
-    @Column(name = "goshuin_type", length = 50)
-    private String goshuinType;
 
     @Column(name = "goshuin_service_open_until")
     private LocalTime goshuinServiceOpenUntil;

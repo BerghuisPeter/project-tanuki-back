@@ -50,7 +50,6 @@ Content-Type: application/json
   "affiliation": "buddhist",
   "websiteUrl": "https://www.senso-ji.jp/",
   "phoneNumber": "03-3842-0181",
-  "goshuinType": "Write-in",
   "goshuinServiceOpenUntil": "16:00",
   "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Senso-ji_Kaminarimon_Night.jpg/1024px-Senso-ji_Kaminarimon_Night.jpg"
 }
