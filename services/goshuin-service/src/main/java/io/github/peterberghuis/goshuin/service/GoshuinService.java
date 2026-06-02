@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,17 +22,20 @@ public class GoshuinService {
     private final GoshuinRepository goshuinRepository;
     private final TempleRepository templeRepository;
 
-    public List<Goshuin> searchGoshuins(GoshuinFormat format, List<Integer> pages, LocalDate startDate, LocalDate endDate, AffiliationType affiliation) {
+    public List<Goshuin> searchGoshuins(GoshuinFormat format, List<Integer> pages, LocalDate startDate, LocalDate endDate, AffiliationType affiliation, String query) {
         Specification<GoshuinEntity> spec = Specification
                 .where(GoshuinSpecifications.withFormat(format))
                 .and(GoshuinSpecifications.withPages(pages))
                 .and(GoshuinSpecifications.withStartDate(startDate))
                 .and(GoshuinSpecifications.withEndDate(endDate))
-                .and(GoshuinSpecifications.withAffiliation(affiliation));
+                .and(GoshuinSpecifications.withAffiliation(affiliation))
+                .and(
+                        GoshuinSpecifications.withLabel(query).or(GoshuinSpecifications.withTempleName(query))
+                );
 
         return goshuinRepository.findAll(spec).stream()
                 .map(this::mapToDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Goshuin createGoshuin(GoshuinCreate goshuinCreate) {
@@ -96,7 +98,7 @@ public class GoshuinService {
                     imageDto.setUrl(URI.create(imageEntity.getImageUrl()));
                     return imageDto;
                 })
-                .collect(Collectors.toList()));
+                .toList());
 
         return dto;
     }

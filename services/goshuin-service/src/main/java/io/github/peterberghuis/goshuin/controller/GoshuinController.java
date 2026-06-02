@@ -21,8 +21,8 @@ public class GoshuinController implements GoshuinApi {
     private final GoshuinService goshuinService;
 
     @Override
-    public ResponseEntity<List<Goshuin>> searchGoshuins(GoshuinFormat format, List<Integer> pages, LocalDate startDate, LocalDate endDate, AffiliationType affiliation) {
-        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, startDate, endDate, affiliation));
+    public ResponseEntity<List<Goshuin>> searchGoshuins(GoshuinFormat format, List<Integer> pages, LocalDate startDate, LocalDate endDate, AffiliationType affiliation, String query) {
+        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, startDate, endDate, affiliation, query));
     }
 
     @Override

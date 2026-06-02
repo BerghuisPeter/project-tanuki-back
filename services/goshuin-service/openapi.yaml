@@ -44,6 +44,11 @@ paths:
           required: false
           schema:
             $ref: '#/components/schemas/AffiliationType'
+        - name: query
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: OK
