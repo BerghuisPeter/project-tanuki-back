@@ -47,7 +47,7 @@ Content-Type: application/json
   },
   "longitude": 139.7967,
   "latitude": 35.7148,
-  "templeType": "Buddhist",
+  "affiliation": "Buddhist",
   "websiteUrl": "https://www.senso-ji.jp/",
   "phoneNumber": "03-3842-0181",
   "goshuinType": "Write-in",
@@ -67,9 +67,9 @@ Content-Type: application/json
       "address": "1-1 Yoyogikamizonocho, Shibuya City, Tokyo"
     }
   },
+  "affiliation": "Shinto",
   "longitude": 139.6993,
-  "latitude": 35.6764,
-  "templeType": "Shinto"
+  "latitude": 35.6764
 }
 
 ### Add a new goshuin (Protected)
@@ -78,7 +78,7 @@ Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
 {
-  "type": "written",
+  "format": "written",
   "templeId": "b981ec39-2381-47dc-a3fa-22f19f842c67",
   "pages": 1,
   "startDate": "2024-05-01",
@@ -106,7 +106,7 @@ Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
 {
-  "type": "written",
+  "format": "written",
   "templeId": "b981ec39-2381-47dc-a3fa-22f19f842c67",
   "pages": 1,
   "startDate": "2024-05-01",

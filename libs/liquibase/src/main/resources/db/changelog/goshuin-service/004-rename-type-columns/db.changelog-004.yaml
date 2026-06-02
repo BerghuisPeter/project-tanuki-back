@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202606021230-rename-type-columns
+      author: junie
+      changes:
+        - renameColumn:
+            tableName: temple
+            oldColumnName: temple_type
+            newColumnName: affiliation_type
+            columnDataType: VARCHAR(50)
+        - renameColumn:
+            tableName: goshuin
+            oldColumnName: type
+            newColumnName: format
+            columnDataType: VARCHAR(50)
