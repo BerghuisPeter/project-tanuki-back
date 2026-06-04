@@ -143,6 +143,10 @@ public class GoshuinService {
         for (TempleI18nEntity translationEntity : entity.getTranslations()) {
             TempleTranslation translationDto = new TempleTranslation();
             translationDto.setName(translationEntity.getName());
+            translationDto.setRegion(translationEntity.getRegion());
+            translationDto.setPostalCode(translationEntity.getPostalCode());
+            translationDto.setPrefecture(translationEntity.getPrefecture());
+            translationDto.setCity(translationEntity.getCity());
             translationDto.setAddress(translationEntity.getAddress());
             translationDto.setDescription(translationEntity.getDescription());
             translations.put(translationEntity.getId().getLocale(), translationDto);

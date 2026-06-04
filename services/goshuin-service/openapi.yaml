@@ -255,9 +255,21 @@ components:
       type: object
       required:
         - name
+        - region
+        - postalCode
+        - prefecture
+        - city
         - address
       properties:
         name:
+          type: string
+        region:
+          type: string
+        postalCode:
+          type: string
+        prefecture:
+          type: string
+        city:
           type: string
         address:
           type: string

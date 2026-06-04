@@ -27,16 +27,32 @@ public class TempleI18nEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, length = 512)
+    @Column(nullable = false)
+    private String region;
+
+    @Column(name = "postal_code", nullable = false)
+    private String postalCode;
+
+    @Column(nullable = false)
+    private String prefecture;
+
+    @Column(nullable = false)
+    private String city;
+
+    @Column(nullable = false)
     private String address;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    public TempleI18nEntity(TempleEntity temple, String locale, String name, String address, String description) {
+    public TempleI18nEntity(TempleEntity temple, String locale, String name, String region, String postalCode, String prefecture, String city, String address, String description) {
         this.temple = temple;
         this.id = new TempleI18nId(temple.getId(), locale);
         this.name = name;
+        this.region = region;
+        this.postalCode = postalCode;
+        this.prefecture = prefecture;
+        this.city = city;
         this.address = address;
         this.description = description;
     }

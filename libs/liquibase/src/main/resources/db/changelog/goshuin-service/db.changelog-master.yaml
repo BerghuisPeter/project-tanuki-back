@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/goshuin-service/005-remove-temple-goshuin-type/db.changelog-005.yaml
   - include:
       file: db/changelog/goshuin-service/006-add-user-id-to-goshuin/db.changelog-006.yaml
+  - include:
+      file: db/changelog/goshuin-service/007-split-temple-address/db.changelog-007.yaml

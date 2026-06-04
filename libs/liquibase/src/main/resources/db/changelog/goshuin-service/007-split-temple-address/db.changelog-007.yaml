@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202606041545-split-temple-address
+      author: junie
+      changes:
+        - addColumn:
+            tableName: temple_i18n
+            columns:
+              - column:
+                  name: region
+                  type: VARCHAR(100)
+              - column:
+                  name: prefecture
+                  type: VARCHAR(100)
+              - column:
+                  name: postal_code
+                  type: VARCHAR(20)
+              - column:
+                  name: city
+                  type: VARCHAR(100)

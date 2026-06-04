@@ -47,6 +47,10 @@ public class TempleService {
                         entity,
                         locale,
                         translationDto.getName(),
+                        translationDto.getRegion(),
+                        translationDto.getPostalCode(),
+                        translationDto.getPrefecture(),
+                        translationDto.getCity(),
                         translationDto.getAddress(),
                         translationDto.getDescription()
                 );
@@ -75,6 +79,10 @@ public class TempleService {
         for (TempleI18nEntity translationEntity : entity.getTranslations()) {
             TempleTranslation translationDto = new TempleTranslation();
             translationDto.setName(translationEntity.getName());
+            translationDto.setRegion(translationEntity.getRegion());
+            translationDto.setPostalCode(translationEntity.getPostalCode());
+            translationDto.setPrefecture(translationEntity.getPrefecture());
+            translationDto.setCity(translationEntity.getCity());
             translationDto.setAddress(translationEntity.getAddress());
             translationDto.setDescription(translationEntity.getDescription());
             translations.put(translationEntity.getId().getLocale(), translationDto);
