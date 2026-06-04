@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -50,6 +52,11 @@ public class ProfileController implements ProfileApi {
     @PostMapping("/internal/profiles/{userId}")
     public ResponseEntity<UserProfile> createInternalProfile(@PathVariable UUID userId, @RequestBody UserProfile userProfile) {
         return ResponseEntity.ok(profileService.upsertProfile(userId, userProfile));
+    }
+
+    @PostMapping("/internal/profiles/bulk")
+    public ResponseEntity<Map<UUID, UserProfile>> getInternalUserProfiles(@RequestBody List<UUID> userIds) {
+        return ResponseEntity.ok(profileService.getProfiles(userIds));
     }
 
     private UUID getUserIdFromContext() {

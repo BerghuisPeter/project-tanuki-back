@@ -1,5 +1,6 @@
 package io.github.peterberghuis.goshuin.service;
 
+import io.github.peterberghuis.goshuin.client.ProfileClient;
 import io.github.peterberghuis.goshuin.dto.*;
 import io.github.peterberghuis.goshuin.entity.*;
 import io.github.peterberghuis.goshuin.repository.GoshuinRepository;
@@ -23,6 +24,7 @@ public class GoshuinService {
     private final GoshuinRepository goshuinRepository;
     private final TempleRepository templeRepository;
     private final GoshuinCommentService goshuinCommentService;
+    private final ProfileClient profileClient;
 
     public List<Goshuin> searchGoshuins(GoshuinFormat format, List<Integer> pages, LocalDate startDate, LocalDate endDate, AffiliationType affiliation, String query) {
         Specification<GoshuinEntity> spec = Specification
@@ -39,8 +41,15 @@ public class GoshuinService {
         List<UUID> ids = entities.stream().map(GoshuinEntity::getId).toList();
         Map<UUID, Integer> commentCounts = goshuinCommentService.getCommentCounts(ids);
 
+        List<UUID> userIds = entities.stream()
+                .map(GoshuinEntity::getUserId)
+                .distinct()
+                .toList();
+        Map<UUID, UserProfile> userProfilesResponse = profileClient.getInternalProfiles(userIds);
+        final Map<UUID, UserProfile> userProfiles = userProfilesResponse != null ? userProfilesResponse : Map.of();
+
         return entities.stream()
-                .map(entity -> mapToDto(entity, commentCounts.getOrDefault(entity.getId(), 0)))
+                .map(entity -> mapToDto(entity, commentCounts.getOrDefault(entity.getId(), 0), userProfiles.get(entity.getUserId())))
                 .toList();
     }
 
@@ -78,13 +87,19 @@ public class GoshuinService {
         }
 
         GoshuinEntity savedEntity = goshuinRepository.save(entity);
-        return mapToDto(savedEntity, 0);
+        UserProfile profile = profileClient.getInternalProfile(savedEntity.getUserId());
+        return mapToDto(savedEntity, 0, profile);
     }
 
-    private Goshuin mapToDto(GoshuinEntity entity, Integer commentCount) {
+    private Goshuin mapToDto(GoshuinEntity entity, Integer commentCount, UserProfile userProfile) {
         Goshuin dto = new Goshuin();
         dto.setId(entity.getId());
-        dto.setUserId(entity.getUserId());
+
+        Creator creator = new Creator();
+        creator.setUserId(entity.getUserId());
+        creator.setProfile(userProfile);
+        dto.setCreator(creator);
+
         dto.setFormat(GoshuinFormat.fromValue(entity.getFormat()));
         dto.setTemple(mapToSummaryDto(entity.getTemple()));
         dto.setPages(entity.getPages());

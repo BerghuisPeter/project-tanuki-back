@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202606041457-add-system-user-profile
+      author: junie
+      changes:
+        - insert:
+            schemaName: profile_schema
+            tableName: user_profile
+            columns:
+              - column:
+                  name: user_id
+                  value: 00000000-0000-0000-0000-000000000000
+              - column:
+                  name: display_name
+                  value: "Inari-bot"
+              - column:
+                  name: locale
+                  value: "en-US"

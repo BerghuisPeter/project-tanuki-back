@@ -19,6 +19,16 @@ spring:
     enabled: false
     default-schema: goshuin_schema
     liquibase-schema: goshuin_schema
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+      client:
+        config:
+          profile-service:
+            url: ${PROFILE_SERVICE_URL:http://localhost:8082}
+            connectTimeout: 2000
+            readTimeout: 3000
 
 gcp:
   storage:

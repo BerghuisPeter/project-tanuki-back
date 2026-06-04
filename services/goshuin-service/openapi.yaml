@@ -282,7 +282,7 @@ components:
       type: object
       required:
         - id
-        - userId
+        - creator
         - format
         - temple
         - pages
@@ -291,9 +291,8 @@ components:
         id:
           type: string
           format: uuid
-        userId:
-          type: string
-          format: uuid
+        creator:
+          $ref: '#/components/schemas/Creator'
         format:
           $ref: '#/components/schemas/GoshuinFormat'
         temple:
@@ -329,6 +328,17 @@ components:
           format: int32
           readOnly: true
           description: The number of comments on this goshuin
+
+    Creator:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: string
+          format: uuid
+        profile:
+          $ref: '#/components/schemas/UserProfile'
 
     GoshuinCreate:
       type: object
@@ -428,6 +438,18 @@ components:
         timestamp:
           type: string
           format: date-time
+
+    UserProfile:
+      type: object
+      properties:
+        displayName:
+          type: string
+        color:
+          type: string
+        avatarUrl:
+          type: string
+        locale:
+          type: string
 
 
 

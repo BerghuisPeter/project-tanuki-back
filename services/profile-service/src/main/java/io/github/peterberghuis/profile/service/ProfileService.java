@@ -19,9 +19,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -120,6 +122,12 @@ public class ProfileService {
         response.setMaxSizeBytes(gcpStorageProperties.getAvatar().getMaxSizeBytes());
         response.setAllowedContentTypes(allowedContentTypes);
         return response;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, UserProfile> getProfiles(List<UUID> userIds) {
+        return userProfileRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(UserProfileEntity::getUserId, this::toDto));
     }
 
     private UserProfile toDto(UserProfileEntity entity) {
