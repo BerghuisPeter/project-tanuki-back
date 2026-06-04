@@ -3,6 +3,7 @@ package io.github.peterberghuis.goshuin.repository;
 import io.github.peterberghuis.goshuin.dto.AffiliationType;
 import io.github.peterberghuis.goshuin.dto.GoshuinFormat;
 import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
+import jakarta.persistence.criteria.Join;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
@@ -48,6 +49,30 @@ public class GoshuinSpecifications {
                 return null;
             }
             return cb.like(cb.lower(root.join("temple").join("translations").get("name")), "%" + templeName.toLowerCase() + "%");
+        };
+    }
+
+    public static Specification<GoshuinEntity> withTempleTranslationSearch(String query) {
+        return (root, cq, cb) -> {
+            if (query == null || query.isBlank()) {
+                return null;
+            }
+
+            String search = "%" + query.toLowerCase() + "%";
+
+            Join<?, ?> translation = root
+                    .join("temple")
+                    .join("translations");
+
+            return cb.or(
+                    cb.like(cb.lower(translation.get("name")), search),
+                    cb.like(cb.lower(translation.get("address")), search),
+                    cb.like(cb.lower(translation.get("description")), search),
+                    cb.like(cb.lower(translation.get("prefecture")), search),
+                    cb.like(cb.lower(translation.get("postalCode")), search),
+                    cb.like(cb.lower(translation.get("city")), search),
+                    cb.like(cb.lower(translation.get("region")), search)
+            );
         };
     }
 }

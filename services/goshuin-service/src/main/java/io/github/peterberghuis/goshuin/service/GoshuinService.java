@@ -34,7 +34,7 @@ public class GoshuinService {
                 .and(GoshuinSpecifications.withEndDate(endDate))
                 .and(GoshuinSpecifications.withAffiliation(affiliation))
                 .and(
-                        GoshuinSpecifications.withLabel(query).or(GoshuinSpecifications.withTempleName(query))
+                        GoshuinSpecifications.withLabel(query).or(GoshuinSpecifications.withTempleTranslationSearch(query))
                 );
 
         List<GoshuinEntity> entities = goshuinRepository.findAll(spec);
