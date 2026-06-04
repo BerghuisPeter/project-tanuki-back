@@ -24,6 +24,9 @@ public class GoshuinEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+
     @Column(nullable = false, length = 50)
     private String format;
 

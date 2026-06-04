@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202606041300-add-user-id-to-goshuin
+      author: junie
+      changes:
+        - addColumn:
+            tableName: goshuin
+            columns:
+              - column:
+                  name: user_id
+                  type: UUID
+                  # Make it nullable first to allow existing rows to be updated
+                  constraints:
+                    nullable: true
+        - update:
+            tableName: goshuin
+            columns:
+              - column:
+                  name: user_id
+                  value: 00000000-0000-0000-0000-000000000000
+            where: user_id IS NULL
+        - addNotNullConstraint:
+            tableName: goshuin
+            columnName: user_id
+            columnDataType: UUID

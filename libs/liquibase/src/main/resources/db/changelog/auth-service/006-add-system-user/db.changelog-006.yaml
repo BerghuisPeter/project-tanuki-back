@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202606041330-add-system-user
+      author: junie
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: 00000000-0000-0000-0000-000000000000
+              - column:
+                  name: email
+                  value: system@project-tanuki.com
+              - column:
+                  name: password_hash
+                  value: "$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00bdXS8YVvS5aO" # Dummy hash for "system"
+              - column:
+                  name: status
+                  value: ACTIVE
+        - insert:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  value: 00000000-0000-0000-0000-000000000000
+              - column:
+                  name: role
+                  value: ADMIN

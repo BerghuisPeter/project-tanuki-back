@@ -80,6 +80,8 @@ public class TempleService {
             translations.put(translationEntity.getId().getLocale(), translationDto);
         }
         dto.setTranslations(translations);
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
 
         return dto;
     }

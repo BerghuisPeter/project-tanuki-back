@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/auth-service/004-oauth2-codes/db.changelog-004.yaml
   - include:
       file: db/changelog/auth-service/005-remove-oauth2-codes/db.changelog-005.yaml
+  - include:
+      file: db/changelog/auth-service/006-add-system-user/db.changelog-006.yaml

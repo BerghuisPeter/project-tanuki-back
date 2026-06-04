@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +22,7 @@ public class GoshuinService {
 
     private final GoshuinRepository goshuinRepository;
     private final TempleRepository templeRepository;
+    private final GoshuinCommentService goshuinCommentService;
 
     public List<Goshuin> searchGoshuins(GoshuinFormat format, List<Integer> pages, LocalDate startDate, LocalDate endDate, AffiliationType affiliation, String query) {
         Specification<GoshuinEntity> spec = Specification
@@ -33,13 +35,18 @@ public class GoshuinService {
                         GoshuinSpecifications.withLabel(query).or(GoshuinSpecifications.withTempleName(query))
                 );
 
-        return goshuinRepository.findAll(spec).stream()
-                .map(this::mapToDto)
+        List<GoshuinEntity> entities = goshuinRepository.findAll(spec);
+        List<UUID> ids = entities.stream().map(GoshuinEntity::getId).toList();
+        Map<UUID, Integer> commentCounts = goshuinCommentService.getCommentCounts(ids);
+
+        return entities.stream()
+                .map(entity -> mapToDto(entity, commentCounts.getOrDefault(entity.getId(), 0)))
                 .toList();
     }
 
     public Goshuin createGoshuin(GoshuinCreate goshuinCreate) {
         GoshuinEntity entity = new GoshuinEntity();
+        entity.setUserId(goshuinCreate.getUserId());
         entity.setFormat(goshuinCreate.getFormat().toString());
         entity.setPages(goshuinCreate.getPages());
         entity.setStartDate(goshuinCreate.getStartDate());
@@ -71,12 +78,13 @@ public class GoshuinService {
         }
 
         GoshuinEntity savedEntity = goshuinRepository.save(entity);
-        return mapToDto(savedEntity);
+        return mapToDto(savedEntity, 0);
     }
 
-    private Goshuin mapToDto(GoshuinEntity entity) {
+    private Goshuin mapToDto(GoshuinEntity entity, Integer commentCount) {
         Goshuin dto = new Goshuin();
         dto.setId(entity.getId());
+        dto.setUserId(entity.getUserId());
         dto.setFormat(GoshuinFormat.fromValue(entity.getFormat()));
         dto.setTemple(mapToSummaryDto(entity.getTemple()));
         dto.setPages(entity.getPages());
@@ -99,6 +107,9 @@ public class GoshuinService {
                     return imageDto;
                 })
                 .toList());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setCommentCount(commentCount);
 
         return dto;
     }
@@ -110,6 +121,8 @@ public class GoshuinService {
         dto.setAffiliationType(AffiliationType.fromValue(entity.getAffiliationType()));
         dto.setLongitude(entity.getLongitude().doubleValue());
         dto.setLatitude(entity.getLatitude().doubleValue());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
 
         Map<String, TempleTranslation> translations = new HashMap<>();
         for (TempleI18nEntity translationEntity : entity.getTranslations()) {

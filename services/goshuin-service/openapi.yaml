@@ -89,6 +89,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/goshuin/comments/count:
+    post:
+      summary: Get comment counts for a list of goshuin IDs
+      operationId: getGoshuinCommentCounts
+      tags:
+        - Goshuin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+                  format: int32
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/temples:
     get:
       summary: Get all temples
@@ -175,6 +207,14 @@ components:
         imageUrl:
           type: string
           format: uri
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
 
     TempleCreate:
       type: object
@@ -242,12 +282,16 @@ components:
       type: object
       required:
         - id
+        - userId
         - format
         - temple
         - pages
         - translations
       properties:
         id:
+          type: string
+          format: uuid
+        userId:
           type: string
           format: uuid
         format:
@@ -272,14 +316,32 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GoshuinImage'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        commentCount:
+          type: integer
+          format: int32
+          readOnly: true
+          description: The number of comments on this goshuin
+
     GoshuinCreate:
       type: object
       required:
+        - userId
         - format
         - templeId
         - pages
         - translations
       properties:
+        userId:
+          type: string
+          format: uuid
         format:
           $ref: '#/components/schemas/GoshuinFormat'
         templeId:
@@ -343,6 +405,14 @@ components:
         latitude:
           type: number
           format: double
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
     ErrorResponse:
       type: object
       properties:
