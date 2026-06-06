@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/goshuin-service/006-add-user-id-to-goshuin/db.changelog-006.yaml
   - include:
       file: db/changelog/goshuin-service/007-split-temple-address/db.changelog-007.yaml
+  - include:
+      file: db/changelog/goshuin-service/008-add-goshuin-commentCount-column/db.changelog-008.yaml

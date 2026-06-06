@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202606041545-add-comment-count
+      author: peter
+      changes:
+        - addColumn:
+            tableName: goshuin
+            columns:
+              - column:
+                  name: comment_count
+                  type: INTEGER
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 202606041545-add-position-for-images
+      author: peter
+      changes:
+        - addColumn:
+            tableName: goshuin_image
+            columns:
+              - column:
+                  name: position
+                  type: INTEGER
+                  defaultValueNumeric: 0

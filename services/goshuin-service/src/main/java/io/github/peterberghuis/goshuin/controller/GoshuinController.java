@@ -1,10 +1,7 @@
 package io.github.peterberghuis.goshuin.controller;
 
 import io.github.peterberghuis.goshuin.api.GoshuinApi;
-import io.github.peterberghuis.goshuin.dto.AffiliationType;
-import io.github.peterberghuis.goshuin.dto.Goshuin;
-import io.github.peterberghuis.goshuin.dto.GoshuinCreate;
-import io.github.peterberghuis.goshuin.dto.GoshuinFormat;
+import io.github.peterberghuis.goshuin.dto.*;
 import io.github.peterberghuis.goshuin.service.GoshuinCommentService;
 import io.github.peterberghuis.goshuin.service.GoshuinService;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +22,8 @@ public class GoshuinController implements GoshuinApi {
     private final GoshuinCommentService goshuinCommentService;
 
     @Override
-    public ResponseEntity<List<Goshuin>> searchGoshuins(GoshuinFormat format, List<Integer> pages, LocalDate startDate, LocalDate endDate, AffiliationType affiliation, String query) {
-        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, startDate, endDate, affiliation, query));
+    public ResponseEntity<List<Goshuin>> searchGoshuins(GoshuinFormat format, List<Integer> pages, LocalDate startDate, LocalDate endDate, AffiliationType affiliation, String query, GoshuinSort sort) {
+        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, startDate, endDate, affiliation, query, sort));
     }
 
     @Override

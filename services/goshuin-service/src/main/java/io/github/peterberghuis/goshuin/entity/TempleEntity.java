@@ -9,8 +9,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -57,5 +57,5 @@ public class TempleEntity {
     private OffsetDateTime updatedAt;
 
     @OneToMany(mappedBy = "temple", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TempleI18nEntity> translations = new ArrayList<>();
+    private Set<TempleI18nEntity> translations = new LinkedHashSet<>();
 }

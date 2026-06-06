@@ -49,6 +49,11 @@ paths:
           required: false
           schema:
             type: string
+        - name: sort
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/GoshuinSort'
       responses:
         '200':
           description: OK
@@ -289,6 +294,13 @@ components:
         - paper
         - cut
         - other
+
+    GoshuinSort:
+      type: string
+      enum:
+        - commentCount
+        - createdAt
+        - nearby
 
     Goshuin:
       type: object

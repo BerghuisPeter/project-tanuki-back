@@ -12,10 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +24,7 @@ public class GoshuinService {
     private final GoshuinCommentService goshuinCommentService;
     private final ProfileClient profileClient;
 
-    public List<Goshuin> searchGoshuins(GoshuinFormat format, List<Integer> pages, LocalDate startDate, LocalDate endDate, AffiliationType affiliation, String query) {
+    public List<Goshuin> searchGoshuins(GoshuinFormat format, List<Integer> pages, LocalDate startDate, LocalDate endDate, AffiliationType affiliation, String query, GoshuinSort sort) {
         Specification<GoshuinEntity> spec = Specification
                 .where(GoshuinSpecifications.withFormat(format))
                 .and(GoshuinSpecifications.withPages(pages))
@@ -37,19 +35,30 @@ public class GoshuinService {
                         GoshuinSpecifications.withLabel(query).or(GoshuinSpecifications.withTempleTranslationSearch(query))
                 );
 
-        List<GoshuinEntity> entities = goshuinRepository.findAll(spec);
-        List<UUID> ids = entities.stream().map(GoshuinEntity::getId).toList();
-        Map<UUID, Integer> commentCounts = goshuinCommentService.getCommentCounts(ids);
+        List<GoshuinEntity> entities = switch (sort) {
+            case CREATED_AT -> goshuinRepository.findAll(spec, GoshuinSpecifications.CREATED_AT_SORT);
+
+            case COMMENT_COUNT -> goshuinRepository.findAll(spec, GoshuinSpecifications.COMMENT_COUNT_SORT);
+
+            case NEARBY -> goshuinRepository.findAll(spec, GoshuinSpecifications.CREATED_AT_SORT);
+        };
 
         List<UUID> userIds = entities.stream()
                 .map(GoshuinEntity::getUserId)
                 .distinct()
                 .toList();
-        Map<UUID, UserProfile> userProfilesResponse = profileClient.getInternalProfiles(userIds);
-        final Map<UUID, UserProfile> userProfiles = userProfilesResponse != null ? userProfilesResponse : Map.of();
+
+        Map<UUID, UserProfile> userProfilesResponse =
+                profileClient.getInternalProfiles(userIds);
+
+        Map<UUID, UserProfile> userProfiles =
+                userProfilesResponse != null ? userProfilesResponse : Map.of();
 
         return entities.stream()
-                .map(entity -> mapToDto(entity, commentCounts.getOrDefault(entity.getId(), 0), userProfiles.get(entity.getUserId())))
+                .map(entity -> mapToDto(
+                        entity,
+                        userProfiles.get(entity.getUserId())
+                ))
                 .toList();
     }
 
@@ -88,10 +97,10 @@ public class GoshuinService {
 
         GoshuinEntity savedEntity = goshuinRepository.save(entity);
         UserProfile profile = profileClient.getInternalProfile(savedEntity.getUserId());
-        return mapToDto(savedEntity, 0, profile);
+        return mapToDto(savedEntity, profile);
     }
 
-    private Goshuin mapToDto(GoshuinEntity entity, Integer commentCount, UserProfile userProfile) {
+    private Goshuin mapToDto(GoshuinEntity entity, UserProfile userProfile) {
         Goshuin dto = new Goshuin();
         dto.setId(entity.getId());
 
@@ -106,14 +115,9 @@ public class GoshuinService {
         dto.setStartDate(entity.getStartDate());
         dto.setEndDate(entity.getEndDate());
 
-        Map<String, GoshuinTranslation> translations = new HashMap<>();
-        for (GoshuinI18nEntity translationEntity : entity.getTranslations()) {
-            GoshuinTranslation translationDto = new GoshuinTranslation();
-            translationDto.setLabel(translationEntity.getLabel());
-            translationDto.setDescription(translationEntity.getDescription());
-            translations.put(translationEntity.getId().getLocale(), translationDto);
-        }
-        dto.setTranslations(translations);
+        dto.setTranslations(
+                mapGoshuinTranslations(entity.getTranslations())
+        );
         dto.setImages(entity.getImages().stream()
                 .map(imageEntity -> {
                     GoshuinImage imageDto = new GoshuinImage();
@@ -124,8 +128,27 @@ public class GoshuinService {
                 .toList());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
-        dto.setCommentCount(commentCount);
+        dto.setCommentCount(entity.getCommentCount());
 
+        return dto;
+    }
+
+    private Map<String, GoshuinTranslation> mapGoshuinTranslations(
+            Set<GoshuinI18nEntity> entities
+    ) {
+        return entities.stream()
+                .collect(Collectors.toMap(
+                        t -> t.getId().getLocale(),
+                        this::mapGoshuinTranslation,
+                        (a, b) -> a,
+                        LinkedHashMap::new
+                ));
+    }
+
+    private GoshuinTranslation mapGoshuinTranslation(GoshuinI18nEntity entity) {
+        GoshuinTranslation dto = new GoshuinTranslation();
+        dto.setLabel(entity.getLabel());
+        dto.setDescription(entity.getDescription());
         return dto;
     }
 
@@ -139,20 +162,29 @@ public class GoshuinService {
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
 
-        Map<String, TempleTranslation> translations = new HashMap<>();
-        for (TempleI18nEntity translationEntity : entity.getTranslations()) {
-            TempleTranslation translationDto = new TempleTranslation();
-            translationDto.setName(translationEntity.getName());
-            translationDto.setRegion(translationEntity.getRegion());
-            translationDto.setPostalCode(translationEntity.getPostalCode());
-            translationDto.setPrefecture(translationEntity.getPrefecture());
-            translationDto.setCity(translationEntity.getCity());
-            translationDto.setAddress(translationEntity.getAddress());
-            translationDto.setDescription(translationEntity.getDescription());
-            translations.put(translationEntity.getId().getLocale(), translationDto);
-        }
+        Map<String, TempleTranslation> translations =
+                entity.getTranslations()
+                        .stream()
+                        .collect(Collectors.toMap(
+                                t -> t.getId().getLocale(),
+                                this::mapTempleTranslation,
+                                (a, b) -> a,
+                                LinkedHashMap::new
+                        ));
         dto.setTranslations(translations);
 
+        return dto;
+    }
+
+    private TempleTranslation mapTempleTranslation(TempleI18nEntity entity) {
+        TempleTranslation dto = new TempleTranslation();
+        dto.setName(entity.getName());
+        dto.setRegion(entity.getRegion());
+        dto.setPostalCode(entity.getPostalCode());
+        dto.setPrefecture(entity.getPrefecture());
+        dto.setCity(entity.getCity());
+        dto.setAddress(entity.getAddress());
+        dto.setDescription(entity.getDescription());
         return dto;
     }
 }

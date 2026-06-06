@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202606041457-update-system-profile
+      author: peter
+      changes:
+        - update:
+            schemaName: profile_schema
+            tableName: user_profile
+            where: user_id = '00000000-0000-0000-0000-000000000000'
+            columns:
+              - column:
+                  name: display_name
+                  value: Tanuki-bot
+              - column:
+                  name: avatar_url
+                  value: https://storage.googleapis.com/tanuki-prod-assets/avatars/tanuki-bot-avatar.jpg

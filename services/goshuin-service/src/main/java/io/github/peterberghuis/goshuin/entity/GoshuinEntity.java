@@ -9,9 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "goshuin")
@@ -51,9 +49,13 @@ public class GoshuinEntity {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
-    @OneToMany(mappedBy = "goshuin", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GoshuinI18nEntity> translations = new ArrayList<>();
+    @Column(name = "comment_count", nullable = false)
+    private Integer commentCount = 0;
 
     @OneToMany(mappedBy = "goshuin", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<GoshuinI18nEntity> translations = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "goshuin", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderColumn(name = "position")
     private List<GoshuinImageEntity> images = new ArrayList<>();
 }

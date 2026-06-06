@@ -6,6 +6,7 @@ import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
 import jakarta.persistence.criteria.Join;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
@@ -75,4 +76,10 @@ public class GoshuinSpecifications {
             );
         };
     }
+
+    public static final Sort CREATED_AT_SORT =
+            Sort.by(Sort.Direction.DESC, "createdAt");
+
+    public static final Sort COMMENT_COUNT_SORT =
+            Sort.by(Sort.Direction.DESC, "commentCount");
 }
