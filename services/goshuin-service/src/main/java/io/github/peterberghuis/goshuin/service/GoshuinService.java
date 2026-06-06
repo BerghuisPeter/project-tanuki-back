@@ -4,6 +4,7 @@ import io.github.peterberghuis.goshuin.client.ProfileClient;
 import io.github.peterberghuis.goshuin.dto.*;
 import io.github.peterberghuis.goshuin.entity.*;
 import io.github.peterberghuis.goshuin.repository.GoshuinRepository;
+import io.github.peterberghuis.goshuin.repository.GoshuinRepositoryCustom;
 import io.github.peterberghuis.goshuin.repository.GoshuinSpecifications;
 import io.github.peterberghuis.goshuin.repository.TempleRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 public class GoshuinService {
 
     private final GoshuinRepository goshuinRepository;
+    private final GoshuinRepositoryCustom goshuinRepositoryCustom;
     private final TempleRepository templeRepository;
     private final ProfileClient profileClient;
 
@@ -39,7 +41,7 @@ public class GoshuinService {
 
             case COMMENT_COUNT -> goshuinRepository.findAll(spec, GoshuinSpecifications.COMMENT_COUNT_SORT);
 
-            case NEARBY -> goshuinRepository.findAll(spec, GoshuinSpecifications.CREATED_AT_SORT);
+            case NEARBY -> goshuinRepositoryCustom.findAllByDistance(spec, 35.634732, 139.615286);
         };
 
         List<UUID> userIds = entities.stream()
