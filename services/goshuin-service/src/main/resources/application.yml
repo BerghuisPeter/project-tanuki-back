@@ -10,6 +10,7 @@ spring:
     properties:
       hibernate:
         default_schema: goshuin_schema
+        default_batch_fetch_size: 50
   datasource:
     driver-class-name: org.postgresql.Driver
     hikari:

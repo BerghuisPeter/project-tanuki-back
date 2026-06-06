@@ -21,7 +21,6 @@ public class GoshuinService {
 
     private final GoshuinRepository goshuinRepository;
     private final TempleRepository templeRepository;
-    private final GoshuinCommentService goshuinCommentService;
     private final ProfileClient profileClient;
 
     public List<Goshuin> searchGoshuins(GoshuinFormat format, List<Integer> pages, LocalDate startDate, LocalDate endDate, AffiliationType affiliation, String query, GoshuinSort sort) {
