@@ -87,12 +87,12 @@ SELECT gen_random_uuid(),
        g.id,
        CASE g.format
            WHEN 'written'
-               THEN 'https://storage.googleapis.com/tanuki-dev-assets/goshuin/04_koudaiji_3-1024x1024.webp'
+               THEN 'https://storage.googleapis.com/tanuki-dev-assets/goshuin/Goshuin-Shikoku.png'
            WHEN 'paper'
-               THEN 'https://storage.googleapis.com/tanuki-dev-assets/goshuin/Goshuin-Shikoku.png'
+               THEN 'https://storage.googleapis.com/tanuki-dev-assets/goshuin/08_koudaiji_7-1024x1024.webp'
            WHEN 'cut'
-               THEN 'https://storage.googleapis.com/tanuki-dev-assets/goshuin/04_koudaiji_3-1024x1024.webp'
+               THEN 'https://storage.googleapis.com/tanuki-dev-assets/goshuin/70047-40-0dadd6d61e93351e693dd871d56d6737-1902x1902.jpg'
            WHEN 'other'
-               THEN 'https://storage.googleapis.com/tanuki-dev-assets/goshuin/Goshuin-Shikoku.png'
+               THEN 'https://storage.googleapis.com/tanuki-dev-assets/goshuin/04_koudaiji_3-1024x1024.webp'
            END
 FROM goshuin_schema.goshuin g;
