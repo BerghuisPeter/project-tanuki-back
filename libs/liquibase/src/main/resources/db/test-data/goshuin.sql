@@ -1,13 +1,39 @@
-INSERT INTO goshuin_schema.goshuin
-(id,
- format,
- temple_id,
- pages,
- start_date,
- user_id)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- add i18n en
-SELECT gen_random_uuid(),
+-- will only work locally! for dev copy past local data and run i18ns from here.
+-- 1. Create the function first
+CREATE
+OR
+REPLACE
+FUNCTION uuid_v7(offset_ms bigint DEFAULT 0) RETURNS uuid AS $$
+DECLARE
+  unix_ms bigint;
+  rand_a  bigint;
+  rand_b1 bigint;
+  rand_b2 bigint;
+  result  text;
+BEGIN
+  unix_ms := (extract(epoch FROM clock_timestamp()) * 1000)::bigint + offset_ms;
+  rand_a  := (random() * 4095)::int;
+  rand_b1 := (random() * 2147483647)::int;
+  rand_b2 := (random() * 2147483647)::int;
+
+  result :=
+    lpad(to_hex((unix_ms << 16) | (7 << 12) | rand_a), 16, '0') ||
+    lpad(to_hex((2::bigint << 62) | (rand_b1::bigint << 31) | rand_b2), 16, '0');
+
+  RETURN (
+    substring(result, 1, 8) || '-' ||
+    substring(result, 9, 4) || '-' ||
+    substring(result, 13, 4) || '-' ||
+    substring(result, 17, 4) || '-' ||
+    substring(result, 21, 12)
+  )::uuid;
+END $$ LANGUAGE plpgsql;
+
+INSERT INTO goshuin_schema.goshuin
+    (id, format, temple_id, pages, start_date, user_id)
+SELECT uuid_v7(row_number() OVER () - 1),
        (ARRAY ['paper','written','cut','other'])
            [1 + floor(random() * 4)::int],
        t.temple_id,
@@ -21,6 +47,7 @@ FROM (VALUES ('11111111-1111-1111-1111-111111111111'::uuid),
              ('55555555-5555-5555-5555-555555555555'::uuid)) AS t(temple_id)
          CROSS JOIN generate_series(1, 10) g(n);
 
+-- add i18n en
 INSERT INTO goshuin_schema.goshuin_i18n
 (goshuin_id,
  locale,
