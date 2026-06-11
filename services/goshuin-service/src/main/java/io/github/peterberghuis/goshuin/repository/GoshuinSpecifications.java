@@ -3,8 +3,9 @@ package io.github.peterberghuis.goshuin.repository;
 import io.github.peterberghuis.goshuin.dto.AffiliationType;
 import io.github.peterberghuis.goshuin.dto.GoshuinFormat;
 import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
+import io.github.peterberghuis.goshuin.model.CommentCountCursor;
+import io.github.peterberghuis.goshuin.model.CreatedAtCursor;
 import io.github.peterberghuis.goshuin.model.GoshuinCursor;
-import io.github.peterberghuis.goshuin.util.CursorUtils;
 import jakarta.persistence.criteria.Join;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -111,7 +112,19 @@ public class GoshuinSpecifications {
     }
 
     public static final Sort COMMENT_COUNT_SORT =
-            Sort.by(Sort.Direction.DESC, "commentCount");
+            Sort.by(Sort.Direction.DESC, "commentCount")
+                    .and(Sort.by(Sort.Direction.DESC, "createdAt"));
+
+    public static Specification<GoshuinEntity> afterCommentCountCursor(int commentCount, OffsetDateTime createdAt) {
+        return (root, query, cb) ->
+                cb.or(
+                        cb.lessThan(root.get("commentCount"), commentCount),
+                        cb.and(
+                                cb.equal(root.get("commentCount"), commentCount),
+                                cb.lessThan(root.get("createdAt"), createdAt)
+                        )
+                );
+    }
 
 
     public static Specification<GoshuinEntity> buildSpec(
@@ -119,18 +132,19 @@ public class GoshuinSpecifications {
             List<Integer> pages,
             AffiliationType affiliation,
             String query,
-            String cursorToken) {
+            GoshuinCursor cursor) {
 
         Specification<GoshuinEntity> spec = Specification
-                .where(GoshuinSpecifications.withFormat(format))
-                .and(GoshuinSpecifications.withPages(pages))
-                .and(GoshuinSpecifications.withAffiliation(affiliation))
-                .and(GoshuinSpecifications.withLabel(query)
-                        .or(GoshuinSpecifications.withTempleTranslationSearch(query)));
+                .where(withFormat(format))
+                .and(withPages(pages))
+                .and(withAffiliation(affiliation))
+                .and(withLabel(query).or(withTempleTranslationSearch(query)));
 
-        if (cursorToken != null && !cursorToken.isBlank()) {
-            GoshuinCursor cursor = CursorUtils.decode(cursorToken);
-            spec = spec.and(GoshuinSpecifications.afterCreatedAtCursor(cursor.createdAt(), cursor.id()));
+        if (cursor != null) {
+            spec = spec.and(switch (cursor) {
+                case CreatedAtCursor c -> afterCreatedAtCursor(c.createdAt(), c.id());
+                case CommentCountCursor c -> afterCommentCountCursor(c.commentCount(), c.createdAt());
+            });
         }
 
         return spec;

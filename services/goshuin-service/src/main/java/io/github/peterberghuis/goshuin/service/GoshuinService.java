@@ -3,6 +3,8 @@ package io.github.peterberghuis.goshuin.service;
 import io.github.peterberghuis.goshuin.client.ProfileClient;
 import io.github.peterberghuis.goshuin.dto.*;
 import io.github.peterberghuis.goshuin.entity.*;
+import io.github.peterberghuis.goshuin.model.CommentCountCursor;
+import io.github.peterberghuis.goshuin.model.CreatedAtCursor;
 import io.github.peterberghuis.goshuin.model.GoshuinCursor;
 import io.github.peterberghuis.goshuin.repository.GoshuinRepository;
 import io.github.peterberghuis.goshuin.repository.GoshuinRepositoryCustom;
@@ -36,13 +38,17 @@ public class GoshuinService {
             Integer limit,
             String cursorToken) {
 
+        GoshuinCursor cursor = cursorToken != null && !cursorToken.isBlank()
+                ? CursorUtils.decode(cursorToken)
+                : null;
+
         Specification<GoshuinEntity> spec = GoshuinSpecifications.buildSpec(
-                format, pages, affiliation, query, cursorToken);
+                format, pages, affiliation, query, cursor);
 
         List<GoshuinEntity> entities = fetchSorted(spec, sort, limit);
         List<Goshuin> goshuins = toGoshuinDtos(entities);
 
-        return paginatedResponse(goshuins, entities, limit);
+        return paginatedResponse(goshuins, entities, limit, sort);
     }
 
     // -------------------------------------------------------------------------
@@ -80,14 +86,19 @@ public class GoshuinService {
     }
 
     private GoshuinSearchResponse paginatedResponse(
-            List<Goshuin> goshuins, List<GoshuinEntity> entities, int limit) {
+            List<Goshuin> goshuins, List<GoshuinEntity> entities, int limit, GoshuinSort sort) {
 
         String nextPageToken = null;
 
         if (entities.size() > limit) {
             GoshuinEntity lastVisible = entities.get(limit - 1);
-            nextPageToken = CursorUtils.encode(
-                    new GoshuinCursor(lastVisible.getCreatedAt(), lastVisible.getId()));
+            nextPageToken = switch (sort) {
+                case CREATED_AT ->
+                        CursorUtils.encode(new CreatedAtCursor(lastVisible.getCreatedAt(), lastVisible.getId()));
+                case COMMENT_COUNT ->
+                        CursorUtils.encode(new CommentCountCursor(lastVisible.getCommentCount(), lastVisible.getCreatedAt()));
+                case PROXIMITY -> null;
+            };
             goshuins = goshuins.subList(0, limit);
         }
 

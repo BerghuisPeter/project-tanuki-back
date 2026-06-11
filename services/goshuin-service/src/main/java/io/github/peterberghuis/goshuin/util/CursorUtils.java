@@ -1,5 +1,7 @@
 package io.github.peterberghuis.goshuin.util;
 
+import io.github.peterberghuis.goshuin.model.CommentCountCursor;
+import io.github.peterberghuis.goshuin.model.CreatedAtCursor;
 import io.github.peterberghuis.goshuin.model.GoshuinCursor;
 
 import java.nio.charset.StandardCharsets;
@@ -13,11 +15,10 @@ public final class CursorUtils {
     }
 
     public static String encode(GoshuinCursor cursor) {
-
-        String raw =
-                cursor.createdAt().toString()
-                        + "|"
-                        + cursor.id();
+        String raw = switch (cursor) {
+            case CreatedAtCursor c -> "CREATED_AT|" + c.createdAt() + "|" + c.id();
+            case CommentCountCursor c -> "COMMENT_COUNT|" + c.commentCount() + "|" + c.createdAt();
+        };
 
         return Base64.getUrlEncoder()
                 .withoutPadding()
@@ -25,17 +26,13 @@ public final class CursorUtils {
     }
 
     public static GoshuinCursor decode(String token) {
+        String raw = new String(Base64.getUrlDecoder().decode(token), StandardCharsets.UTF_8);
+        String[] parts = raw.split("\\|");
 
-        String decoded = new String(
-                Base64.getUrlDecoder().decode(token),
-                StandardCharsets.UTF_8
-        );
-
-        String[] parts = decoded.split("\\|");
-
-        return new GoshuinCursor(
-                OffsetDateTime.parse(parts[0]),
-                UUID.fromString(parts[1])
-        );
+        return switch (parts[0]) {
+            case "CREATED_AT" -> new CreatedAtCursor(OffsetDateTime.parse(parts[1]), UUID.fromString(parts[2]));
+            case "COMMENT_COUNT" -> new CommentCountCursor(Integer.parseInt(parts[1]), OffsetDateTime.parse(parts[2]));
+            default -> throw new IllegalArgumentException("Unknown cursor type: " + parts[0]);
+        };
     }
 }
