@@ -26,56 +26,53 @@ public class GoshuinRepositoryCustomImpl implements GoshuinRepositoryCustom {
             ProximityCursor cursor) {
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<GoshuinEntity> query = cb.createQuery(GoshuinEntity.class);
-
-        Root<GoshuinEntity> root = query.from(GoshuinEntity.class);
+        CriteriaQuery<GoshuinEntity> cq = cb.createQuery(GoshuinEntity.class);
+        Root<GoshuinEntity> root = cq.from(GoshuinEntity.class);
 
         Predicate specPredicate = spec != null
-                ? spec.toPredicate(root, query, cb)
+                ? spec.toPredicate(root, cq, cb)
                 : cb.conjunction();
 
         Join<GoshuinEntity, TempleEntity> temple = root.join("temple");
 
-        Expression<Double> latRad =
-                cb.function("radians", Double.class, cb.function("CAST", Double.class, temple.get("latitude"), cb.literal("DOUBLE PRECISION")));
-
-        Expression<Double> lonRad =
-                cb.function("radians", Double.class, cb.function("CAST", Double.class, temple.get("longitude"), cb.literal("DOUBLE PRECISION")));
+        // Use CAST(latitude AS double) which is supported by Hibernate 6+
+        Expression<Double> latRad = cb.function("radians", Double.class, cb.function("cast", Double.class, temple.get("latitude"), cb.literal("double")));
+        Expression<Double> lonRad = cb.function("radians", Double.class, cb.function("cast", Double.class, temple.get("longitude"), cb.literal("double")));
 
         double latRadValue = Math.toRadians(lat);
         double lonRadValue = Math.toRadians(lon);
 
         Expression<Double> cosPart = cb.prod(
-                cb.function("cos", Double.class, cb.literal(latRadValue).as(Double.class)),
+                cb.function("cos", Double.class, cb.literal(latRadValue)),
                 cb.prod(
                         cb.function("cos", Double.class, latRad),
                         cb.function(
                                 "cos",
                                 Double.class,
-                                cb.diff(lonRad, cb.literal(lonRadValue).as(Double.class))
+                                cb.diff(lonRad, cb.literal(lonRadValue))
                         )
                 )
         );
 
         Expression<Double> sinPart = cb.prod(
-                cb.function("sin", Double.class, cb.literal(latRadValue).as(Double.class)),
+                cb.function("sin", Double.class, cb.literal(latRadValue)),
                 cb.function("sin", Double.class, latRad)
         );
 
         Expression<Double> acosArg = cb.sum(cosPart, sinPart);
 
+        // Clamp acosArg to [-1, 1] to avoid NaN
+        Expression<Double> clampedAcosArg = cb.function("greatest", Double.class, cb.literal(-1.0), cb.function("least", Double.class, cb.literal(1.0), acosArg));
+
         Expression<Double> distance = cb.prod(
-                cb.literal(6371.0).as(Double.class),
-                cb.function("acos", Double.class, acosArg)
+                cb.literal(6371.0),
+                cb.function("acos", Double.class, clampedAcosArg)
         );
 
-        if (specPredicate != null) {
-            query.where(specPredicate);
-        }
+        cq.where(specPredicate);
+        cq.orderBy(cb.asc(distance), cb.asc(root.get("id")));
 
-        query.orderBy(cb.asc(distance), cb.asc(root.get("id")));
-
-        return entityManager.createQuery(query)
+        return entityManager.createQuery(cq)
                 .setFirstResult(cursor != null ? cursor.offset() : 0)
                 .setMaxResults(limit + 1)
                 .getResultList();
