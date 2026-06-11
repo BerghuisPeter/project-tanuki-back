@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import org.hibernate.annotations.UuidGenerator;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -19,7 +20,8 @@ import java.util.*;
 public class GoshuinEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue
+    @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID id;
 
     @Column(name = "user_id", nullable = false)

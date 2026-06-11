@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import org.hibernate.annotations.UuidGenerator;
 import java.util.UUID;
 
 @Entity
@@ -15,7 +16,8 @@ import java.util.UUID;
 public class UserAuthProvider {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue
+    @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)

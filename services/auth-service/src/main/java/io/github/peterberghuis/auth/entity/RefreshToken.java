@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import org.hibernate.annotations.UuidGenerator;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -16,6 +17,8 @@ import java.util.UUID;
 public class RefreshToken {
 
     @Id
+    @GeneratedValue
+    @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID id;
 
     @Column(nullable = false, unique = true)
@@ -27,11 +30,4 @@ public class RefreshToken {
 
     @Column(name = "expiry_date", nullable = false)
     private Instant expiryDate;
-
-    @PrePersist
-    protected void onCreate() {
-        if (id == null) {
-            id = UUID.randomUUID();
-        }
-    }
 }
