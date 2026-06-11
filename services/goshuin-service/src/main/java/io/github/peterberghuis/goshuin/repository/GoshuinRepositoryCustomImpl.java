@@ -35,8 +35,10 @@ public class GoshuinRepositoryCustomImpl implements GoshuinRepositoryCustom {
 
         Join<GoshuinEntity, TempleEntity> temple = root.join("temple");
 
-        Expression<Double> latRad = cb.function("radians", Double.class, temple.get("latitude").as(Double.class));
-        Expression<Double> lonRad = cb.function("radians", Double.class, temple.get("longitude").as(Double.class));
+        Expression<Double> latRad = cb.function("radians", Double.class,
+                temple.get("latitude").as(Double.class));
+        Expression<Double> lonRad = cb.function("radians", Double.class,
+                temple.get("longitude").as(Double.class));
 
         double latRadValue = Math.toRadians(lat);
         double lonRadValue = Math.toRadians(lon);
