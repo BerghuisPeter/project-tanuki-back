@@ -97,8 +97,7 @@ public class GoshuinService {
             GoshuinEntity last = entities.get(limit - 1);
             nextPageToken = switch (sort) {
                 case CREATED_AT -> CursorUtils.encode(new CreatedAtCursor(last.getCreatedAt(), last.getId()));
-                case COMMENT_COUNT ->
-                        CursorUtils.encode(new CommentCountCursor(last.getCommentCount(), last.getCreatedAt()));
+                case COMMENT_COUNT -> CursorUtils.encode(new CommentCountCursor(last.getCommentCount(), last.getId()));
                 case PROXIMITY -> {
                     int currentOffset = cursor instanceof ProximityCursor(int offset) ? offset : 0;
                     yield CursorUtils.encode(new ProximityCursor(currentOffset + limit));

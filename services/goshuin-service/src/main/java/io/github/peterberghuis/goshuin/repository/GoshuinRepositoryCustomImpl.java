@@ -73,7 +73,7 @@ public class GoshuinRepositoryCustomImpl implements GoshuinRepositoryCustom {
             query.where(specPredicate);
         }
 
-        query.orderBy(cb.asc(distance), cb.asc(root.get("createdAt")));
+        query.orderBy(cb.asc(distance), cb.asc(root.get("id")));
 
         return entityManager.createQuery(query)
                 .setFirstResult(cursor != null ? cursor.offset() : 0)

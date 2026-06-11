@@ -1,6 +1,6 @@
 package io.github.peterberghuis.goshuin.model;
 
-import java.time.OffsetDateTime;
+import java.util.UUID;
 
-public record CommentCountCursor(int commentCount, OffsetDateTime createdAt) implements GoshuinCursor {
+public record CommentCountCursor(int commentCount, UUID id) implements GoshuinCursor {
 }

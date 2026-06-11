@@ -113,16 +113,15 @@ public class GoshuinSpecifications {
     }
 
     public static final Sort COMMENT_COUNT_SORT =
-            Sort.by(Sort.Direction.DESC, "commentCount")
-                    .and(Sort.by(Sort.Direction.DESC, "createdAt"));
+            Sort.by(Sort.Order.desc("commentCount"), Sort.Order.desc("id"));
 
-    public static Specification<GoshuinEntity> afterCommentCountCursor(int commentCount, OffsetDateTime createdAt) {
+    public static Specification<GoshuinEntity> afterCommentCountCursor(int commentCount, UUID id) {
         return (root, query, cb) ->
                 cb.or(
                         cb.lessThan(root.get("commentCount"), commentCount),
                         cb.and(
                                 cb.equal(root.get("commentCount"), commentCount),
-                                cb.lessThan(root.get("createdAt"), createdAt)
+                                cb.lessThan(root.get("id"), id)
                         )
                 );
     }
@@ -144,7 +143,7 @@ public class GoshuinSpecifications {
         if (cursor != null && !(cursor instanceof ProximityCursor)) {
             spec = spec.and(switch (cursor) {
                 case CreatedAtCursor c -> afterCreatedAtCursor(c.createdAt(), c.id());
-                case CommentCountCursor c -> afterCommentCountCursor(c.commentCount(), c.createdAt());
+                case CommentCountCursor c -> afterCommentCountCursor(c.commentCount(), c.id());
                 default -> throw new IllegalArgumentException("Unexpected cursor: " + cursor);
             });
         }
