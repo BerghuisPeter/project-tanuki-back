@@ -6,10 +6,10 @@ import io.github.peterberghuis.goshuin.entity.*;
 import io.github.peterberghuis.goshuin.model.CommentCountCursor;
 import io.github.peterberghuis.goshuin.model.CreatedAtCursor;
 import io.github.peterberghuis.goshuin.model.GoshuinCursor;
+import io.github.peterberghuis.goshuin.model.ProximityCursor;
 import io.github.peterberghuis.goshuin.repository.GoshuinRepository;
 import io.github.peterberghuis.goshuin.repository.GoshuinRepositoryCustom;
 import io.github.peterberghuis.goshuin.repository.GoshuinSpecifications;
-import io.github.peterberghuis.goshuin.repository.TempleRepository;
 import io.github.peterberghuis.goshuin.util.CursorUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -26,7 +26,6 @@ public class GoshuinService {
 
     private final GoshuinRepository goshuinRepository;
     private final GoshuinRepositoryCustom goshuinRepositoryCustom;
-    private final TempleRepository templeRepository;
     private final ProfileClient profileClient;
 
     public GoshuinSearchResponse searchGoshuins(
@@ -38,6 +37,9 @@ public class GoshuinService {
             Integer limit,
             String cursorToken) {
 
+        double lat = 35.634732;
+        double lon = 139.615286;
+
         GoshuinCursor cursor = cursorToken != null && !cursorToken.isBlank()
                 ? CursorUtils.decode(cursorToken)
                 : null;
@@ -45,10 +47,10 @@ public class GoshuinService {
         Specification<GoshuinEntity> spec = GoshuinSpecifications.buildSpec(
                 format, pages, affiliation, query, cursor);
 
-        List<GoshuinEntity> entities = fetchSorted(spec, sort, limit);
+        List<GoshuinEntity> entities = fetchSorted(spec, sort, limit, lat, lon, cursor);
         List<Goshuin> goshuins = toGoshuinDtos(entities);
 
-        return paginatedResponse(goshuins, entities, limit, sort);
+        return paginatedResponse(goshuins, entities, limit, sort, lat, lon, cursor);
     }
 
     // -------------------------------------------------------------------------
@@ -56,7 +58,7 @@ public class GoshuinService {
     // -------------------------------------------------------------------------
 
     private List<GoshuinEntity> fetchSorted(
-            Specification<GoshuinEntity> spec, GoshuinSort sort, int limit) {
+            Specification<GoshuinEntity> spec, GoshuinSort sort, int limit, double lat, double lon, GoshuinCursor cursor) {
 
         return switch (sort) {
             case CREATED_AT -> goshuinRepository
@@ -65,7 +67,8 @@ public class GoshuinService {
 
             case COMMENT_COUNT -> goshuinRepository.findAll(spec, GoshuinSpecifications.COMMENT_COUNT_SORT);
 
-            case PROXIMITY -> goshuinRepositoryCustom.findAllByDistance(spec, 35.634732, 139.615286);
+            case PROXIMITY ->
+                    goshuinRepositoryCustom.findAllByDistance(spec, lat, lon, limit, (ProximityCursor) cursor);
         };
     }
 
@@ -86,18 +89,20 @@ public class GoshuinService {
     }
 
     private GoshuinSearchResponse paginatedResponse(
-            List<Goshuin> goshuins, List<GoshuinEntity> entities, int limit, GoshuinSort sort) {
+            List<Goshuin> goshuins, List<GoshuinEntity> entities, int limit, GoshuinSort sort, double lat, double lon, GoshuinCursor cursor) {
 
         String nextPageToken = null;
 
         if (entities.size() > limit) {
-            GoshuinEntity lastVisible = entities.get(limit - 1);
+            GoshuinEntity last = entities.get(limit - 1);
             nextPageToken = switch (sort) {
-                case CREATED_AT ->
-                        CursorUtils.encode(new CreatedAtCursor(lastVisible.getCreatedAt(), lastVisible.getId()));
+                case CREATED_AT -> CursorUtils.encode(new CreatedAtCursor(last.getCreatedAt(), last.getId()));
                 case COMMENT_COUNT ->
-                        CursorUtils.encode(new CommentCountCursor(lastVisible.getCommentCount(), lastVisible.getCreatedAt()));
-                case PROXIMITY -> null;
+                        CursorUtils.encode(new CommentCountCursor(last.getCommentCount(), last.getCreatedAt()));
+                case PROXIMITY -> {
+                    int currentOffset = cursor instanceof ProximityCursor(int offset) ? offset : 0;
+                    yield CursorUtils.encode(new ProximityCursor(currentOffset + limit));
+                }
             };
             goshuins = goshuins.subList(0, limit);
         }

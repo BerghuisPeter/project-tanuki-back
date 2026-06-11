@@ -6,6 +6,7 @@ import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
 import io.github.peterberghuis.goshuin.model.CommentCountCursor;
 import io.github.peterberghuis.goshuin.model.CreatedAtCursor;
 import io.github.peterberghuis.goshuin.model.GoshuinCursor;
+import io.github.peterberghuis.goshuin.model.ProximityCursor;
 import jakarta.persistence.criteria.Join;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -140,10 +141,11 @@ public class GoshuinSpecifications {
                 .and(withAffiliation(affiliation))
                 .and(withLabel(query).or(withTempleTranslationSearch(query)));
 
-        if (cursor != null) {
+        if (cursor != null && !(cursor instanceof ProximityCursor)) {
             spec = spec.and(switch (cursor) {
                 case CreatedAtCursor c -> afterCreatedAtCursor(c.createdAt(), c.id());
                 case CommentCountCursor c -> afterCommentCountCursor(c.commentCount(), c.createdAt());
+                default -> throw new IllegalArgumentException("Unexpected cursor: " + cursor);
             });
         }
 

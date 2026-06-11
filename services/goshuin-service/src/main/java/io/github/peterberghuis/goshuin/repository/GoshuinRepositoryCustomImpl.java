@@ -2,6 +2,7 @@ package io.github.peterberghuis.goshuin.repository;
 
 import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
 import io.github.peterberghuis.goshuin.entity.TempleEntity;
+import io.github.peterberghuis.goshuin.model.ProximityCursor;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.*;
@@ -20,17 +21,18 @@ public class GoshuinRepositoryCustomImpl implements GoshuinRepositoryCustom {
     public List<GoshuinEntity> findAllByDistance(
             Specification<GoshuinEntity> spec,
             double lat,
-            double lon) {
+            double lon,
+            int limit,
+            ProximityCursor cursor) {
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<GoshuinEntity> query = cb.createQuery(GoshuinEntity.class);
 
         Root<GoshuinEntity> root = query.from(GoshuinEntity.class);
 
-        if (spec != null) {
-            Predicate predicate = spec.toPredicate(root, query, cb);
-            query.where(predicate);
-        }
+        Predicate specPredicate = spec != null
+                ? spec.toPredicate(root, query, cb)
+                : cb.conjunction();
 
         Join<GoshuinEntity, TempleEntity> temple = root.join("temple");
 
@@ -63,12 +65,19 @@ public class GoshuinRepositoryCustomImpl implements GoshuinRepositoryCustom {
         Expression<Double> acosArg = cb.sum(cosPart, sinPart);
 
         Expression<Double> distance = cb.prod(
-                cb.literal(6371.0), // km
+                cb.literal(6371.0),
                 cb.function("acos", Double.class, acosArg)
         );
 
-        query.orderBy(cb.asc(distance));
+        if (specPredicate != null) {
+            query.where(specPredicate);
+        }
 
-        return entityManager.createQuery(query).getResultList();
+        query.orderBy(cb.asc(distance), cb.asc(root.get("createdAt")));
+
+        return entityManager.createQuery(query)
+                .setFirstResult(cursor != null ? cursor.offset() : 0)
+                .setMaxResults(limit + 1)
+                .getResultList();
     }
 }
