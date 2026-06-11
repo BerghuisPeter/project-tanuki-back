@@ -35,9 +35,8 @@ public class GoshuinRepositoryCustomImpl implements GoshuinRepositoryCustom {
 
         Join<GoshuinEntity, TempleEntity> temple = root.join("temple");
 
-        // Use CAST(latitude AS double) which is supported by Hibernate 6+
-        Expression<Double> latRad = cb.function("radians", Double.class, cb.function("cast", Double.class, temple.get("latitude"), cb.literal("double")));
-        Expression<Double> lonRad = cb.function("radians", Double.class, cb.function("cast", Double.class, temple.get("longitude"), cb.literal("double")));
+        Expression<Double> latRad = cb.function("radians", Double.class, temple.get("latitude").as(Double.class));
+        Expression<Double> lonRad = cb.function("radians", Double.class, temple.get("longitude").as(Double.class));
 
         double latRadValue = Math.toRadians(lat);
         double lonRadValue = Math.toRadians(lon);
