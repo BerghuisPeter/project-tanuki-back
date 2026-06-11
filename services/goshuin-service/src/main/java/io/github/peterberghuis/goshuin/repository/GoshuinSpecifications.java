@@ -10,7 +10,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class GoshuinSpecifications {
@@ -78,7 +80,33 @@ public class GoshuinSpecifications {
     }
 
     public static final Sort CREATED_AT_SORT =
-            Sort.by(Sort.Direction.DESC, "createdAt");
+            Sort.by(
+                    Sort.Order.desc("createdAt"),
+                    Sort.Order.desc("id")
+            );
+
+    public static Specification<GoshuinEntity> afterCreatedAtCursor(
+            OffsetDateTime createdAt,
+            UUID id
+    ) {
+        return (root, query, cb) ->
+                cb.or(
+                        cb.lessThan(
+                                root.get("createdAt"),
+                                createdAt
+                        ),
+                        cb.and(
+                                cb.equal(
+                                        root.get("createdAt"),
+                                        createdAt
+                                ),
+                                cb.lessThan(
+                                        root.get("id"),
+                                        id
+                                )
+                        )
+                );
+    }
 
     public static final Sort COMMENT_COUNT_SORT =
             Sort.by(Sort.Direction.DESC, "commentCount");

@@ -54,15 +54,24 @@ paths:
           required: false
           schema:
             $ref: '#/components/schemas/GoshuinSort'
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: nextPageToken
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Goshuin'
+                $ref: '#/components/schemas/GoshuinSearchResponse'
     post:
       summary: Add a new goshuin
       operationId: addGoshuin
@@ -301,6 +310,16 @@ components:
         - commentCount
         - createdAt
         - nearby
+
+    GoshuinSearchResponse:
+      type: object
+      properties:
+        goshuins:
+          type: array
+          items:
+            $ref: '#/components/schemas/Goshuin'
+        nextPageToken:
+          type: string
 
     Goshuin:
       type: object

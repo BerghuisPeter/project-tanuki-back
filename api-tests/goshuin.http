@@ -24,7 +24,7 @@ GET {{goshuin_service_url}}/api/v1/temples
 Accept: application/json
 
 ### Get all goshuins (Public)
-GET {{goshuin_service_url}}/api/v1/goshuin
+GET {{goshuin_service_url}}/api/v1/goshuin?limit=20&sort=createdAt
 Accept: application/json
 
 ### Add a new temple (Senso-ji) (Protected)

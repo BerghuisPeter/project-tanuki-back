@@ -22,8 +22,16 @@ public class GoshuinController implements GoshuinApi {
     private final GoshuinCommentService goshuinCommentService;
 
     @Override
-    public ResponseEntity<List<Goshuin>> searchGoshuins(GoshuinFormat format, List<Integer> pages, LocalDate startDate, LocalDate endDate, AffiliationType affiliation, String query, GoshuinSort sort) {
-        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, startDate, endDate, affiliation, query, sort));
+    public ResponseEntity<GoshuinSearchResponse> searchGoshuins(
+            Integer limit,
+            GoshuinFormat format,
+            List<Integer> pages,
+            LocalDate startDate,
+            LocalDate endDate,
+            AffiliationType affiliation,
+            String query, GoshuinSort sort,
+            String cursorToken) {
+        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, startDate, endDate, affiliation, query, sort, limit, cursorToken));
     }
 
     @Override

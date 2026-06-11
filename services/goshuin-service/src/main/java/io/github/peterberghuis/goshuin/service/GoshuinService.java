@@ -3,11 +3,14 @@ package io.github.peterberghuis.goshuin.service;
 import io.github.peterberghuis.goshuin.client.ProfileClient;
 import io.github.peterberghuis.goshuin.dto.*;
 import io.github.peterberghuis.goshuin.entity.*;
+import io.github.peterberghuis.goshuin.model.GoshuinCursor;
 import io.github.peterberghuis.goshuin.repository.GoshuinRepository;
 import io.github.peterberghuis.goshuin.repository.GoshuinRepositoryCustom;
 import io.github.peterberghuis.goshuin.repository.GoshuinSpecifications;
 import io.github.peterberghuis.goshuin.repository.TempleRepository;
+import io.github.peterberghuis.goshuin.util.CursorUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +28,17 @@ public class GoshuinService {
     private final TempleRepository templeRepository;
     private final ProfileClient profileClient;
 
-    public List<Goshuin> searchGoshuins(GoshuinFormat format, List<Integer> pages, LocalDate startDate, LocalDate endDate, AffiliationType affiliation, String query, GoshuinSort sort) {
+    public GoshuinSearchResponse searchGoshuins(
+            GoshuinFormat format,
+            List<Integer> pages,
+            LocalDate startDate,
+            LocalDate endDate,
+            AffiliationType affiliation,
+            String query,
+            GoshuinSort sort,
+            Integer limit,
+            String cursorToken) {
+
         Specification<GoshuinEntity> spec = Specification
                 .where(GoshuinSpecifications.withFormat(format))
                 .and(GoshuinSpecifications.withPages(pages))
@@ -36,8 +49,29 @@ public class GoshuinService {
                         GoshuinSpecifications.withLabel(query).or(GoshuinSpecifications.withTempleTranslationSearch(query))
                 );
 
+        // add token cursor if present
+        if (cursorToken != null && !cursorToken.isBlank()) {
+            GoshuinCursor cursor =
+                    CursorUtils.decode(cursorToken);
+            spec = spec.and(
+                    GoshuinSpecifications.afterCreatedAtCursor(
+                            cursor.createdAt(),
+                            cursor.id()
+                    )
+            );
+        }
+
         List<GoshuinEntity> entities = switch (sort) {
-            case CREATED_AT -> goshuinRepository.findAll(spec, GoshuinSpecifications.CREATED_AT_SORT);
+            case CREATED_AT -> {
+                PageRequest pageRequest =
+                        PageRequest.of(
+                                0,
+                                limit + 1,
+                                GoshuinSpecifications.CREATED_AT_SORT
+                        );
+
+                yield goshuinRepository.findAll(spec, pageRequest).getContent();
+            }
 
             case COMMENT_COUNT -> goshuinRepository.findAll(spec, GoshuinSpecifications.COMMENT_COUNT_SORT);
 
@@ -55,12 +89,33 @@ public class GoshuinService {
         Map<UUID, UserProfile> userProfiles =
                 userProfilesResponse != null ? userProfilesResponse : Map.of();
 
-        return entities.stream()
+        List<Goshuin> goshuinResponseList = entities.stream()
                 .map(entity -> mapToDto(
                         entity,
                         userProfiles.get(entity.getUserId())
                 ))
                 .toList();
+
+        // prepare next page token if present
+        String nextPageToken = null;
+        if (entities.size() > limit) {
+            GoshuinEntity lastVisible =
+                    entities.get(limit - 1);
+            nextPageToken =
+                    CursorUtils.encode(
+                            new GoshuinCursor(
+                                    lastVisible.getCreatedAt(),
+                                    lastVisible.getId()
+                            )
+                    );
+            goshuinResponseList = goshuinResponseList.subList(0, limit);
+        }
+
+        GoshuinSearchResponse goshuinSearchResponse = new GoshuinSearchResponse();
+        goshuinSearchResponse.setGoshuins(goshuinResponseList);
+        goshuinSearchResponse.setNextPageToken(nextPageToken);
+
+        return goshuinSearchResponse;
     }
 
     public Goshuin createGoshuin(GoshuinCreate goshuinCreate) {
