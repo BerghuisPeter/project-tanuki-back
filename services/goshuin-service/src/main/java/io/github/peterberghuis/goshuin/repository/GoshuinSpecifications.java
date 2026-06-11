@@ -3,6 +3,8 @@ package io.github.peterberghuis.goshuin.repository;
 import io.github.peterberghuis.goshuin.dto.AffiliationType;
 import io.github.peterberghuis.goshuin.dto.GoshuinFormat;
 import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
+import io.github.peterberghuis.goshuin.model.GoshuinCursor;
+import io.github.peterberghuis.goshuin.util.CursorUtils;
 import jakarta.persistence.criteria.Join;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -110,4 +112,27 @@ public class GoshuinSpecifications {
 
     public static final Sort COMMENT_COUNT_SORT =
             Sort.by(Sort.Direction.DESC, "commentCount");
+
+
+    public static Specification<GoshuinEntity> buildSpec(
+            GoshuinFormat format,
+            List<Integer> pages,
+            AffiliationType affiliation,
+            String query,
+            String cursorToken) {
+
+        Specification<GoshuinEntity> spec = Specification
+                .where(GoshuinSpecifications.withFormat(format))
+                .and(GoshuinSpecifications.withPages(pages))
+                .and(GoshuinSpecifications.withAffiliation(affiliation))
+                .and(GoshuinSpecifications.withLabel(query)
+                        .or(GoshuinSpecifications.withTempleTranslationSearch(query)));
+
+        if (cursorToken != null && !cursorToken.isBlank()) {
+            GoshuinCursor cursor = CursorUtils.decode(cursorToken);
+            spec = spec.and(GoshuinSpecifications.afterCreatedAtCursor(cursor.createdAt(), cursor.id()));
+        }
+
+        return spec;
+    }
 }

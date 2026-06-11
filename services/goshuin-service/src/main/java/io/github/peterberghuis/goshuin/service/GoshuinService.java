@@ -15,7 +15,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,185 +30,132 @@ public class GoshuinService {
     public GoshuinSearchResponse searchGoshuins(
             GoshuinFormat format,
             List<Integer> pages,
-            LocalDate startDate,
-            LocalDate endDate,
             AffiliationType affiliation,
             String query,
             GoshuinSort sort,
             Integer limit,
             String cursorToken) {
 
-        Specification<GoshuinEntity> spec = Specification
-                .where(GoshuinSpecifications.withFormat(format))
-                .and(GoshuinSpecifications.withPages(pages))
-                .and(GoshuinSpecifications.withStartDate(startDate))
-                .and(GoshuinSpecifications.withEndDate(endDate))
-                .and(GoshuinSpecifications.withAffiliation(affiliation))
-                .and(
-                        GoshuinSpecifications.withLabel(query).or(GoshuinSpecifications.withTempleTranslationSearch(query))
-                );
+        Specification<GoshuinEntity> spec = GoshuinSpecifications.buildSpec(
+                format, pages, affiliation, query, cursorToken);
 
-        // add token cursor if present
-        if (cursorToken != null && !cursorToken.isBlank()) {
-            GoshuinCursor cursor =
-                    CursorUtils.decode(cursorToken);
-            spec = spec.and(
-                    GoshuinSpecifications.afterCreatedAtCursor(
-                            cursor.createdAt(),
-                            cursor.id()
-                    )
-            );
-        }
+        List<GoshuinEntity> entities = fetchSorted(spec, sort, limit);
+        List<Goshuin> goshuins = toGoshuinDtos(entities);
 
-        List<GoshuinEntity> entities = switch (sort) {
-            case CREATED_AT -> {
-                PageRequest pageRequest =
-                        PageRequest.of(
-                                0,
-                                limit + 1,
-                                GoshuinSpecifications.CREATED_AT_SORT
-                        );
+        return paginatedResponse(goshuins, entities, limit);
+    }
 
-                yield goshuinRepository.findAll(spec, pageRequest).getContent();
-            }
+    // -------------------------------------------------------------------------
+    // Search helpers
+    // -------------------------------------------------------------------------
+
+    private List<GoshuinEntity> fetchSorted(
+            Specification<GoshuinEntity> spec, GoshuinSort sort, int limit) {
+
+        return switch (sort) {
+            case CREATED_AT -> goshuinRepository
+                    .findAll(spec, PageRequest.of(0, limit + 1, GoshuinSpecifications.CREATED_AT_SORT))
+                    .getContent();
 
             case COMMENT_COUNT -> goshuinRepository.findAll(spec, GoshuinSpecifications.COMMENT_COUNT_SORT);
 
-            case NEARBY -> goshuinRepositoryCustom.findAllByDistance(spec, 35.634732, 139.615286);
+            case PROXIMITY -> goshuinRepositoryCustom.findAllByDistance(spec, 35.634732, 139.615286);
         };
+    }
 
+    private List<Goshuin> toGoshuinDtos(List<GoshuinEntity> entities) {
+        Map<UUID, UserProfile> profilesByUserId = fetchProfiles(entities);
+        return entities.stream()
+                .map(e -> mapToDto(e, profilesByUserId.get(e.getUserId())))
+                .toList();
+    }
+
+    private Map<UUID, UserProfile> fetchProfiles(List<GoshuinEntity> entities) {
         List<UUID> userIds = entities.stream()
                 .map(GoshuinEntity::getUserId)
                 .distinct()
                 .toList();
+        Map<UUID, UserProfile> profiles = profileClient.getInternalProfiles(userIds);
+        return profiles != null ? profiles : Map.of();
+    }
 
-        Map<UUID, UserProfile> userProfilesResponse =
-                profileClient.getInternalProfiles(userIds);
+    private GoshuinSearchResponse paginatedResponse(
+            List<Goshuin> goshuins, List<GoshuinEntity> entities, int limit) {
 
-        Map<UUID, UserProfile> userProfiles =
-                userProfilesResponse != null ? userProfilesResponse : Map.of();
-
-        List<Goshuin> goshuinResponseList = entities.stream()
-                .map(entity -> mapToDto(
-                        entity,
-                        userProfiles.get(entity.getUserId())
-                ))
-                .toList();
-
-        // prepare next page token if present
         String nextPageToken = null;
+
         if (entities.size() > limit) {
-            GoshuinEntity lastVisible =
-                    entities.get(limit - 1);
-            nextPageToken =
-                    CursorUtils.encode(
-                            new GoshuinCursor(
-                                    lastVisible.getCreatedAt(),
-                                    lastVisible.getId()
-                            )
-                    );
-            goshuinResponseList = goshuinResponseList.subList(0, limit);
+            GoshuinEntity lastVisible = entities.get(limit - 1);
+            nextPageToken = CursorUtils.encode(
+                    new GoshuinCursor(lastVisible.getCreatedAt(), lastVisible.getId()));
+            goshuins = goshuins.subList(0, limit);
         }
 
-        GoshuinSearchResponse goshuinSearchResponse = new GoshuinSearchResponse();
-        goshuinSearchResponse.setGoshuins(goshuinResponseList);
-        goshuinSearchResponse.setNextPageToken(nextPageToken);
-
-        return goshuinSearchResponse;
+        GoshuinSearchResponse response = new GoshuinSearchResponse();
+        response.setGoshuins(goshuins);
+        response.setNextPageToken(nextPageToken);
+        return response;
     }
 
-    public Goshuin createGoshuin(GoshuinCreate goshuinCreate) {
-        GoshuinEntity entity = new GoshuinEntity();
-        entity.setUserId(goshuinCreate.getUserId());
-        entity.setFormat(goshuinCreate.getFormat().toString());
-        entity.setPages(goshuinCreate.getPages());
-        entity.setStartDate(goshuinCreate.getStartDate());
-        entity.setEndDate(goshuinCreate.getEndDate());
-
-        TempleEntity temple = templeRepository.findById(goshuinCreate.getTempleId())
-                .orElseThrow(() -> new RuntimeException("Temple not found"));
-        entity.setTemple(temple);
-
-        if (goshuinCreate.getImages() != null) {
-            for (GoshuinImage imageDto : goshuinCreate.getImages()) {
-                if (imageDto.getUrl() != null) {
-                    GoshuinImageEntity imageEntity = new GoshuinImageEntity(entity, imageDto.getUrl().toString());
-                    entity.getImages().add(imageEntity);
-                }
-            }
-        }
-
-        if (goshuinCreate.getTranslations() != null) {
-            for (Map.Entry<String, GoshuinTranslation> entry : goshuinCreate.getTranslations().entrySet()) {
-                GoshuinI18nEntity translationEntity = new GoshuinI18nEntity(
-                        entity,
-                        entry.getKey(),
-                        entry.getValue().getLabel(),
-                        entry.getValue().getDescription()
-                );
-                entity.getTranslations().add(translationEntity);
-            }
-        }
-
-        GoshuinEntity savedEntity = goshuinRepository.save(entity);
-        UserProfile profile = profileClient.getInternalProfile(savedEntity.getUserId());
-        return mapToDto(savedEntity, profile);
-    }
+    // -------------------------------------------------------------------------
+    // DTO mappers
+    // -------------------------------------------------------------------------
 
     private Goshuin mapToDto(GoshuinEntity entity, UserProfile userProfile) {
         Goshuin dto = new Goshuin();
         dto.setId(entity.getId());
-
-        Creator creator = new Creator();
-        creator.setUserId(entity.getUserId());
-        creator.setProfile(userProfile);
-        dto.setCreator(creator);
-
+        dto.setCreator(toCreatorDto(entity.getUserId(), userProfile));
         dto.setFormat(GoshuinFormat.fromValue(entity.getFormat()));
-        dto.setTemple(mapToSummaryDto(entity.getTemple()));
+        dto.setTemple(toTempleLiteDto(entity.getTemple()));
         dto.setPages(entity.getPages());
         dto.setStartDate(entity.getStartDate());
         dto.setEndDate(entity.getEndDate());
-
-        dto.setTranslations(
-                mapGoshuinTranslations(entity.getTranslations())
-        );
-        dto.setImages(entity.getImages().stream()
-                .map(imageEntity -> {
-                    GoshuinImage imageDto = new GoshuinImage();
-                    imageDto.setId(imageEntity.getId());
-                    imageDto.setUrl(URI.create(imageEntity.getImageUrl()));
-                    return imageDto;
-                })
-                .toList());
+        dto.setTranslations(toGoshuinTranslationMap(entity.getTranslations()));
+        dto.setImages(toImageDtos(entity.getImages()));
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
         dto.setCommentCount(entity.getCommentCount());
-
         return dto;
     }
 
-    private Map<String, GoshuinTranslation> mapGoshuinTranslations(
-            Set<GoshuinI18nEntity> entities
-    ) {
+    private Creator toCreatorDto(UUID userId, UserProfile profile) {
+        Creator creator = new Creator();
+        creator.setUserId(userId);
+        creator.setProfile(profile);
+        return creator;
+    }
+
+    private List<GoshuinImage> toImageDtos(List<GoshuinImageEntity> imageEntities) {
+        return imageEntities.stream()
+                .map(imageEntity -> {
+                    GoshuinImage dto = new GoshuinImage();
+                    dto.setId(imageEntity.getId());
+                    dto.setUrl(URI.create(imageEntity.getImageUrl()));
+                    return dto;
+                })
+                .toList();
+    }
+
+    private Map<String, GoshuinTranslation> toGoshuinTranslationMap(Set<GoshuinI18nEntity> entities) {
         return entities.stream()
                 .collect(Collectors.toMap(
                         t -> t.getId().getLocale(),
-                        this::mapGoshuinTranslation,
+                        this::toGoshuinTranslationDto,
                         (a, b) -> a,
                         LinkedHashMap::new
                 ));
     }
 
-    private GoshuinTranslation mapGoshuinTranslation(GoshuinI18nEntity entity) {
+    private GoshuinTranslation toGoshuinTranslationDto(GoshuinI18nEntity entity) {
         GoshuinTranslation dto = new GoshuinTranslation();
         dto.setLabel(entity.getLabel());
         dto.setDescription(entity.getDescription());
         return dto;
     }
 
-    private TempleLite mapToSummaryDto(TempleEntity entity) {
+    private TempleLite toTempleLiteDto(TempleEntity entity) {
         if (entity == null) return null;
+
         TempleLite dto = new TempleLite();
         dto.setId(entity.getId());
         dto.setAffiliationType(AffiliationType.fromValue(entity.getAffiliationType()));
@@ -217,22 +163,21 @@ public class GoshuinService {
         dto.setLatitude(entity.getLatitude().doubleValue());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
-
-        Map<String, TempleTranslation> translations =
-                entity.getTranslations()
-                        .stream()
-                        .collect(Collectors.toMap(
-                                t -> t.getId().getLocale(),
-                                this::mapTempleTranslation,
-                                (a, b) -> a,
-                                LinkedHashMap::new
-                        ));
-        dto.setTranslations(translations);
-
+        dto.setTranslations(toTempleTranslationMap(entity.getTranslations()));
         return dto;
     }
 
-    private TempleTranslation mapTempleTranslation(TempleI18nEntity entity) {
+    private Map<String, TempleTranslation> toTempleTranslationMap(Set<TempleI18nEntity> entities) {
+        return entities.stream()
+                .collect(Collectors.toMap(
+                        t -> t.getId().getLocale(),
+                        this::toTempleTranslationDto,
+                        (a, b) -> a,
+                        LinkedHashMap::new
+                ));
+    }
+
+    private TempleTranslation toTempleTranslationDto(TempleI18nEntity entity) {
         TempleTranslation dto = new TempleTranslation();
         dto.setName(entity.getName());
         dto.setRegion(entity.getRegion());

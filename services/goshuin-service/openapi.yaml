@@ -27,18 +27,6 @@ paths:
             items:
               type: integer
               format: int32
-        - name: startDate
-          in: query
-          required: false
-          schema:
-            type: string
-            format: date
-        - name: endDate
-          in: query
-          required: false
-          schema:
-            type: string
-            format: date
         - name: affiliation
           in: query
           required: false
@@ -72,36 +60,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GoshuinSearchResponse'
-    post:
-      summary: Add a new goshuin
-      operationId: addGoshuin
-      tags:
-        - Goshuin
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GoshuinCreate'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Goshuin'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/goshuin/comments/count:
     post:
@@ -309,7 +267,7 @@ components:
       enum:
         - commentCount
         - createdAt
-        - nearby
+        - proximity
 
     GoshuinSearchResponse:
       type: object
@@ -383,41 +341,6 @@ components:
         profile:
           $ref: '#/components/schemas/UserProfile'
 
-    GoshuinCreate:
-      type: object
-      required:
-        - userId
-        - format
-        - templeId
-        - pages
-        - translations
-      properties:
-        userId:
-          type: string
-          format: uuid
-        format:
-          $ref: '#/components/schemas/GoshuinFormat'
-        templeId:
-          type: string
-          format: uuid
-        pages:
-          type: integer
-          format: int32
-          default: 1
-        startDate:
-          type: string
-          format: date
-        endDate:
-          type: string
-          format: date
-        translations:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/GoshuinTranslation'
-        images:
-          type: array
-          items:
-            $ref: '#/components/schemas/GoshuinImage'
     GoshuinTranslation:
       type: object
       properties:

@@ -1,15 +1,16 @@
 package io.github.peterberghuis.goshuin.controller;
 
 import io.github.peterberghuis.goshuin.api.GoshuinApi;
-import io.github.peterberghuis.goshuin.dto.*;
+import io.github.peterberghuis.goshuin.dto.AffiliationType;
+import io.github.peterberghuis.goshuin.dto.GoshuinFormat;
+import io.github.peterberghuis.goshuin.dto.GoshuinSearchResponse;
+import io.github.peterberghuis.goshuin.dto.GoshuinSort;
 import io.github.peterberghuis.goshuin.service.GoshuinCommentService;
 import io.github.peterberghuis.goshuin.service.GoshuinService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,17 +27,10 @@ public class GoshuinController implements GoshuinApi {
             Integer limit,
             GoshuinFormat format,
             List<Integer> pages,
-            LocalDate startDate,
-            LocalDate endDate,
             AffiliationType affiliation,
             String query, GoshuinSort sort,
             String cursorToken) {
-        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, startDate, endDate, affiliation, query, sort, limit, cursorToken));
-    }
-
-    @Override
-    public ResponseEntity<Goshuin> addGoshuin(GoshuinCreate goshuinCreate) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(goshuinService.createGoshuin(goshuinCreate));
+        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, affiliation, query, sort, limit, cursorToken));
     }
 
     @Override
