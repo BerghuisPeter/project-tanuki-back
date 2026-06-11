@@ -35,39 +35,38 @@ public class GoshuinRepositoryCustomImpl implements GoshuinRepositoryCustom {
 
         Join<GoshuinEntity, TempleEntity> temple = root.join("temple");
 
-        Expression<Double> latRad = cb.function("radians", Double.class,
-                temple.get("latitude").as(Double.class));
-        Expression<Double> lonRad = cb.function("radians", Double.class,
-                temple.get("longitude").as(Double.class));
+        Expression<Double> templeLat = temple.get("latitude").as(Double.class);
+        Expression<Double> templeLon = temple.get("longitude").as(Double.class);
 
-        double latRadValue = Math.toRadians(lat);
-        double lonRadValue = Math.toRadians(lon);
+        Expression<Double> latRad = cb.function("radians", Double.class, templeLat);
+        Expression<Double> lonRad = cb.function("radians", Double.class, templeLon);
+        Expression<Double> latRad0 = cb.literal(Math.toRadians(lat));
+        Expression<Double> lonRad0 = cb.literal(Math.toRadians(lon));
 
         Expression<Double> cosPart = cb.prod(
-                cb.function("cos", Double.class, cb.literal(latRadValue)),
+                cb.function("cos", Double.class, latRad0),
                 cb.prod(
                         cb.function("cos", Double.class, latRad),
-                        cb.function(
-                                "cos",
-                                Double.class,
-                                cb.diff(lonRad, cb.literal(lonRadValue))
-                        )
+                        cb.function("cos", Double.class, cb.diff(lonRad, lonRad0))
                 )
         );
 
         Expression<Double> sinPart = cb.prod(
-                cb.function("sin", Double.class, cb.literal(latRadValue)),
+                cb.function("sin", Double.class, latRad0),
                 cb.function("sin", Double.class, latRad)
         );
 
-        Expression<Double> acosArg = cb.sum(cosPart, sinPart);
-
-        // Clamp acosArg to [-1, 1] to avoid NaN
-        Expression<Double> clampedAcosArg = cb.function("greatest", Double.class, cb.literal(-1.0), cb.function("least", Double.class, cb.literal(1.0), acosArg));
+        Expression<Double> acosArg = cb.function("greatest", Double.class,
+                cb.literal(-1.0),
+                cb.function("least", Double.class,
+                        cb.literal(1.0),
+                        cb.sum(cosPart, sinPart)
+                )
+        );
 
         Expression<Double> distance = cb.prod(
                 cb.literal(6371.0),
-                cb.function("acos", Double.class, clampedAcosArg)
+                cb.function("acos", Double.class, acosArg)
         );
 
         cq.where(specPredicate);
