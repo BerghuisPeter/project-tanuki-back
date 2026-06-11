@@ -37,35 +37,35 @@ public class GoshuinRepositoryCustomImpl implements GoshuinRepositoryCustom {
         Join<GoshuinEntity, TempleEntity> temple = root.join("temple");
 
         Expression<Double> latRad =
-                cb.function("radians", Double.class, temple.get("latitude").as(Double.class));
+                cb.function("radians", Double.class, cb.function("CAST", Double.class, temple.get("latitude"), cb.literal("DOUBLE PRECISION")));
 
         Expression<Double> lonRad =
-                cb.function("radians", Double.class, temple.get("longitude").as(Double.class));
+                cb.function("radians", Double.class, cb.function("CAST", Double.class, temple.get("longitude"), cb.literal("DOUBLE PRECISION")));
 
         double latRadValue = Math.toRadians(lat);
         double lonRadValue = Math.toRadians(lon);
 
         Expression<Double> cosPart = cb.prod(
-                cb.function("cos", Double.class, cb.literal(latRadValue)),
+                cb.function("cos", Double.class, cb.literal(latRadValue).as(Double.class)),
                 cb.prod(
                         cb.function("cos", Double.class, latRad),
                         cb.function(
                                 "cos",
                                 Double.class,
-                                cb.diff(lonRad, cb.literal(lonRadValue))
+                                cb.diff(lonRad, cb.literal(lonRadValue).as(Double.class))
                         )
                 )
         );
 
         Expression<Double> sinPart = cb.prod(
-                cb.function("sin", Double.class, cb.literal(latRadValue)),
+                cb.function("sin", Double.class, cb.literal(latRadValue).as(Double.class)),
                 cb.function("sin", Double.class, latRad)
         );
 
         Expression<Double> acosArg = cb.sum(cosPart, sinPart);
 
         Expression<Double> distance = cb.prod(
-                cb.literal(6371.0),
+                cb.literal(6371.0).as(Double.class),
                 cb.function("acos", Double.class, acosArg)
         );
 
