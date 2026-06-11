@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202606111950-change-lat-long-to-float8
+      author: junie
+      changes:
+        - modifyDataType:
+            tableName: temple
+            columnName: latitude
+            newDataType: FLOAT8
+        - modifyDataType:
+            tableName: temple
+            columnName: longitude
+            newDataType: FLOAT8
