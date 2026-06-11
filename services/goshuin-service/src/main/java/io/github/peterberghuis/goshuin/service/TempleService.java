@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
@@ -31,8 +30,8 @@ public class TempleService {
     @Transactional
     public Temple createTemple(TempleCreate templeCreate) {
         TempleEntity entity = new TempleEntity();
-        entity.setLongitude(BigDecimal.valueOf(templeCreate.getLongitude()));
-        entity.setLatitude(BigDecimal.valueOf(templeCreate.getLatitude()));
+        entity.setLongitude(templeCreate.getLongitude());
+        entity.setLatitude(templeCreate.getLatitude());
         entity.setAffiliationType(templeCreate.getAffiliationType().toString());
         entity.setWebsiteUrl(templeCreate.getWebsiteUrl() != null ? templeCreate.getWebsiteUrl().toString() : null);
         entity.setPhoneNumber(templeCreate.getPhoneNumber());

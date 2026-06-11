@@ -5,9 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import org.hibernate.annotations.UuidGenerator;
-import java.math.BigDecimal;
+
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
@@ -25,11 +24,11 @@ public class TempleEntity {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID id;
 
-    @Column(nullable = false, precision = 9, scale = 6)
-    private BigDecimal longitude;
+    @Column(nullable = false)
+    private Double longitude;
 
-    @Column(nullable = false, precision = 9, scale = 6)
-    private BigDecimal latitude;
+    @Column(nullable = false)
+    private Double latitude;
 
     @Column(name = "affiliation_type", nullable = false, length = 50)
     private String affiliationType;
