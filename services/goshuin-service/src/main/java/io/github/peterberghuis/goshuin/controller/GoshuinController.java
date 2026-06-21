@@ -29,8 +29,10 @@ public class GoshuinController implements GoshuinApi {
             List<Integer> pages,
             AffiliationType affiliation,
             String query, GoshuinSort sort,
+            Double lat,
+            Double lng,
             String cursorToken) {
-        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, affiliation, query, sort, limit, cursorToken));
+        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, affiliation, query, sort, limit, lat, lng, cursorToken));
     }
 
     @Override

@@ -48,6 +48,18 @@ paths:
           schema:
             type: integer
             format: int32
+        - name: lat
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: lng
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
         - name: nextPageToken
           in: query
           required: false

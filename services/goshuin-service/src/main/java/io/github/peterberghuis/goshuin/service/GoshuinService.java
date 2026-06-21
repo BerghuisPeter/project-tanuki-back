@@ -35,10 +35,12 @@ public class GoshuinService {
             String query,
             GoshuinSort sort,
             Integer limit,
+            Double lat,
+            Double lng,
             String cursorToken) {
 
-        double lat = 35.634732;
-        double lon = 139.615286;
+//        lat = 35.634732;
+//        lng = 139.615286;
 
         GoshuinCursor cursor = cursorToken != null && !cursorToken.isBlank()
                 ? CursorUtils.decode(cursorToken)
@@ -47,10 +49,10 @@ public class GoshuinService {
         Specification<GoshuinEntity> spec = GoshuinSpecifications.buildSpec(
                 format, pages, affiliation, query, cursor);
 
-        List<GoshuinEntity> entities = fetchSorted(spec, sort, limit, lat, lon, cursor);
+        List<GoshuinEntity> entities = fetchSorted(spec, sort, limit, lat, lng, cursor);
         List<Goshuin> goshuins = toGoshuinDtos(entities);
 
-        return paginatedResponse(goshuins, entities, limit, sort, lat, lon, cursor);
+        return paginatedResponse(goshuins, entities, limit, sort, lat, lng, cursor);
     }
 
     // -------------------------------------------------------------------------
@@ -58,7 +60,7 @@ public class GoshuinService {
     // -------------------------------------------------------------------------
 
     private List<GoshuinEntity> fetchSorted(
-            Specification<GoshuinEntity> spec, GoshuinSort sort, int limit, double lat, double lon, GoshuinCursor cursor) {
+            Specification<GoshuinEntity> spec, GoshuinSort sort, int limit, Double lat, Double lon, GoshuinCursor cursor) {
 
         return switch (sort) {
             case CREATED_AT -> goshuinRepository
@@ -89,7 +91,7 @@ public class GoshuinService {
     }
 
     private GoshuinSearchResponse paginatedResponse(
-            List<Goshuin> goshuins, List<GoshuinEntity> entities, int limit, GoshuinSort sort, double lat, double lon, GoshuinCursor cursor) {
+            List<Goshuin> goshuins, List<GoshuinEntity> entities, int limit, GoshuinSort sort, Double lat, Double lon, GoshuinCursor cursor) {
 
         String nextPageToken = null;
 
