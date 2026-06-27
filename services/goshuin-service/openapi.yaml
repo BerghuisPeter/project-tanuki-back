@@ -108,9 +108,15 @@ paths:
   /api/v1/temples:
     get:
       summary: Get all temples
-      operationId: getTemples
+      operationId: searchTemples
       tags:
         - Temple
+      parameters:
+        - name: query
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: OK

@@ -6,7 +6,9 @@ import io.github.peterberghuis.goshuin.dto.TempleTranslation;
 import io.github.peterberghuis.goshuin.entity.TempleEntity;
 import io.github.peterberghuis.goshuin.entity.TempleI18nEntity;
 import io.github.peterberghuis.goshuin.repository.TempleRepository;
+import io.github.peterberghuis.goshuin.repository.TempleSpecifications;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,8 +23,9 @@ public class TempleService {
 
     private final TempleRepository templeRepository;
 
-    public List<Temple> getAllTemples() {
-        return templeRepository.findAll().stream()
+    public List<Temple> searchTemples(String query) {
+        Specification<TempleEntity> spec = TempleSpecifications.search(query);
+        return templeRepository.findAll(spec).stream()
                 .map(this::mapToDto)
                 .toList();
     }

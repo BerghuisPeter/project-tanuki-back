@@ -18,8 +18,8 @@ public class TempleController implements TempleApi {
     private final TempleService templeService;
 
     @Override
-    public ResponseEntity<List<Temple>> getTemples() {
-        return ResponseEntity.ok(templeService.getAllTemples());
+    public ResponseEntity<List<Temple>> searchTemples(String query) {
+        return ResponseEntity.ok(templeService.searchTemples(query));
     }
 
     @Override

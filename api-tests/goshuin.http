@@ -19,54 +19,6 @@ Content-Type: application/json
     }
 %}
 
-### Get all temples (Public)
-GET {{goshuin_service_url}}/api/v1/temples
-Accept: application/json
-
 ### Get all goshuins (Public)
 GET {{goshuin_service_url}}/api/v1/goshuin?limit=20&sort=createdAt
 Accept: application/json
-
-### Add a new temple (Senso-ji) (Protected)
-POST {{goshuin_service_url}}/api/v1/temples
-Authorization: Bearer {{access_token}}
-Content-Type: application/json
-
-{
-  "translations": {
-    "ja": {
-      "name": "浅草寺",
-      "address": "東京都台東区浅草２丁目３−１",
-      "description": "東京都内最古の寺院。聖観世音菩薩を本尊とする。"
-    },
-    "en": {
-      "name": "Senso-ji",
-      "address": "2-3-1 Asakusa, Taito City, Tokyo",
-      "description": "Tokyo's oldest temple, dedicated to Kannon Bosatsu."
-    }
-  },
-  "longitude": 139.7967,
-  "latitude": 35.7148,
-  "affiliation": "buddhist",
-  "websiteUrl": "https://www.senso-ji.jp/",
-  "phoneNumber": "03-3842-0181",
-  "goshuinServiceOpenUntil": "16:00",
-  "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Senso-ji_Kaminarimon_Night.jpg/1024px-Senso-ji_Kaminarimon_Night.jpg"
-}
-
-### Add another temple (Meiji Jingu - simplified) (Protected)
-POST {{goshuin_service_url}}/api/v1/temples
-Authorization: Bearer {{access_token}}
-Content-Type: application/json
-
-{
-  "translations": {
-    "en": {
-      "name": "Meiji Jingu",
-      "address": "1-1 Yoyogikamizonocho, Shibuya City, Tokyo"
-    }
-  },
-  "affiliation": "shinto",
-  "longitude": 139.6993,
-  "latitude": 35.6764
-}

@@ -1,0 +1,97 @@
+### Variables
+@goshuin_service_url = http://localhost:8083
+
+### Login with the test account (to get token for POST)
+POST http://localhost:8081/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Password123!"
+}
+
+> {%
+    if (response.status === 200 && response.body) {
+        client.global.set("access_token", response.body.accessToken);
+        client.global.set("refresh_token", response.body.refreshToken);
+    } else {
+        client.log("Request failed or returned empty body. Status: " + response.status);
+    }
+%}
+
+### Get all temples (Public)
+GET {{goshuin_service_url}}/api/v1/temples
+Accept: application/json
+
+### Add a new temple (Senso-ji) (Protected)
+POST {{goshuin_service_url}}/api/v1/temples
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "translations": {
+    "ja": {
+      "name": "浅草寺",
+      "region": "関東",
+      "postalCode": "111-0032",
+      "prefecture": "東京都",
+      "city": "台東区",
+      "address": "浅草２丁目３−１",
+      "description": "東京都内最古の寺院。聖観世音菩薩を本尊とする。"
+    },
+    "en": {
+      "name": "Senso-ji",
+      "region": "Kanto",
+      "postalCode": "111-0032",
+      "prefecture": "Tokyo",
+      "city": "Taito City",
+      "address": "2-3-1 Asakusa",
+      "description": "Tokyo's oldest temple, dedicated to Kannon Bosatsu."
+    }
+  },
+  "longitude": 139.7967,
+  "latitude": 35.7148,
+  "affiliationType": "buddhist",
+  "websiteUrl": "https://www.senso-ji.jp/",
+  "phoneNumber": "03-3842-0181",
+  "goshuinServiceOpenUntil": "16:00",
+  "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Senso-ji_Kaminarimon_Night.jpg/1024px-Senso-ji_Kaminarimon_Night.jpg"
+}
+
+### Add another temple (Meiji Jingu) (Protected)
+POST {{goshuin_service_url}}/api/v1/temples
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "translations": {
+    "en": {
+      "name": "Meiji Jingu",
+      "region": "Kanto",
+      "postalCode": "151-8557",
+      "prefecture": "Tokyo",
+      "city": "Shibuya City",
+      "address": "1-1 Yoyogikamizonocho"
+    }
+  },
+  "affiliationType": "shinto",
+  "longitude": 139.6993,
+  "latitude": 35.6764
+}
+
+### Search temples by name
+GET {{goshuin_service_url}}/api/v1/temples?query=Senso-ji
+Accept: application/json
+
+### Search temples by name (jp)
+GET {{goshuin_service_url}}/api/v1/temples?query=浅草寺
+Accept: application/json
+
+### Search temples by address
+GET {{goshuin_service_url}}/api/v1/temples?query=Asakusa
+Accept: application/json
+
+### Search temples by postal code
+GET {{goshuin_service_url}}/api/v1/temples?query=151-8557
+Accept: application/json
+
