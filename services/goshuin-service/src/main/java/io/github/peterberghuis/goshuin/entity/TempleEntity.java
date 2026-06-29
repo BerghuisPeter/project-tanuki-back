@@ -47,7 +47,7 @@ public class TempleEntity {
     private String imageUrl;
 
     @Column(name = "original_locale", nullable = false, length = 10)
-    private String originalLocale = "ja";
+    private String originalLocale = "en";
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
