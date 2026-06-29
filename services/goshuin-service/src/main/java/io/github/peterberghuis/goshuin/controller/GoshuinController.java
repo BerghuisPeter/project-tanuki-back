@@ -36,13 +36,7 @@ public class GoshuinController implements GoshuinApi {
     }
 
     @Override
-    public ResponseEntity<Map<String, Integer>> getGoshuinCommentCounts(List<UUID> goshuinIds) {
-        Map<UUID, Integer> counts = goshuinCommentService.getCommentCounts(goshuinIds);
-        Map<String, Integer> result = counts.entrySet().stream()
-                .collect(java.util.stream.Collectors.toMap(
-                        entry -> entry.getKey().toString(),
-                        Map.Entry::getValue
-                ));
-        return ResponseEntity.ok(result);
+    public ResponseEntity<List<Map<String, String>>> getGoshuinComments(UUID id) {
+        return ResponseEntity.ok(goshuinCommentService.getComments(id));
     }
 }
