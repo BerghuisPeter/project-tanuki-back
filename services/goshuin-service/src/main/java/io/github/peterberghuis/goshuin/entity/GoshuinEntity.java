@@ -37,6 +37,9 @@ public class GoshuinEntity {
     @Column(nullable = false)
     private Integer pages = 1;
 
+    @Column(name = "original_locale", nullable = false, length = 10)
+    private String originalLocale = "ja";
+
     @Column(name = "start_date")
     private LocalDate startDate;
 

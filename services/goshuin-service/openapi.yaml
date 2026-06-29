@@ -196,6 +196,9 @@ components:
         imageUrl:
           type: string
           format: uri
+        originalLocale:
+          type: string
+          example: "ja"
         createdAt:
           type: string
           format: date-time
@@ -239,6 +242,9 @@ components:
         imageUrl:
           type: string
           format: uri
+        originalLocale:
+          type: string
+          example: "ja"
 
     TempleTranslation:
       type: object
@@ -319,6 +325,9 @@ components:
           type: integer
           format: int32
           default: 1
+        originalLocale:
+          type: string
+          example: "ja"
         startDate:
           type: string
           format: date
@@ -398,6 +407,9 @@ components:
         latitude:
           type: number
           format: double
+        originalLocale:
+          type: string
+          example: "ja"
         createdAt:
           type: string
           format: date-time

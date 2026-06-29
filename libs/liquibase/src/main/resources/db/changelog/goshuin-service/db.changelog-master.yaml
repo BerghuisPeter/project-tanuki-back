@@ -17,3 +17,5 @@ databaseChangeLog:
       file: db/changelog/goshuin-service/008-add-goshuin-commentCount-column/db.changelog-008.yaml
   - include:
       file: db/changelog/goshuin-service/009-change-lat-long-type/db.changelog-009.yaml
+  - include:
+      file: db/changelog/goshuin-service/010-add-original-locale/db.changelog-010.yaml

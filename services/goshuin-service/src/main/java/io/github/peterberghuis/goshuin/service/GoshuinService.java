@@ -125,6 +125,7 @@ public class GoshuinService {
         dto.setFormat(GoshuinFormat.fromValue(entity.getFormat()));
         dto.setTemple(toTempleLiteDto(entity.getTemple()));
         dto.setPages(entity.getPages());
+        dto.setOriginalLocale(entity.getOriginalLocale());
         dto.setStartDate(entity.getStartDate());
         dto.setEndDate(entity.getEndDate());
         dto.setTranslations(toGoshuinTranslationMap(entity.getTranslations()));
@@ -178,6 +179,7 @@ public class GoshuinService {
         dto.setAffiliationType(AffiliationType.fromValue(entity.getAffiliationType()));
         dto.setLongitude(entity.getLongitude().doubleValue());
         dto.setLatitude(entity.getLatitude().doubleValue());
+        dto.setOriginalLocale(entity.getOriginalLocale());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
         dto.setTranslations(toTempleTranslationMap(entity.getTranslations()));

@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202606292153-add-original-locale-columns
+      author: junie
+      changes:
+        - addColumn:
+            tableName: temple
+            columns:
+              - column:
+                  name: original_locale
+                  type: varchar(10)
+                  defaultValue: en
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: goshuin
+            columns:
+              - column:
+                  name: original_locale
+                  type: varchar(10)
+                  defaultValue: en
+                  constraints:
+                    nullable: false
+        - update:
+            tableName: temple
+            columns:
+              - column:
+                  name: original_locale
+                  value: en
+        - update:
+            tableName: goshuin
+            columns:
+              - column:
+                  name: original_locale
+                  value: en

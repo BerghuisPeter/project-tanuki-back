@@ -42,6 +42,9 @@ public class TempleService {
             entity.setGoshuinServiceOpenUntil(LocalTime.parse(templeCreate.getGoshuinServiceOpenUntil()));
         }
         entity.setImageUrl(templeCreate.getImageUrl() != null ? templeCreate.getImageUrl().toString() : null);
+        if (templeCreate.getOriginalLocale() != null) {
+            entity.setOriginalLocale(templeCreate.getOriginalLocale());
+        }
 
         if (templeCreate.getTranslations() != null) {
             templeCreate.getTranslations().forEach((locale, translationDto) -> {
@@ -76,6 +79,7 @@ public class TempleService {
             dto.setGoshuinServiceOpenUntil(entity.getGoshuinServiceOpenUntil().toString());
         }
         dto.setImageUrl(entity.getImageUrl() != null ? java.net.URI.create(entity.getImageUrl()) : null);
+        dto.setOriginalLocale(entity.getOriginalLocale());
 
         Map<String, TempleTranslation> translations = new HashMap<>();
         for (TempleI18nEntity translationEntity : entity.getTranslations()) {
