@@ -418,6 +418,9 @@ components:
           type: string
           format: date-time
           readOnly: true
+        imageUrl:
+          type: string
+          format: uri
     ErrorResponse:
       type: object
       properties:

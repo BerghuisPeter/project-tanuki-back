@@ -182,6 +182,7 @@ public class GoshuinService {
         dto.setOriginalLocale(entity.getOriginalLocale());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setImageUrl(entity.getImageUrl() != null ? URI.create(entity.getImageUrl()) : null);
         dto.setTranslations(toTempleTranslationMap(entity.getTranslations()));
         return dto;
     }
