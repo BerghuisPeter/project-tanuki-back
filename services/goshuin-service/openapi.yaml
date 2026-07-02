@@ -72,6 +72,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GoshuinSearchResponse'
+    post:
+      summary: Create a new goshuin
+      operationId: createGoshuin
+      tags:
+        - Goshuin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoshuinCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Goshuin'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/goshuin/{id}/comments:
     get:
@@ -301,6 +331,47 @@ components:
             $ref: '#/components/schemas/Goshuin'
         nextPageToken:
           type: string
+
+    GoshuinCreate:
+      type: object
+      required:
+        - format
+        - translations
+        - imageUrls
+      oneOf:
+        - required: [ templeId ]
+        - required: [ temple ]
+      properties:
+        templeId:
+          type: string
+          format: uuid
+        temple:
+          $ref: '#/components/schemas/TempleCreate'
+        format:
+          $ref: '#/components/schemas/GoshuinFormat'
+        pages:
+          type: integer
+          format: int32
+          default: 1
+        originalLocale:
+          type: string
+          example: "ja"
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        translations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/GoshuinTranslation'
+        imageUrls:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            format: uri
 
     Goshuin:
       type: object

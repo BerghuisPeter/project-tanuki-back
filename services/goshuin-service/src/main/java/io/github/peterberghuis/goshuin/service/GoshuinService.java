@@ -3,6 +3,9 @@ package io.github.peterberghuis.goshuin.service;
 import io.github.peterberghuis.goshuin.client.ProfileClient;
 import io.github.peterberghuis.goshuin.dto.*;
 import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
+import io.github.peterberghuis.goshuin.entity.GoshuinI18nEntity;
+import io.github.peterberghuis.goshuin.entity.GoshuinImageEntity;
+import io.github.peterberghuis.goshuin.entity.TempleEntity;
 import io.github.peterberghuis.goshuin.mapper.GoshuinMapper;
 import io.github.peterberghuis.goshuin.model.CommentCountCursor;
 import io.github.peterberghuis.goshuin.model.CreatedAtCursor;
@@ -13,10 +16,13 @@ import io.github.peterberghuis.goshuin.repository.GoshuinRepositoryCustom;
 import io.github.peterberghuis.goshuin.repository.GoshuinSpecifications;
 import io.github.peterberghuis.goshuin.util.CursorUtils;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,6 +33,7 @@ public class GoshuinService {
 
     private final GoshuinRepository goshuinRepository;
     private final GoshuinRepositoryCustom goshuinRepositoryCustom;
+    private final TempleService templeService;
     private final ProfileClient profileClient;
     private final GoshuinMapper goshuinMapper;
 
@@ -55,6 +62,69 @@ public class GoshuinService {
         List<Goshuin> goshuins = toGoshuinDtos(entities);
 
         return paginatedResponse(goshuins, entities, limit, sort, lat, lng, cursor);
+    }
+
+    private static @NonNull GoshuinEntity buildGoshuinEntity(UUID userId, GoshuinCreate goshuinCreate, TempleEntity templeEntity) {
+        GoshuinEntity entity = new GoshuinEntity();
+        entity.setUserId(userId);
+        entity.setTemple(templeEntity);
+        entity.setFormat(goshuinCreate.getFormat().getValue());
+        if (goshuinCreate.getPages() != null) {
+            entity.setPages(goshuinCreate.getPages());
+        }
+        if (goshuinCreate.getOriginalLocale() != null) {
+            entity.setOriginalLocale(goshuinCreate.getOriginalLocale());
+        }
+        entity.setStartDate(goshuinCreate.getStartDate());
+        entity.setEndDate(goshuinCreate.getEndDate());
+        return entity;
+    }
+
+    @Transactional
+    public Goshuin createGoshuin(UUID userId, GoshuinCreate goshuinCreate) {
+        if (goshuinCreate.getTempleId() != null && goshuinCreate.getTemple() != null) {
+            throw new IllegalArgumentException("Only one of templeId or temple definition can be provided");
+        }
+
+        if (goshuinCreate.getImageUrls() == null || goshuinCreate.getImageUrls().isEmpty()) {
+            throw new IllegalArgumentException("At least one image URL must be provided");
+        }
+
+        TempleEntity templeEntity;
+        if (goshuinCreate.getTempleId() != null) {
+            templeEntity = templeService.getTempleEntityById(goshuinCreate.getTempleId());
+        } else if (goshuinCreate.getTemple() != null) {
+            templeEntity = templeService.createTempleInternal(goshuinCreate.getTemple());
+        } else {
+            throw new IllegalArgumentException("Either templeId or temple definition must be provided");
+        }
+
+        GoshuinEntity entity = buildGoshuinEntity(userId, goshuinCreate, templeEntity);
+
+        if (goshuinCreate.getTranslations() != null) {
+            goshuinCreate.getTranslations().forEach((locale, translationDto) -> {
+                GoshuinI18nEntity translation = new GoshuinI18nEntity(
+                        entity,
+                        locale,
+                        translationDto.getLabel(),
+                        translationDto.getDescription()
+                );
+                entity.getTranslations().add(translation);
+            });
+        }
+
+        if (goshuinCreate.getImageUrls() != null) {
+            for (URI url : goshuinCreate.getImageUrls()) {
+                GoshuinImageEntity image = new GoshuinImageEntity(entity, url.toString());
+                entity.getImages().add(image);
+            }
+        }
+
+        GoshuinEntity saved = goshuinRepository.saveAndFlush(entity);
+
+        Map<UUID, UserProfile> profiles = profileClient.getInternalProfiles(List.of(userId));
+        UserProfile userProfile = profiles != null ? profiles.get(userId) : null;
+        return goshuinMapper.mapToDto(saved, userProfile);
     }
 
     // -------------------------------------------------------------------------

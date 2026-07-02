@@ -22,3 +22,93 @@ Content-Type: application/json
 ### Get all goshuins (Public)
 GET {{goshuin_service_url}}/api/v1/goshuin?limit=20&sort=createdAt
 Accept: application/json
+
+### Create a new goshuin (Existing Temple)
+POST {{goshuin_service_url}}/api/v1/goshuin
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "templeId": "11111111-1111-1111-1111-111111111111",
+  "format": "written",
+  "pages": 1,
+  "originalLocale": "en",
+  "startDate": "2024-05-01",
+  "endDate": "2024-05-02",
+  "translations": {
+    "en": {
+      "label": "Spring 2026 Special Goshuin",
+      "description": "A special goshuin for the summer season."
+    }
+  },
+  "imageUrls": [
+    "https://storage.googleapis.com/tanuki-dev-assets/goshuin/Goshuin-Shikoku.png"
+  ]
+}
+
+### Create a new goshuin (New Temple)
+POST {{goshuin_service_url}}/api/v1/goshuin
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "temple": {
+    "longitude": 139.7528,
+    "latitude": 35.6852,
+    "affiliationType": "shinto",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSr05vRThwtumWKyDDWJdfzo6ywX0VFyGzIYvF8OF5eVVQq8YFPu3Z2f54&s=10",
+    "originalLocale": "en",
+    "translations": {
+      "en": {
+        "name": "Test Shrine",
+        "region": "Kanto",
+        "postalCode": "100-0001",
+        "prefecture": "Tokyo",
+        "city": "Chiyoda",
+        "address": "1-1 Chiyoda"
+      }
+    }
+  },
+  "format": "paper",
+  "originalLocale": "en",
+  "translations": {
+    "en": {
+      "label": "Test Goshuin"
+    }
+  },
+  "imageUrls": [
+    "https://storage.googleapis.com/tanuki-dev-assets/goshuin/Goshuin-Shikoku.png"
+  ]
+}
+
+### Create a new goshuin (Failure - Missing Temple)
+POST {{goshuin_service_url}}/api/v1/goshuin
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "format": "written",
+  "translations": {
+    "en": {
+      "label": "Invalid Goshuin"
+    }
+  },
+  "imageUrls": [
+    "https://example.com/goshuin1.jpg"
+  ]
+}
+
+### Create a new goshuin (Failure - Missing Image)
+POST {{goshuin_service_url}}/api/v1/goshuin
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "templeId": "11111111-1111-1111-1111-111111111111",
+  "format": "written",
+  "translations": {
+    "en": {
+      "label": "Invalid Goshuin"
+    }
+  }
+}

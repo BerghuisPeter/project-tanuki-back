@@ -1,14 +1,13 @@
 package io.github.peterberghuis.goshuin.controller;
 
 import io.github.peterberghuis.goshuin.api.GoshuinApi;
-import io.github.peterberghuis.goshuin.dto.AffiliationType;
-import io.github.peterberghuis.goshuin.dto.GoshuinFormat;
-import io.github.peterberghuis.goshuin.dto.GoshuinSearchResponse;
-import io.github.peterberghuis.goshuin.dto.GoshuinSort;
+import io.github.peterberghuis.goshuin.dto.*;
 import io.github.peterberghuis.goshuin.service.GoshuinCommentService;
 import io.github.peterberghuis.goshuin.service.GoshuinService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -36,7 +35,21 @@ public class GoshuinController implements GoshuinApi {
     }
 
     @Override
+    public ResponseEntity<Goshuin> createGoshuin(GoshuinCreate goshuinCreate) {
+        UUID userId = getUserIdFromContext();
+        return ResponseEntity.status(HttpStatus.CREATED).body(goshuinService.createGoshuin(userId, goshuinCreate));
+    }
+
+    @Override
     public ResponseEntity<List<Map<String, String>>> getGoshuinComments(UUID id) {
         return ResponseEntity.ok(goshuinCommentService.getComments(id));
+    }
+
+    private UUID getUserIdFromContext() {
+        String userIdStr = (String) SecurityContextHolder.getContext().getAuthentication().getCredentials();
+        if (userIdStr == null) {
+            throw new RuntimeException("Unauthorized: No user ID in security context");
+        }
+        return UUID.fromString(userIdStr);
     }
 }

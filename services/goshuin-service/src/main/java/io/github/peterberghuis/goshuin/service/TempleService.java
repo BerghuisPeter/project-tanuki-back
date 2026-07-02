@@ -16,6 +16,7 @@ import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,8 +31,19 @@ public class TempleService {
                 .toList();
     }
 
+    public TempleEntity getTempleEntityById(UUID id) {
+        return templeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Temple not found with id: " + id));
+    }
+
     @Transactional
     public Temple createTemple(TempleCreate templeCreate) {
+        TempleEntity saved = createTempleInternal(templeCreate);
+        return mapToDto(saved);
+    }
+
+    @Transactional
+    public TempleEntity createTempleInternal(TempleCreate templeCreate) {
         TempleEntity entity = new TempleEntity();
         entity.setLongitude(templeCreate.getLongitude());
         entity.setLatitude(templeCreate.getLatitude());
@@ -63,8 +75,7 @@ public class TempleService {
             });
         }
 
-        TempleEntity saved = templeRepository.save(entity);
-        return mapToDto(saved);
+        return templeRepository.save(entity);
     }
 
     private Temple mapToDto(TempleEntity entity) {
