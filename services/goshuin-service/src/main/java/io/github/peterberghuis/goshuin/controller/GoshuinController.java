@@ -27,11 +27,14 @@ public class GoshuinController implements GoshuinApi {
             GoshuinFormat format,
             List<Integer> pages,
             AffiliationType affiliation,
-            String query, GoshuinSort sort,
+            String query,
+            Boolean mine,
+            GoshuinSort sort,
             Double lat,
             Double lng,
             String cursorToken) {
-        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, affiliation, query, sort, limit, lat, lng, cursorToken));
+        UUID userId = (mine != null && mine) ? getUserIdFromContext() : null;
+        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, affiliation, query, sort, limit, lat, lng, cursorToken, userId));
     }
 
     @Override

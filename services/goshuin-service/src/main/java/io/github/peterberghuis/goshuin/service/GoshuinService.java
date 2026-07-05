@@ -46,7 +46,8 @@ public class GoshuinService {
             Integer limit,
             Double lat,
             Double lng,
-            String cursorToken) {
+            String cursorToken,
+            UUID userId) {
 
 //        lat = 35.634732;
 //        lng = 139.615286;
@@ -56,7 +57,7 @@ public class GoshuinService {
                 : null;
 
         Specification<GoshuinEntity> spec = GoshuinSpecifications.buildSpec(
-                format, pages, affiliation, query, cursor);
+                format, pages, affiliation, query, cursor, userId);
 
         List<GoshuinEntity> entities = fetchSorted(spec, sort, limit, lat, lng, cursor);
         List<Goshuin> goshuins = toGoshuinDtos(entities);

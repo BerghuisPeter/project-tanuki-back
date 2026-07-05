@@ -37,6 +37,11 @@ paths:
           required: false
           schema:
             type: string
+        - name: mine
+          in: query
+          required: false
+          schema:
+            type: boolean
         - name: sort
           in: query
           required: false

@@ -25,6 +25,10 @@ public class GoshuinSpecifications {
         return (root, _, cb) -> format == null ? null : cb.equal(root.get("format"), format.toString());
     }
 
+    public static Specification<GoshuinEntity> withUserId(UUID userId) {
+        return (root, _, cb) -> userId == null ? null : cb.equal(root.get("userId"), userId);
+    }
+
     public static Specification<GoshuinEntity> withPages(List<Integer> pages) {
         return (root, _, cb) -> (pages == null || pages.isEmpty()) ? null : root.get("pages").in(pages);
     }
@@ -132,10 +136,12 @@ public class GoshuinSpecifications {
             List<Integer> pages,
             AffiliationType affiliation,
             String query,
-            GoshuinCursor cursor) {
+            GoshuinCursor cursor,
+            UUID userId) {
 
         Specification<GoshuinEntity> spec = Specification
                 .where(withFormat(format))
+                .and(withUserId(userId))
                 .and(withPages(pages))
                 .and(withAffiliation(affiliation))
                 .and(withLabel(query).or(withTempleTranslationSearch(query)));

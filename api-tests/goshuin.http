@@ -128,3 +128,8 @@ Authorization: Bearer {{access_token}}
     }
   }
 }
+
+###
+GET {{goshuin_service_url}}/api/v1/goshuin?limit=20&sort=createdAt&mine=true
+Accept: application/json
+Authorization: Bearer {{access_token}}
