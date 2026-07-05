@@ -23,6 +23,22 @@ Content-Type: application/json
 GET {{goshuin_service_url}}/api/v1/goshuin?limit=20&sort=createdAt
 Accept: application/json
 
+# ----------- temple ----------
+
+### Search temples (name)
+GET {{goshuin_service_url}}/api/v1/temples?query=浅草寺
+Accept: application/json
+
+### Search temples (city)
+GET {{goshuin_service_url}}/api/v1/temples?query=Shibuya
+Accept: application/json
+
+### Search temples (adress)
+GET {{goshuin_service_url}}/api/v1/temples?query=Shibuya
+Accept: application/json
+
+# --------- goshuin ---------
+
 ### Create a new goshuin (Existing Temple)
 POST {{goshuin_service_url}}/api/v1/goshuin
 Content-Type: application/json

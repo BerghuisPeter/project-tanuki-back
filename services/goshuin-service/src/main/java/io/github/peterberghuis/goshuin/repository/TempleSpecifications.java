@@ -27,6 +27,7 @@ public class TempleSpecifications {
             return cb.or(
                     cb.like(cb.lower(translation.get("name")), search),
                     cb.like(cb.lower(translation.get("address")), search),
+                    cb.like(cb.lower(translation.get("city")), search),
                     cb.like(cb.lower(translation.get("postalCode")), search)
             );
         };
