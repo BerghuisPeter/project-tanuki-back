@@ -1,6 +1,7 @@
 package io.github.peterberghuis.goshuin.controller;
 
 import io.github.peterberghuis.goshuin.api.TempleApi;
+import io.github.peterberghuis.goshuin.dto.AffiliationType;
 import io.github.peterberghuis.goshuin.dto.Temple;
 import io.github.peterberghuis.goshuin.dto.TempleCreate;
 import io.github.peterberghuis.goshuin.service.TempleService;
@@ -18,8 +19,8 @@ public class TempleController implements TempleApi {
     private final TempleService templeService;
 
     @Override
-    public ResponseEntity<List<Temple>> searchTemples(String query) {
-        return ResponseEntity.ok(templeService.searchTemples(query));
+    public ResponseEntity<List<Temple>> searchTemples(String name, String city, AffiliationType affiliationType) {
+        return ResponseEntity.ok(templeService.searchTemples(name, city, affiliationType));
     }
 
     @Override

@@ -141,16 +141,26 @@ paths:
 
   /api/v1/temples:
     get:
-      summary: Get all temples
+      summary: search temples
       operationId: searchTemples
       tags:
         - Temple
       parameters:
-        - name: query
+        - name: name
           in: query
           required: false
           schema:
             type: string
+        - name: city
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: affiliationType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AffiliationType'
       responses:
         '200':
           description: OK

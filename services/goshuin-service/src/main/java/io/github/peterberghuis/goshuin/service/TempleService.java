@@ -1,5 +1,6 @@
 package io.github.peterberghuis.goshuin.service;
 
+import io.github.peterberghuis.goshuin.dto.AffiliationType;
 import io.github.peterberghuis.goshuin.dto.Temple;
 import io.github.peterberghuis.goshuin.dto.TempleCreate;
 import io.github.peterberghuis.goshuin.dto.TempleTranslation;
@@ -24,8 +25,8 @@ public class TempleService {
 
     private final TempleRepository templeRepository;
 
-    public List<Temple> searchTemples(String query) {
-        Specification<TempleEntity> spec = TempleSpecifications.search(query);
+    public List<Temple> searchTemples(String name, String city, AffiliationType affiliationType) {
+        Specification<TempleEntity> spec = TempleSpecifications.search(name, city, affiliationType);
         return templeRepository.findAll(spec).stream()
                 .map(this::mapToDto)
                 .toList();

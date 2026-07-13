@@ -44,7 +44,7 @@ Content-Type: application/json
       "region": "Kanto",
       "postalCode": "111-0032",
       "prefecture": "Tokyo",
-      "city": "Taito City",
+      "city": "Taito",
       "address": "2-3-1 Asakusa",
       "description": "Tokyo's oldest temple, dedicated to Kannon Bosatsu."
     }
@@ -70,7 +70,7 @@ Content-Type: application/json
       "region": "Kanto",
       "postalCode": "151-8557",
       "prefecture": "Tokyo",
-      "city": "Shibuya City",
+      "city": "Shibuya",
       "address": "1-1 Yoyogikamizonocho"
     }
   },
@@ -80,18 +80,18 @@ Content-Type: application/json
 }
 
 ### Search temples by name
-GET {{goshuin_service_url}}/api/v1/temples?query=Senso-ji
+GET {{goshuin_service_url}}/api/v1/temples?name=Senso-ji
 Accept: application/json
 
 ### Search temples by name (jp)
-GET {{goshuin_service_url}}/api/v1/temples?query=浅草寺
+GET {{goshuin_service_url}}/api/v1/temples?name=浅草寺
 Accept: application/json
 
 ### Search temples by address
-GET {{goshuin_service_url}}/api/v1/temples?query=Asakusa
+GET {{goshuin_service_url}}/api/v1/temples?city=minato
 Accept: application/json
 
-### Search temples by postal code
-GET {{goshuin_service_url}}/api/v1/temples?query=151-8557
+### Search temples by affiliation
+GET {{goshuin_service_url}}/api/v1/temples?affiliationType=shinto
 Accept: application/json
 
