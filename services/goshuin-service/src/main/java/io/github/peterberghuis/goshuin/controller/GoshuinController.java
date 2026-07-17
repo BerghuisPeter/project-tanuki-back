@@ -4,14 +4,11 @@ import io.github.peterberghuis.goshuin.api.GoshuinApi;
 import io.github.peterberghuis.goshuin.dto.*;
 import io.github.peterberghuis.goshuin.service.GoshuinCommentService;
 import io.github.peterberghuis.goshuin.service.GoshuinService;
+import io.github.peterberghuis.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -36,30 +33,18 @@ public class GoshuinController implements GoshuinApi {
             Double lat,
             Double lng,
             String cursorToken) {
-        UUID userId = (mine != null && mine) ? getUserIdFromContext() : null;
+        UUID userId = (mine != null && mine) ? SecurityUtils.getUserIdFromContext() : null;
         return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, affiliation, query, sort, limit, lat, lng, cursorToken, userId));
     }
 
     @Override
     public ResponseEntity<Goshuin> createGoshuin(GoshuinCreate goshuinCreate) {
-        UUID userId = getUserIdFromContext();
+        UUID userId = SecurityUtils.getUserIdFromContext();
         return ResponseEntity.status(HttpStatus.CREATED).body(goshuinService.createGoshuin(userId, goshuinCreate));
     }
 
     @Override
     public ResponseEntity<List<Map<String, String>>> getGoshuinComments(UUID id) {
         return ResponseEntity.ok(goshuinCommentService.getComments(id));
-    }
-
-    private UUID getUserIdFromContext() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication instanceof AnonymousAuthenticationToken || !authentication.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not authenticated");
-        }
-        String userIdStr = (String) authentication.getCredentials();
-        if (userIdStr == null || userIdStr.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User ID not found in security context");
-        }
-        return UUID.fromString(userIdStr);
     }
 }

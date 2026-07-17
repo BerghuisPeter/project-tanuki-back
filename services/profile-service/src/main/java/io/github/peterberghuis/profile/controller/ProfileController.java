@@ -5,14 +5,10 @@ import io.github.peterberghuis.profile.dto.UploadUrlResponse;
 import io.github.peterberghuis.profile.dto.UserProfile;
 import io.github.peterberghuis.profile.service.ProfileService;
 import io.github.peterberghuis.profile.validator.UserProfileValidator;
+import io.github.peterberghuis.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +23,7 @@ public class ProfileController implements ProfileApi {
 
     @Override
     public ResponseEntity<UserProfile> getUserProfile() {
-        UUID userId = getUserIdFromContext();
+        UUID userId = SecurityUtils.getUserIdFromContext();
         return profileService.getProfile(userId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -36,13 +32,13 @@ public class ProfileController implements ProfileApi {
     @Override
     public ResponseEntity<UserProfile> updateUserProfile(UserProfile userProfile) {
         userPreferencesValidator.validate(userProfile);
-        UUID userId = getUserIdFromContext();
+        UUID userId = SecurityUtils.getUserIdFromContext();
         return ResponseEntity.ok(profileService.upsertProfile(userId, userProfile));
     }
 
     @Override
     public ResponseEntity<UploadUrlResponse> getAvatarUploadUrl(String contentType) {
-        UUID userId = getUserIdFromContext();
+        UUID userId = SecurityUtils.getUserIdFromContext();
         return ResponseEntity.ok(profileService.getAvatarUploadUrl(userId, contentType));
     }
 
@@ -61,17 +57,5 @@ public class ProfileController implements ProfileApi {
     @PostMapping("/internal/profiles/bulk")
     public ResponseEntity<Map<UUID, UserProfile>> getInternalUserProfiles(@RequestBody List<UUID> userIds) {
         return ResponseEntity.ok(profileService.getProfiles(userIds));
-    }
-
-    private UUID getUserIdFromContext() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication instanceof AnonymousAuthenticationToken || !authentication.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not authenticated");
-        }
-        String userIdStr = (String) authentication.getCredentials();
-        if (userIdStr == null || userIdStr.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User ID not found in security context");
-        }
-        return UUID.fromString(userIdStr);
     }
 }
