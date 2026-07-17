@@ -7,8 +7,11 @@ import io.github.peterberghuis.goshuin.service.GoshuinService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -49,9 +52,13 @@ public class GoshuinController implements GoshuinApi {
     }
 
     private UUID getUserIdFromContext() {
-        String userIdStr = (String) SecurityContextHolder.getContext().getAuthentication().getCredentials();
-        if (userIdStr == null) {
-            throw new RuntimeException("Unauthorized: No user ID in security context");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not authenticated");
+        }
+        String userIdStr = (String) authentication.getCredentials();
+        if (userIdStr == null || userIdStr.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User ID not found in security context");
         }
         return UUID.fromString(userIdStr);
     }
