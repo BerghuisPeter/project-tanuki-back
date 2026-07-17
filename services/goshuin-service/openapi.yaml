@@ -361,7 +361,7 @@ components:
           type: string
           format: uuid
         temple:
-          $ref: '#/components/schemas/TempleCreate'
+          $ref: '#/components/schemas/GoshuinCreateTemple'
         format:
           $ref: '#/components/schemas/GoshuinFormat'
         pages:
@@ -387,6 +387,16 @@ components:
           items:
             type: string
             format: uri
+
+    GoshuinCreateTemple:
+      type: object
+      properties:
+        name:
+          type: string
+        city:
+          type: string
+        affiliationType:
+          $ref: '#/components/schemas/AffiliationType'
 
     Goshuin:
       type: object

@@ -95,7 +95,11 @@ public class GoshuinService {
         if (goshuinCreate.getTempleId() != null) {
             templeEntity = templeService.getTempleEntityById(goshuinCreate.getTempleId());
         } else if (goshuinCreate.getTemple() != null) {
-            templeEntity = templeService.createTempleInternal(goshuinCreate.getTemple());
+            // ToDo
+            //  replace with enrichment service for the temple.
+            //  For now attach it to the default temple.
+            String uuidString = "11111111-1111-1111-1111-111111111111";
+            templeEntity = templeService.getTempleEntityById(UUID.fromString(uuidString));
         } else {
             throw new IllegalArgumentException("Either templeId or temple definition must be provided");
         }
