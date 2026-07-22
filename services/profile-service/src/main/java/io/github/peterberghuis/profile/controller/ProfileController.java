@@ -1,7 +1,7 @@
 package io.github.peterberghuis.profile.controller;
 
+import io.github.peterberghuis.common.dto.UploadUrlResponse;
 import io.github.peterberghuis.profile.api.ProfileApi;
-import io.github.peterberghuis.profile.dto.UploadUrlResponse;
 import io.github.peterberghuis.profile.dto.UserProfile;
 import io.github.peterberghuis.profile.service.ProfileService;
 import io.github.peterberghuis.profile.validator.UserProfileValidator;

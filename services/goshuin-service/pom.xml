@@ -26,6 +26,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.github.peterberghuis</groupId>
+            <artifactId>gcp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
@@ -106,9 +111,13 @@
                             <importMappings>
                                 <importMapping>ErrorResponse=io.github.peterberghuis.common.dto.ErrorResponse
                                 </importMapping>
+                                <importMapping>UploadUrlResponse=io.github.peterberghuis.common.dto.UploadUrlResponse
+                                </importMapping>
                             </importMappings>
                             <typeMappings>
                                 <typeMapping>ErrorResponse=io.github.peterberghuis.common.dto.ErrorResponse
+                                </typeMapping>
+                                <typeMapping>UploadUrlResponse=io.github.peterberghuis.common.dto.UploadUrlResponse
                                 </typeMapping>
                             </typeMappings>
                             <configOptions>

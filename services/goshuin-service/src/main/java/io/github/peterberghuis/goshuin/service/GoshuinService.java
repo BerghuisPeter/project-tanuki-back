@@ -1,6 +1,13 @@
 package io.github.peterberghuis.goshuin.service;
 
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.HttpMethod;
+import com.google.cloud.storage.Storage;
+import io.github.peterberghuis.common.dto.UploadUrlResponse;
+import io.github.peterberghuis.gcp.config.GcpStorageProperties;
 import io.github.peterberghuis.goshuin.client.ProfileClient;
+import io.github.peterberghuis.goshuin.config.GoshuinImageStorageProperties;
 import io.github.peterberghuis.goshuin.dto.*;
 import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
 import io.github.peterberghuis.goshuin.entity.GoshuinI18nEntity;
@@ -19,13 +26,18 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
+import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +48,9 @@ public class GoshuinService {
     private final TempleService templeService;
     private final ProfileClient profileClient;
     private final GoshuinMapper goshuinMapper;
+    private final Storage storage;
+    private final GcpStorageProperties gcpStorageProperties;
+    private final GoshuinImageStorageProperties goshuinImageStorageProperties;
 
     public GoshuinSearchResponse searchGoshuins(
             GoshuinFormat format,
@@ -63,6 +78,30 @@ public class GoshuinService {
         List<Goshuin> goshuins = toGoshuinDtos(entities);
 
         return paginatedResponse(goshuins, entities, limit, sort, lat, lng, cursor);
+    }
+
+    public UploadUrlResponse getGoshuinUploadUrl(UUID userId, String contentType) {
+        List<String> allowedContentTypes = goshuinImageStorageProperties.getAllowedContentTypes();
+        if (contentType == null || !allowedContentTypes.contains(contentType)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid content type. Allowed: " + allowedContentTypes);
+        }
+
+        String fileName = "goshuins/" + userId + "-" + UUID.randomUUID();
+        BlobInfo blobInfo = BlobInfo.newBuilder(BlobId.of(gcpStorageProperties.getBucketName(), fileName))
+                .setContentType(contentType)
+                .build();
+
+        URL url = storage.signUrl(blobInfo, 15, TimeUnit.MINUTES,
+                Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
+                Storage.SignUrlOption.withExtHeaders(Collections.singletonMap("Content-Type", contentType)),
+                Storage.SignUrlOption.withV4Signature());
+
+        return UploadUrlResponse.builder()
+                .uploadUrl(url.toString())
+                .fileName(fileName)
+                .maxSizeBytes(goshuinImageStorageProperties.getMaxSizeBytes())
+                .allowedContentTypes(allowedContentTypes)
+                .build();
     }
 
     private static @NonNull GoshuinEntity buildGoshuinEntity(UUID userId, GoshuinCreate goshuinCreate, TempleEntity templeEntity) {

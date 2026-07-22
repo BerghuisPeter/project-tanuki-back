@@ -20,6 +20,7 @@
         <module>libs/security</module>
         <module>libs/common</module>
         <module>libs/liquibase</module>
+        <module>libs/gcp</module>
     </modules>
 
     <properties>
@@ -28,6 +29,7 @@
         <openapi-generator.version>7.11.0</openapi-generator.version>
         <jackson-databind-nullable.version>0.2.6</jackson-databind-nullable.version>
         <swagger-annotations.version>2.2.28</swagger-annotations.version>
+        <google-cloud-storage.version>2.68.0</google-cloud-storage.version>
     </properties>
 
     <!-- Dependencies shared by ALL modules -->
@@ -62,6 +64,11 @@
                 <groupId>org.openapitools</groupId>
                 <artifactId>jackson-databind-nullable</artifactId>
                 <version>${jackson-databind-nullable.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>google-cloud-storage</artifactId>
+                <version>${google-cloud-storage.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

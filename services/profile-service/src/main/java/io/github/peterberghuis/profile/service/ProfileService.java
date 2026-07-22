@@ -4,8 +4,9 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.HttpMethod;
 import com.google.cloud.storage.Storage;
-import io.github.peterberghuis.profile.config.GcpStorageProperties;
-import io.github.peterberghuis.profile.dto.UploadUrlResponse;
+import io.github.peterberghuis.common.dto.UploadUrlResponse;
+import io.github.peterberghuis.gcp.config.GcpStorageProperties;
+import io.github.peterberghuis.profile.config.AvatarStorageProperties;
 import io.github.peterberghuis.profile.dto.UserProfile;
 import io.github.peterberghuis.profile.entity.UserProfileEntity;
 import io.github.peterberghuis.profile.event.AvatarChangedEvent;
@@ -31,6 +32,7 @@ public class ProfileService {
     private final UserProfileRepository userProfileRepository;
     private final Storage storage;
     private final GcpStorageProperties gcpStorageProperties;
+    private final AvatarStorageProperties avatarStorageProperties;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
@@ -101,7 +103,7 @@ public class ProfileService {
     }
 
     public UploadUrlResponse getAvatarUploadUrl(UUID userId, String contentType) {
-        List<String> allowedContentTypes = gcpStorageProperties.getAvatar().getAllowedContentTypes();
+        List<String> allowedContentTypes = avatarStorageProperties.getAllowedContentTypes();
         if (contentType == null || !allowedContentTypes.contains(contentType)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid content type. Allowed: " + allowedContentTypes);
         }
@@ -119,7 +121,7 @@ public class ProfileService {
         UploadUrlResponse response = new UploadUrlResponse();
         response.setUploadUrl(url.toString());
         response.setFileName(fileName);
-        response.setMaxSizeBytes(gcpStorageProperties.getAvatar().getMaxSizeBytes());
+        response.setMaxSizeBytes(avatarStorageProperties.getMaxSizeBytes());
         response.setAllowedContentTypes(allowedContentTypes);
         return response;
     }

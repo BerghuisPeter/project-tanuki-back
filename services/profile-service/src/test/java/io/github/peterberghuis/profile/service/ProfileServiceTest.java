@@ -1,7 +1,8 @@
 package io.github.peterberghuis.profile.service;
 
-import io.github.peterberghuis.profile.config.GcpStorageProperties;
-import io.github.peterberghuis.profile.dto.UploadUrlResponse;
+import io.github.peterberghuis.common.dto.UploadUrlResponse;
+import io.github.peterberghuis.gcp.config.GcpStorageProperties;
+import io.github.peterberghuis.profile.config.AvatarStorageProperties;
 import io.github.peterberghuis.profile.dto.UserProfile;
 import io.github.peterberghuis.profile.entity.UserProfileEntity;
 import io.github.peterberghuis.profile.event.AvatarChangedEvent;
@@ -41,15 +42,19 @@ class ProfileServiceTest {
     private ApplicationEventPublisher eventPublisher;
 
     private GcpStorageProperties gcpStorageProperties;
+    private AvatarStorageProperties avatarStorageProperties;
 
     @BeforeEach
     void setUp() {
         gcpStorageProperties = new GcpStorageProperties();
         gcpStorageProperties.setBucketName("test-bucket");
-        gcpStorageProperties.getAvatar().setAllowedContentTypes(List.of("image/jpeg", "image/png"));
-        gcpStorageProperties.getAvatar().setMaxSizeBytes(5242880L);
+
+        avatarStorageProperties = new AvatarStorageProperties();
+        avatarStorageProperties.setAllowedContentTypes(List.of("image/jpeg", "image/png"));
+        avatarStorageProperties.setMaxSizeBytes(5242880L);
 
         ReflectionTestUtils.setField(profileService, "gcpStorageProperties", gcpStorageProperties);
+        ReflectionTestUtils.setField(profileService, "avatarStorageProperties", avatarStorageProperties);
     }
 
     @Test

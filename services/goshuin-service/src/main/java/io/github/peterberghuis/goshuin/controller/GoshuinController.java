@@ -1,5 +1,6 @@
 package io.github.peterberghuis.goshuin.controller;
 
+import io.github.peterberghuis.common.dto.UploadUrlResponse;
 import io.github.peterberghuis.goshuin.api.GoshuinApi;
 import io.github.peterberghuis.goshuin.dto.*;
 import io.github.peterberghuis.goshuin.service.GoshuinCommentService;
@@ -41,6 +42,12 @@ public class GoshuinController implements GoshuinApi {
     public ResponseEntity<Goshuin> createGoshuin(GoshuinCreate goshuinCreate) {
         UUID userId = SecurityUtils.getUserIdFromContext();
         return ResponseEntity.status(HttpStatus.CREATED).body(goshuinService.createGoshuin(userId, goshuinCreate));
+    }
+
+    @Override
+    public ResponseEntity<UploadUrlResponse> getGoshuinUploadUrl(String contentType) {
+        UUID userId = SecurityUtils.getUserIdFromContext();
+        return ResponseEntity.ok(goshuinService.getGoshuinUploadUrl(userId, contentType));
     }
 
     @Override

@@ -26,6 +26,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.github.peterberghuis</groupId>
+            <artifactId>gcp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
@@ -68,11 +73,6 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.cloud</groupId>
-            <artifactId>google-cloud-storage</artifactId>
-            <version>2.68.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
@@ -102,9 +102,13 @@
                             <importMappings>
                                 <importMapping>ErrorResponse=io.github.peterberghuis.common.dto.ErrorResponse
                                 </importMapping>
+                                <importMapping>UploadUrlResponse=io.github.peterberghuis.common.dto.UploadUrlResponse
+                                </importMapping>
                             </importMappings>
                             <typeMappings>
                                 <typeMapping>ErrorResponse=io.github.peterberghuis.common.dto.ErrorResponse
+                                </typeMapping>
+                                <typeMapping>UploadUrlResponse=io.github.peterberghuis.common.dto.UploadUrlResponse
                                 </typeMapping>
                             </typeMappings>
                             <configOptions>
