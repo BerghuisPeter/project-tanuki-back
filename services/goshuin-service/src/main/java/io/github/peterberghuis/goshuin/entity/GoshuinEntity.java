@@ -46,6 +46,9 @@ public class GoshuinEntity {
     @Column(name = "end_date")
     private LocalDate endDate;
 
+    @Embedded
+    private EnrichmentMetadata enrichment = new EnrichmentMetadata();
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;

@@ -19,3 +19,5 @@ databaseChangeLog:
       file: db/changelog/goshuin-service/009-change-lat-long-type/db.changelog-009.yaml
   - include:
       file: db/changelog/goshuin-service/010-add-original-locale/db.changelog-010.yaml
+  - include:
+      file: db/changelog/goshuin-service/011-add-enrichment-status/db.changelog-011.yaml

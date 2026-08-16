@@ -235,9 +235,6 @@ components:
       required:
         - id
         - translations
-        - longitude
-        - latitude
-        - affiliationType
       properties:
         id:
           type: string
@@ -279,14 +276,12 @@ components:
           type: string
           format: date-time
           readOnly: true
-
+        enrichment:
+          $ref: '#/components/schemas/EnrichmentMetadata'
     TempleCreate:
       type: object
       required:
         - translations
-        - longitude
-        - latitude
-        - affiliationType
       properties:
         translations:
           type: object
@@ -322,11 +317,6 @@ components:
       type: object
       required:
         - name
-        - region
-        - postalCode
-        - prefecture
-        - city
-        - address
       properties:
         name:
           type: string
@@ -348,6 +338,30 @@ components:
       enum:
         - buddhist
         - shinto
+
+    EnrichmentMetadata:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/EnrichmentStatus'
+        error:
+          type: string
+          readOnly: true
+        attempts:
+          type: integer
+          readOnly: true
+        lastAt:
+          type: string
+          format: date-time
+          readOnly: true
+
+    EnrichmentStatus:
+      type: string
+      enum:
+        - PENDING
+        - PROCESSING
+        - COMPLETE
+        - FAILED
 
     GoshuinFormat:
       type: string
@@ -489,6 +503,8 @@ components:
           type: string
           format: date-time
           readOnly: true
+        enrichment:
+          $ref: '#/components/schemas/EnrichmentMetadata'
         commentCount:
           type: integer
           format: int32
@@ -526,10 +542,7 @@ components:
       type: object
       required:
         - id
-        - affiliationType
         - translations
-        - longitude
-        - latitude
       properties:
         id:
           type: string
@@ -557,6 +570,8 @@ components:
           type: string
           format: date-time
           readOnly: true
+        enrichment:
+          $ref: '#/components/schemas/EnrichmentMetadata'
         imageUrl:
           type: string
           format: uri

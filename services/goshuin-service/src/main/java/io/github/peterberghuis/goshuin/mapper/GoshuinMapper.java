@@ -25,7 +25,18 @@ public class GoshuinMapper {
         dto.setImages(toImageDtos(entity.getImages()));
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setEnrichment(toEnrichmentMetadataDto(entity.getEnrichment()));
         dto.setCommentCount(entity.getCommentCount());
+        return dto;
+    }
+
+    private io.github.peterberghuis.goshuin.dto.EnrichmentMetadata toEnrichmentMetadataDto(io.github.peterberghuis.goshuin.entity.EnrichmentMetadata entity) {
+        if (entity == null) return null;
+        io.github.peterberghuis.goshuin.dto.EnrichmentMetadata dto = new io.github.peterberghuis.goshuin.dto.EnrichmentMetadata();
+        dto.setStatus(io.github.peterberghuis.goshuin.dto.EnrichmentStatus.fromValue(entity.getStatus().name()));
+        dto.setError(entity.getError());
+        dto.setAttempts(entity.getAttempts());
+        dto.setLastAt(entity.getLastAt());
         return dto;
     }
 
@@ -75,6 +86,7 @@ public class GoshuinMapper {
         dto.setOriginalLocale(entity.getOriginalLocale());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setEnrichment(toEnrichmentMetadataDto(entity.getEnrichment()));
         dto.setImageUrl(entity.getImageUrl() != null ? URI.create(entity.getImageUrl()) : null);
         dto.setTranslations(toTempleTranslationMap(entity.getTranslations()));
         return dto;

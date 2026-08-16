@@ -24,13 +24,13 @@ public class TempleEntity {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column
     private Double longitude;
 
-    @Column(nullable = false)
+    @Column
     private Double latitude;
 
-    @Column(name = "affiliation_type", nullable = false, length = 50)
+    @Column(name = "affiliation_type", length = 50)
     private String affiliationType;
 
     @Column(name = "website_url", length = 2048)
@@ -51,6 +51,9 @@ public class TempleEntity {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
+
+    @Embedded
+    private EnrichmentMetadata enrichment = new EnrichmentMetadata();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

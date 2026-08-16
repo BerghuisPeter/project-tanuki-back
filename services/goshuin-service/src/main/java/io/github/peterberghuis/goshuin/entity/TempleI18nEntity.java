@@ -27,19 +27,19 @@ public class TempleI18nEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column
     private String region;
 
-    @Column(name = "postal_code", nullable = false)
+    @Column(name = "postal_code")
     private String postalCode;
 
-    @Column(nullable = false)
+    @Column
     private String prefecture;
 
-    @Column(nullable = false)
+    @Column
     private String city;
 
-    @Column(nullable = false)
+    @Column
     private String address;
 
     @Column(columnDefinition = "TEXT")

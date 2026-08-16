@@ -108,7 +108,17 @@ public class TempleService {
         dto.setTranslations(translations);
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setEnrichment(toEnrichmentMetadataDto(entity.getEnrichment()));
+        return dto;
+    }
 
+    private io.github.peterberghuis.goshuin.dto.EnrichmentMetadata toEnrichmentMetadataDto(io.github.peterberghuis.goshuin.entity.EnrichmentMetadata entity) {
+        if (entity == null) return null;
+        io.github.peterberghuis.goshuin.dto.EnrichmentMetadata dto = new io.github.peterberghuis.goshuin.dto.EnrichmentMetadata();
+        dto.setStatus(io.github.peterberghuis.goshuin.dto.EnrichmentStatus.fromValue(entity.getStatus().name()));
+        dto.setError(entity.getError());
+        dto.setAttempts(entity.getAttempts());
+        dto.setLastAt(entity.getLastAt());
         return dto;
     }
 }

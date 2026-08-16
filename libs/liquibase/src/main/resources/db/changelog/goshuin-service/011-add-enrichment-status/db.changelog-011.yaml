@@ -1,0 +1,122 @@
+databaseChangeLog:
+  - changeSet:
+      id: 202608162015-add-enrichment-to-temple-and-goshuin
+      author: junie
+      changes:
+        - addColumn:
+            tableName: temple
+            columns:
+              - column:
+                  name: enrichment_status
+                  type: VARCHAR(50)
+                  defaultValue: PENDING
+                  constraints:
+                    nullable: false
+              - column:
+                  name: enrichment_error
+                  type: TEXT
+              - column:
+                  name: enrichment_attempts
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_enrichment_at
+                  type: TIMESTAMP
+
+        - addColumn:
+            tableName: goshuin
+            columns:
+              - column:
+                  name: enrichment_status
+                  type: VARCHAR(50)
+                  defaultValue: PENDING
+                  constraints:
+                    nullable: false
+              - column:
+                  name: enrichment_error
+                  type: TEXT
+              - column:
+                  name: enrichment_attempts
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_enrichment_at
+                  type: TIMESTAMP
+
+  - changeSet:
+      id: 202608162016-create-enrichment-job-table
+      author: junie
+      changes:
+        - createTable:
+            tableName: enrichment_job
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: resource_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: resource_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: error
+                  type: TEXT
+              - column:
+                  name: attempts
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: completed_at
+                  type: TIMESTAMP
+
+  - changeSet:
+      id: 202608162017-make-fields-nullable-for-enrichment
+      author: junie
+      changes:
+        - dropNotNullConstraint:
+            tableName: temple
+            columnName: longitude
+            columnDataType: FLOAT8
+        - dropNotNullConstraint:
+            tableName: temple
+            columnName: latitude
+            columnDataType: FLOAT8
+        - dropNotNullConstraint:
+            tableName: temple
+            columnName: affiliation_type
+            columnDataType: VARCHAR(50)
+        - dropNotNullConstraint:
+            tableName: temple_i18n
+            columnName: address
+            columnDataType: VARCHAR(512)
