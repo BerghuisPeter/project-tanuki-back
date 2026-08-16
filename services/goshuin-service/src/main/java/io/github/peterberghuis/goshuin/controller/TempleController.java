@@ -19,8 +19,8 @@ public class TempleController implements TempleApi {
     private final TempleService templeService;
 
     @Override
-    public ResponseEntity<List<Temple>> searchTemples(String name, String city, AffiliationType affiliationType) {
-        return ResponseEntity.ok(templeService.searchTemples(name, city, affiliationType));
+    public ResponseEntity<List<Temple>> searchTemples(String name, String city, AffiliationType affiliationType, Boolean includeNonCompleted) {
+        return ResponseEntity.ok(templeService.searchTemples(name, city, affiliationType, includeNonCompleted));
     }
 
     @Override

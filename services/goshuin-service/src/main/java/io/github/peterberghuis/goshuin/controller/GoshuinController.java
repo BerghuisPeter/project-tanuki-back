@@ -33,9 +33,10 @@ public class GoshuinController implements GoshuinApi {
             GoshuinSort sort,
             Double lat,
             Double lng,
-            String cursorToken) {
+            String cursorToken,
+            Boolean includeNonCompleted) {
         UUID userId = (mine != null && mine) ? SecurityUtils.getUserIdFromContext() : null;
-        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, affiliation, query, sort, limit, lat, lng, cursorToken, userId));
+        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, affiliation, query, sort, limit, lat, lng, cursorToken, userId, includeNonCompleted));
     }
 
     @Override

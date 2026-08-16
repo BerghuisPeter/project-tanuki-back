@@ -1,6 +1,7 @@
 package io.github.peterberghuis.goshuin.repository;
 
 import io.github.peterberghuis.goshuin.dto.AffiliationType;
+import io.github.peterberghuis.goshuin.entity.EnrichmentStatus;
 import io.github.peterberghuis.goshuin.entity.TempleEntity;
 import io.github.peterberghuis.goshuin.entity.TempleI18nEntity;
 import jakarta.persistence.criteria.Join;
@@ -18,7 +19,8 @@ public class TempleSpecifications {
     public static Specification<TempleEntity> search(
             String name,
             String city,
-            AffiliationType affiliationType
+            AffiliationType affiliationType,
+            Boolean includeNonCompleted
     ) {
         return (root, cq, cb) -> {
 
@@ -48,6 +50,10 @@ public class TempleSpecifications {
                 predicates.add(
                         cb.equal(root.get("affiliationType"), affiliationType.getValue())
                 );
+            }
+
+            if (includeNonCompleted == null || !includeNonCompleted) {
+                predicates.add(cb.equal(root.get("enrichment").get("status"), EnrichmentStatus.COMPLETE));
             }
 
             return predicates.isEmpty()

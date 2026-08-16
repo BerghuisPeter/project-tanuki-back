@@ -70,6 +70,12 @@ paths:
           required: false
           schema:
             type: string
+        - name: includeNonCompleted
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: OK
@@ -188,6 +194,12 @@ paths:
           required: false
           schema:
             $ref: '#/components/schemas/AffiliationType'
+        - name: includeNonCompleted
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: OK

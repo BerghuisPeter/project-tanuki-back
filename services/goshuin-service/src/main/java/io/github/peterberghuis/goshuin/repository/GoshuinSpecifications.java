@@ -2,6 +2,7 @@ package io.github.peterberghuis.goshuin.repository;
 
 import io.github.peterberghuis.goshuin.dto.AffiliationType;
 import io.github.peterberghuis.goshuin.dto.GoshuinFormat;
+import io.github.peterberghuis.goshuin.entity.EnrichmentStatus;
 import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
 import io.github.peterberghuis.goshuin.model.CommentCountCursor;
 import io.github.peterberghuis.goshuin.model.CreatedAtCursor;
@@ -130,6 +131,14 @@ public class GoshuinSpecifications {
                 );
     }
 
+    public static Specification<GoshuinEntity> withEnrichmentStatus(EnrichmentStatus status) {
+        return (root, _, cb) -> status == null ? null : cb.equal(root.get("enrichment").get("status"), status);
+    }
+
+    public static Specification<GoshuinEntity> withTempleEnrichmentStatus(EnrichmentStatus status) {
+        return (root, _, cb) -> status == null ? null : cb.equal(root.get("temple").get("enrichment").get("status"), status);
+    }
+
 
     public static Specification<GoshuinEntity> buildSpec(
             GoshuinFormat format,
@@ -137,7 +146,8 @@ public class GoshuinSpecifications {
             AffiliationType affiliation,
             String query,
             GoshuinCursor cursor,
-            UUID userId) {
+            UUID userId,
+            Boolean includeNonCompleted) {
 
         Specification<GoshuinEntity> spec = Specification
                 .where(withFormat(format))
@@ -145,6 +155,11 @@ public class GoshuinSpecifications {
                 .and(withPages(pages))
                 .and(withAffiliation(affiliation))
                 .and(withLabel(query).or(withTempleTranslationSearch(query)));
+
+        if (includeNonCompleted == null || !includeNonCompleted) {
+            spec = spec.and(withEnrichmentStatus(EnrichmentStatus.COMPLETE))
+                    .and(withTempleEnrichmentStatus(EnrichmentStatus.COMPLETE));
+        }
 
         if (cursor != null && !(cursor instanceof ProximityCursor)) {
             spec = spec.and(switch (cursor) {

@@ -62,7 +62,8 @@ public class GoshuinService {
             Double lat,
             Double lng,
             String cursorToken,
-            UUID userId) {
+            UUID userId,
+            Boolean includeNonCompleted) {
 
 //        lat = 35.634732;
 //        lng = 139.615286;
@@ -72,7 +73,7 @@ public class GoshuinService {
                 : null;
 
         Specification<GoshuinEntity> spec = GoshuinSpecifications.buildSpec(
-                format, pages, affiliation, query, cursor, userId);
+                format, pages, affiliation, query, cursor, userId, includeNonCompleted);
 
         List<GoshuinEntity> entities = fetchSorted(spec, sort, limit, lat, lng, cursor);
         List<Goshuin> goshuins = toGoshuinDtos(entities);
