@@ -7,6 +7,8 @@ This project is organized as a multi-module Maven project:
 - **`services/`**: Independent Spring Boot microservices.
     - `auth-service`: Handles authentication, user management, and roles. (Port: 8081)
     - `profile-service`: Manages user profiles. (Port: 8082)
+  - `goshuin-service`: Manages goshuin records and temple data. (Port: 8083)
+  - `enrichment-worker`: Python-based background worker for data enrichment (Geocoding, AI). (Port: 8085)
   - **`libs/`**: Shared infrastructure libraries.
       - `security`: Common security utilities, JWT handling, and shared security configuration.
       - `common`: Generic utilities, shared DTOs, and global exception handling.

@@ -35,3 +35,16 @@ build/
 ### Local Environment Secrets ###
 .env
 /tileserver-data/data/osm-2020-02-10-v3.11_asia_japan.mbtiles
+
+### Python ###
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.env.python
+.pytest_cache/
+.coverage
+htmlcov/

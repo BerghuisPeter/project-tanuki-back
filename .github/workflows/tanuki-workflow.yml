@@ -3,6 +3,8 @@ name: Tanuki CI/CD
 on:
   push:
     branches: [ develop, master ]
+    paths-ignore:
+      - 'services/enrichment-worker/**'
   workflow_dispatch:
 
 jobs:
