@@ -25,8 +25,8 @@ public class TempleService {
 
     private final TempleRepository templeRepository;
 
-    public List<Temple> searchTemples(String name, String city, AffiliationType affiliationType, Boolean includeNonCompleted) {
-        Specification<TempleEntity> spec = TempleSpecifications.search(name, city, affiliationType, includeNonCompleted);
+    public List<Temple> searchTemples(String name, String city, AffiliationType affiliationType, UUID userId, List<io.github.peterberghuis.goshuin.dto.EnrichmentStatus> enrichmentStatuses) {
+        Specification<TempleEntity> spec = TempleSpecifications.search(name, city, affiliationType, userId, enrichmentStatuses);
         return templeRepository.findAll(spec).stream()
                 .map(this::mapToDto)
                 .toList();

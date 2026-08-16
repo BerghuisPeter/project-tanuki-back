@@ -70,12 +70,13 @@ paths:
           required: false
           schema:
             type: string
-        - name: includeNonCompleted
+        - name: enrichmentStatuses
           in: query
           required: false
           schema:
-            type: boolean
-            default: false
+            type: array
+            items:
+              $ref: '#/components/schemas/EnrichmentStatus'
       responses:
         '200':
           description: OK
@@ -194,12 +195,18 @@ paths:
           required: false
           schema:
             $ref: '#/components/schemas/AffiliationType'
-        - name: includeNonCompleted
+        - name: mine
           in: query
           required: false
           schema:
             type: boolean
-            default: false
+        - name: enrichmentStatuses
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/EnrichmentStatus'
       responses:
         '200':
           description: OK

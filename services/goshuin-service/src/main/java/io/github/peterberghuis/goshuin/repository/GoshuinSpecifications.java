@@ -131,12 +131,12 @@ public class GoshuinSpecifications {
                 );
     }
 
-    public static Specification<GoshuinEntity> withEnrichmentStatus(EnrichmentStatus status) {
-        return (root, _, cb) -> status == null ? null : cb.equal(root.get("enrichment").get("status"), status);
+    public static Specification<GoshuinEntity> withEnrichmentStatuses(List<EnrichmentStatus> statuses) {
+        return (root, _, cb) -> (statuses == null || statuses.isEmpty()) ? null : root.get("enrichment").get("status").in(statuses);
     }
 
-    public static Specification<GoshuinEntity> withTempleEnrichmentStatus(EnrichmentStatus status) {
-        return (root, _, cb) -> status == null ? null : cb.equal(root.get("temple").get("enrichment").get("status"), status);
+    public static Specification<GoshuinEntity> withTempleEnrichmentStatuses(List<EnrichmentStatus> statuses) {
+        return (root, _, cb) -> (statuses == null || statuses.isEmpty()) ? null : root.get("temple").get("enrichment").get("status").in(statuses);
     }
 
 
@@ -147,7 +147,7 @@ public class GoshuinSpecifications {
             String query,
             GoshuinCursor cursor,
             UUID userId,
-            Boolean includeNonCompleted) {
+            List<io.github.peterberghuis.goshuin.dto.EnrichmentStatus> enrichmentStatuses) {
 
         Specification<GoshuinEntity> spec = Specification
                 .where(withFormat(format))
@@ -156,9 +156,15 @@ public class GoshuinSpecifications {
                 .and(withAffiliation(affiliation))
                 .and(withLabel(query).or(withTempleTranslationSearch(query)));
 
-        if (includeNonCompleted == null || !includeNonCompleted) {
-            spec = spec.and(withEnrichmentStatus(EnrichmentStatus.COMPLETE))
-                    .and(withTempleEnrichmentStatus(EnrichmentStatus.COMPLETE));
+        if (enrichmentStatuses == null || enrichmentStatuses.isEmpty()) {
+            spec = spec.and(withEnrichmentStatuses(List.of(EnrichmentStatus.COMPLETE)))
+                    .and(withTempleEnrichmentStatuses(List.of(EnrichmentStatus.COMPLETE)));
+        } else {
+            List<EnrichmentStatus> entityStatuses = enrichmentStatuses.stream()
+                    .map(s -> EnrichmentStatus.valueOf(s.name()))
+                    .toList();
+            spec = spec.and(withEnrichmentStatuses(entityStatuses))
+                    .and(withTempleEnrichmentStatuses(entityStatuses));
         }
 
         if (cursor != null && !(cursor instanceof ProximityCursor)) {

@@ -34,9 +34,10 @@ public class GoshuinController implements GoshuinApi {
             Double lat,
             Double lng,
             String cursorToken,
-            Boolean includeNonCompleted) {
+            List<EnrichmentStatus> enrichmentStatuses) {
         UUID userId = (mine != null && mine) ? SecurityUtils.getUserIdFromContext() : null;
-        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, affiliation, query, sort, limit, lat, lng, cursorToken, userId, includeNonCompleted));
+        List<EnrichmentStatus> statusesToUse = (mine != null && mine) ? enrichmentStatuses : null;
+        return ResponseEntity.ok(goshuinService.searchGoshuins(format, pages, affiliation, query, sort, limit, lat, lng, cursorToken, userId, statusesToUse));
     }
 
     @Override
