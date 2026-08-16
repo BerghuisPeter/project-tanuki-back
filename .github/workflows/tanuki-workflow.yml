@@ -68,9 +68,7 @@ jobs:
   liquibase-build:
     needs: [ changes ]
     # Only build the migration image if any liquibase files changed, or if it's a manual dispatch
-    if: |
-      github.event_name == 'workflow_dispatch' || 
-      needs.changes.outputs.liquibase == 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.liquibase == 'true'
     uses: ./.github/workflows/_liquibase-build.yml
     secrets:
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
@@ -82,10 +80,7 @@ jobs:
   liquibase-update-job:
     needs: [ changes, liquibase-build ]
     # Update the job image once before executing parallel migrations
-    if: |
-      always() && 
-      (github.event_name == 'workflow_dispatch' || needs.changes.outputs.liquibase == 'true') &&
-      (needs.liquibase-build.result == 'success' || needs.liquibase-build.result == 'skipped')
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.liquibase == 'true'
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
     steps:
@@ -106,11 +101,7 @@ jobs:
   liquibase-migrate:
     needs: [ changes, liquibase-build, liquibase-update-job ]
     # Run if liquibase files changed OR manual dispatch.
-    if: |
-      always() && 
-      (github.event_name == 'workflow_dispatch' || needs.changes.outputs.liquibase == 'true') &&
-      (needs.liquibase-build.result == 'success' || needs.liquibase-build.result == 'skipped') &&
-      (needs.liquibase-update-job.result == 'success' || needs.liquibase-update-job.result == 'skipped')
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.liquibase == 'true'
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
     strategy:
@@ -144,25 +135,7 @@ jobs:
             --region=${{ vars.GAR_LOCATION }} \
             --update-env-vars SERVICE_NAME=${{ matrix.service }},LIQUIBASE_COMMAND_CHANGELOG_FILE=db/changelog/${{ matrix.service }}/db.changelog-master.yaml,LIQUIBASE_COMMAND_DEFAULT_SCHEMA_NAME=$SCHEMA \
             --wait
-
-      - name: Calculate service matrix
-        id: set-matrix
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" || "${{ needs.changes.outputs.global }}" == "true" ]]; then
-            echo "matrix=[\"auth-service\", \"profile-service\", \"goshuin-service\"]" >> $GITHUB_OUTPUT
-          else
-            SERVICES=()
-            [[ "${{ needs.changes.outputs.auth-service }}" == "true" ]] && SERVICES+=("\"auth-service\"")
-            [[ "${{ needs.changes.outputs.profile-service }}" == "true" ]] && SERVICES+=("\"profile-service\"")
-            [[ "${{ needs.changes.outputs.goshuin-service }}" == "true" ]] && SERVICES+=("\"goshuin-service\"")
-          
-            # Join array with commas
-            IFS=,
-            echo "matrix=[${SERVICES[*]}]" >> $GITHUB_OUTPUT
-          fi
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-
+  
   build-and-deploy:
     needs: [ changes, liquibase-migrate ]
     # services build if matrix is not empty.
