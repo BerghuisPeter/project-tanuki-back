@@ -67,10 +67,9 @@ jobs:
 
   liquibase-build:
     needs: [ changes ]
-    # Only build the migration image if any liquibase files changed, or if it's a manual dispatch/global change
+    # Only build the migration image if any liquibase files changed, or if it's a manual dispatch
     if: |
       github.event_name == 'workflow_dispatch' || 
-      needs.changes.outputs.global == 'true' || 
       needs.changes.outputs.liquibase == 'true'
     uses: ./.github/workflows/_liquibase-build.yml
     secrets:
@@ -85,7 +84,7 @@ jobs:
     # Update the job image once before executing parallel migrations
     if: |
       always() && 
-      (github.event_name == 'workflow_dispatch' || needs.changes.outputs.liquibase == 'true' || needs.changes.outputs.global == 'true') &&
+      (github.event_name == 'workflow_dispatch' || needs.changes.outputs.liquibase == 'true') &&
       (needs.liquibase-build.result == 'success' || needs.liquibase-build.result == 'skipped')
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
@@ -109,7 +108,7 @@ jobs:
     # Run if liquibase files changed OR manual dispatch.
     if: |
       always() && 
-      (github.event_name == 'workflow_dispatch' || needs.changes.outputs.liquibase == 'true' || needs.changes.outputs.global == 'true') &&
+      (github.event_name == 'workflow_dispatch' || needs.changes.outputs.liquibase == 'true') &&
       (needs.liquibase-build.result == 'success' || needs.liquibase-build.result == 'skipped') &&
       (needs.liquibase-update-job.result == 'success' || needs.liquibase-update-job.result == 'skipped')
     runs-on: ubuntu-latest
@@ -124,10 +123,9 @@ jobs:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
       - name: Execute Liquibase Migration Job
-        # Only run migration for the service if its specific liquibase files changed, or if it's a manual dispatch/global change
+        # Only run migration for the service if its specific liquibase files changed, or if it's a manual dispatch
         if: |
           github.event_name == 'workflow_dispatch' || 
-          needs.changes.outputs.global == 'true' || 
           needs.changes.outputs[format('liquibase-{0}', matrix.service)] == 'true'
         run: |
           ENVIRONMENT=${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
