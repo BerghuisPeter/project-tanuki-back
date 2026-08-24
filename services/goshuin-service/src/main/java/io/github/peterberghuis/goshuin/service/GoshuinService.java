@@ -9,10 +9,8 @@ import io.github.peterberghuis.gcp.config.GcpStorageProperties;
 import io.github.peterberghuis.goshuin.client.ProfileClient;
 import io.github.peterberghuis.goshuin.config.GoshuinImageStorageProperties;
 import io.github.peterberghuis.goshuin.dto.*;
-import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
-import io.github.peterberghuis.goshuin.entity.GoshuinI18nEntity;
-import io.github.peterberghuis.goshuin.entity.GoshuinImageEntity;
-import io.github.peterberghuis.goshuin.entity.TempleEntity;
+import io.github.peterberghuis.goshuin.dto.EnrichmentStatus;
+import io.github.peterberghuis.goshuin.entity.*;
 import io.github.peterberghuis.goshuin.mapper.GoshuinMapper;
 import io.github.peterberghuis.goshuin.model.CommentCountCursor;
 import io.github.peterberghuis.goshuin.model.CreatedAtCursor;
@@ -46,6 +44,7 @@ public class GoshuinService {
     private final GoshuinRepository goshuinRepository;
     private final GoshuinRepositoryCustom goshuinRepositoryCustom;
     private final TempleService templeService;
+    private final EnrichmentService enrichmentService;
     private final ProfileClient profileClient;
     private final GoshuinMapper goshuinMapper;
     private final Storage storage;
@@ -123,26 +122,15 @@ public class GoshuinService {
 
     @Transactional
     public Goshuin createGoshuin(UUID userId, GoshuinCreate goshuinCreate) {
-        if (goshuinCreate.getTempleId() != null && goshuinCreate.getTemple() != null) {
-            throw new IllegalArgumentException("Only one of templeId or temple definition can be provided");
-        }
-
         if (goshuinCreate.getImageUrls() == null || goshuinCreate.getImageUrls().isEmpty()) {
             throw new IllegalArgumentException("At least one image URL must be provided");
         }
 
-        TempleEntity templeEntity;
-        if (goshuinCreate.getTempleId() != null) {
-            templeEntity = templeService.getTempleEntityById(goshuinCreate.getTempleId());
-        } else if (goshuinCreate.getTemple() != null) {
-            // ToDo
-            //  replace with enrichment service for the temple.
-            //  For now attach it to the default temple.
-            String uuidString = "11111111-1111-1111-1111-111111111111";
-            templeEntity = templeService.getTempleEntityById(UUID.fromString(uuidString));
-        } else {
-            throw new IllegalArgumentException("Either templeId or temple definition must be provided");
-        }
+        TempleEntity templeEntity = templeService.resolveTemple(
+                goshuinCreate.getTempleId(),
+                goshuinCreate.getTemple(),
+                goshuinCreate.getOriginalLocale()
+        );
 
         GoshuinEntity entity = buildGoshuinEntity(userId, goshuinCreate, templeEntity);
 
@@ -166,6 +154,7 @@ public class GoshuinService {
         }
 
         GoshuinEntity saved = goshuinRepository.saveAndFlush(entity);
+        enrichmentService.createJob(EnrichmentResourceType.GOSHUIN, saved.getId());
 
         Map<UUID, UserProfile> profiles = profileClient.getInternalProfiles(List.of(userId));
         UserProfile userProfile = profiles != null ? profiles.get(userId) : null;

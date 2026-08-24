@@ -81,8 +81,8 @@ public class GoshuinMapper {
         TempleLite dto = new TempleLite();
         dto.setId(entity.getId());
         dto.setAffiliationType(AffiliationType.fromValue(entity.getAffiliationType()));
-        dto.setLongitude(entity.getLongitude().doubleValue());
-        dto.setLatitude(entity.getLatitude().doubleValue());
+        dto.setLongitude(entity.getLongitude());
+        dto.setLatitude(entity.getLatitude());
         dto.setOriginalLocale(entity.getOriginalLocale());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());

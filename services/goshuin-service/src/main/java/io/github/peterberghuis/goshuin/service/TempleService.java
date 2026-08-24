@@ -1,9 +1,7 @@
 package io.github.peterberghuis.goshuin.service;
 
-import io.github.peterberghuis.goshuin.dto.AffiliationType;
-import io.github.peterberghuis.goshuin.dto.Temple;
-import io.github.peterberghuis.goshuin.dto.TempleCreate;
-import io.github.peterberghuis.goshuin.dto.TempleTranslation;
+import io.github.peterberghuis.goshuin.dto.*;
+import io.github.peterberghuis.goshuin.entity.EnrichmentResourceType;
 import io.github.peterberghuis.goshuin.entity.TempleEntity;
 import io.github.peterberghuis.goshuin.entity.TempleI18nEntity;
 import io.github.peterberghuis.goshuin.repository.TempleRepository;
@@ -24,6 +22,7 @@ import java.util.UUID;
 public class TempleService {
 
     private final TempleRepository templeRepository;
+    private final EnrichmentService enrichmentService;
 
     public List<Temple> searchTemples(String name, String city, AffiliationType affiliationType, UUID userId, List<io.github.peterberghuis.goshuin.dto.EnrichmentStatus> enrichmentStatuses) {
         Specification<TempleEntity> spec = TempleSpecifications.search(name, city, affiliationType, userId, enrichmentStatuses);
@@ -35,6 +34,29 @@ public class TempleService {
     public TempleEntity getTempleEntityById(UUID id) {
         return templeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Temple not found with id: " + id));
+    }
+
+    @Transactional
+    public TempleEntity resolveTemple(UUID templeId, GoshuinCreateTemple templeDto, String originalLocale) {
+        if (templeId != null && templeDto != null) {
+            throw new IllegalArgumentException("Only one of templeId or temple definition can be provided");
+        }
+        if (templeId != null) {
+            return getTempleEntityById(templeId);
+        } else if (templeDto != null) {
+            TempleCreate templeCreate = new TempleCreate();
+            templeCreate.setAffiliationType(templeDto.getAffiliationType());
+
+            String locale = originalLocale != null ? originalLocale : "en";
+            TempleTranslation translation = new TempleTranslation();
+            translation.setName(templeDto.getName());
+            translation.setCity(templeDto.getCity());
+
+            templeCreate.setTranslations(Map.of(locale, translation));
+            return createTempleInternal(templeCreate);
+        } else {
+            throw new IllegalArgumentException("Either templeId or temple definition must be provided");
+        }
     }
 
     @Transactional
@@ -76,7 +98,9 @@ public class TempleService {
             });
         }
 
-        return templeRepository.save(entity);
+        TempleEntity saved = templeRepository.save(entity);
+        enrichmentService.createJob(EnrichmentResourceType.TEMPLE, saved.getId());
+        return saved;
     }
 
     private Temple mapToDto(TempleEntity entity) {
