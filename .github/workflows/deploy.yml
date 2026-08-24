@@ -1,0 +1,183 @@
+name: Tanuki CI/CD
+
+on:
+  push:
+    branches: [ develop, master ]
+    paths:
+      - 'services/**'
+      - 'libs/**'
+      - 'pom.xml'
+      - 'Dockerfile'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      liquibase_image: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.liquibase_image == 'true' }}
+      auth_migrate: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.auth_migrate == 'true' }}
+      auth_deploy: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.auth_deploy == 'true' }}
+      profile_migrate: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.profile_migrate == 'true' }}
+      profile_deploy: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.profile_deploy == 'true' }}
+      goshuin_migrate: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.goshuin_migrate == 'true' }}
+      goshuin_deploy: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.goshuin_deploy == 'true' }}
+      environment: ${{ steps.env.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set environment
+        id: env
+        run: echo "environment=${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}" >> $GITHUB_OUTPUT
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            liquibase_image:
+              - 'libs/liquibase/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+              - '.github/workflows/_liquibase-build.yml'
+            auth_migrate:
+              - 'libs/liquibase/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+              - '.github/workflows/_liquibase-build.yml'
+              - '.github/workflows/deploy.yml'
+            auth_deploy:
+              - 'services/auth-service/**'
+              - 'libs/common/**'
+              - 'libs/security/**'
+              - 'libs/gcp/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+              - '.github/workflows/deploy.yml'
+              - '.github/workflows/_build-push.yml'
+            profile_migrate:
+              - 'libs/liquibase/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+              - '.github/workflows/_liquibase-build.yml'
+              - '.github/workflows/deploy.yml'
+            profile_deploy:
+              - 'services/profile-service/**'
+              - 'libs/common/**'
+              - 'libs/security/**'
+              - 'libs/gcp/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+              - '.github/workflows/deploy.yml'
+              - '.github/workflows/_build-push.yml'
+            goshuin_migrate:
+              - 'libs/liquibase/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+              - '.github/workflows/_liquibase-build.yml'
+              - '.github/workflows/deploy.yml'
+            goshuin_deploy:
+              - 'services/goshuin-service/**'
+              - 'libs/common/**'
+              - 'libs/security/**'
+              - 'libs/gcp/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+              - '.github/workflows/deploy.yml'
+              - '.github/workflows/_build-push.yml'
+
+  liquibase-update:
+    needs: [ changes ]
+    if: needs.changes.outputs.liquibase_image == 'true'
+    uses: ./.github/workflows/_liquibase-build.yml
+    secrets:
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+    with:
+      service_name: "liquibase"
+      image_name: "liquibase-migration"
+      environment: ${{ needs.changes.outputs.environment }}
+
+  # Auth Service Pipeline
+  auth-migrate:
+    needs: [ changes, liquibase-update ]
+    if: |
+      always() && 
+      needs.changes.outputs.auth_migrate == 'true' &&
+      (needs.liquibase-update.result == 'success' || needs.liquibase-update.result == 'skipped')
+    uses: ./.github/workflows/_liquibase-migrate.yml
+    secrets:
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+    with:
+      service_name: "auth-service"
+      environment: ${{ needs.changes.outputs.environment }}
+
+  auth-deploy:
+    needs: [ changes, auth-migrate, liquibase-update ]
+    if: |
+      always() && 
+      needs.changes.outputs.auth_deploy == 'true' &&
+      (needs.liquibase-update.result == 'success' || needs.liquibase-update.result == 'skipped') &&
+      (needs.auth-migrate.result == 'success' || needs.auth-migrate.result == 'skipped')
+    uses: ./.github/workflows/_build-push.yml
+    secrets:
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+    with:
+      service_name: "auth-service"
+      image_name: "auth-service"
+      environment: ${{ needs.changes.outputs.environment }}
+
+  # Profile Service Pipeline
+  profile-migrate:
+    needs: [ changes, liquibase-update ]
+    if: |
+      always() && 
+      needs.changes.outputs.profile_migrate == 'true' &&
+      (needs.liquibase-update.result == 'success' || needs.liquibase-update.result == 'skipped')
+    uses: ./.github/workflows/_liquibase-migrate.yml
+    secrets:
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+    with:
+      service_name: "profile-service"
+      environment: ${{ needs.changes.outputs.environment }}
+
+  profile-deploy:
+    needs: [ changes, profile-migrate, liquibase-update ]
+    if: |
+      always() && 
+      needs.changes.outputs.profile_deploy == 'true' &&
+      (needs.liquibase-update.result == 'success' || needs.liquibase-update.result == 'skipped') &&
+      (needs.profile-migrate.result == 'success' || needs.profile-migrate.result == 'skipped')
+    uses: ./.github/workflows/_build-push.yml
+    secrets:
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+    with:
+      service_name: "profile-service"
+      image_name: "profile-service"
+      environment: ${{ needs.changes.outputs.environment }}
+
+  # Goshuin Service Pipeline
+  goshuin-migrate:
+    needs: [ changes, liquibase-update ]
+    if: |
+      always() && 
+      needs.changes.outputs.goshuin_migrate == 'true' &&
+      (needs.liquibase-update.result == 'success' || needs.liquibase-update.result == 'skipped')
+    uses: ./.github/workflows/_liquibase-migrate.yml
+    secrets:
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+    with:
+      service_name: "goshuin-service"
+      environment: ${{ needs.changes.outputs.environment }}
+
+  goshuin-deploy:
+    needs: [ changes, goshuin-migrate, liquibase-update ]
+    if: |
+      always() && 
+      needs.changes.outputs.goshuin_deploy == 'true' &&
+      (needs.liquibase-update.result == 'success' || needs.liquibase-update.result == 'skipped') &&
+      (needs.goshuin-migrate.result == 'success' || needs.goshuin-migrate.result == 'skipped')
+    uses: ./.github/workflows/_build-push.yml
+    secrets:
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+    with:
+      service_name: "goshuin-service"
+      image_name: "goshuin-service"
+      environment: ${{ needs.changes.outputs.environment }}

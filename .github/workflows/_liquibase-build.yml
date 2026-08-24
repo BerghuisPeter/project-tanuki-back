@@ -42,3 +42,35 @@ jobs:
           tags: |
             ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/liquibase-migration:${{ github.sha }}
             ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/liquibase-migration:latest
+
+  update-job:
+    needs: [ push ]
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Update Cloud Run Job Image
+        run: |
+          IMAGE="${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/liquibase-migration:${{ github.sha }}"
+          
+          # Retry loop to handle Cloud Run job update conflicts during parallel service deployments
+          for i in {1..5}; do
+            echo "Attempt $i: Updating Cloud Run job liquibase-migration-${{ inputs.environment }}..."
+            if gcloud run jobs update liquibase-migration-${{ inputs.environment }} \
+              --image=$IMAGE \
+              --region=${{ vars.GAR_LOCATION }}; then
+              echo "Successfully updated Cloud Run job."
+              break
+            else
+              if [ $i -eq 5 ]; then
+                echo "Failed to update Cloud Run job after 5 attempts."
+                exit 1
+              fi
+              echo "Update conflict or error detected. Retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
