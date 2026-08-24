@@ -35,15 +35,13 @@ jobs:
           filters: |
             liquibase_image:
               - 'libs/liquibase/**'
-              - 'pom.xml'
-              - 'Dockerfile'
               - '.github/workflows/_liquibase-build.yml'
             auth_migrate:
-              - 'libs/liquibase/**'
-              - 'pom.xml'
-              - 'Dockerfile'
-              - '.github/workflows/_liquibase-build.yml'
-              - '.github/workflows/deploy.yml'
+              - 'libs/liquibase/src/main/resources/db/changelog/auth-service/**'
+              - 'libs/liquibase/src/main/resources/db/test-data/**'
+              - 'libs/liquibase/Dockerfile'
+              - 'libs/liquibase/pom.xml'
+              - '.github/workflows/_liquibase-migrate.yml'
             auth_deploy:
               - 'services/auth-service/**'
               - 'libs/common/**'
@@ -54,11 +52,11 @@ jobs:
               - '.github/workflows/deploy.yml'
               - '.github/workflows/_build-push.yml'
             profile_migrate:
-              - 'libs/liquibase/**'
-              - 'pom.xml'
-              - 'Dockerfile'
-              - '.github/workflows/_liquibase-build.yml'
-              - '.github/workflows/deploy.yml'
+              - 'libs/liquibase/src/main/resources/db/changelog/profile-service/**'
+              - 'libs/liquibase/src/main/resources/db/test-data/**'
+              - 'libs/liquibase/Dockerfile'
+              - 'libs/liquibase/pom.xml'
+              - '.github/workflows/_liquibase-migrate.yml'
             profile_deploy:
               - 'services/profile-service/**'
               - 'libs/common/**'
@@ -69,11 +67,11 @@ jobs:
               - '.github/workflows/deploy.yml'
               - '.github/workflows/_build-push.yml'
             goshuin_migrate:
-              - 'libs/liquibase/**'
-              - 'pom.xml'
-              - 'Dockerfile'
-              - '.github/workflows/_liquibase-build.yml'
-              - '.github/workflows/deploy.yml'
+              - 'libs/liquibase/src/main/resources/db/changelog/goshuin-service/**'
+              - 'libs/liquibase/src/main/resources/db/test-data/**'
+              - 'libs/liquibase/Dockerfile'
+              - 'libs/liquibase/pom.xml'
+              - '.github/workflows/_liquibase-migrate.yml'
             goshuin_deploy:
               - 'services/goshuin-service/**'
               - 'libs/common/**'
