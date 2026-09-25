@@ -64,12 +64,12 @@ uv sync
 Start the development server with hot reloading via `uv`:
 
 ```powershell
-uv run uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+uv run uvicorn main:app --host 0.0.0.0 --port 8085 --reload
 ```
 
-- **Health Check**: `GET http://localhost:8080/health`
-- **Root Endpoint**: `GET http://localhost:8080/`
-- **Enrichment Webhook**: `POST http://localhost:8080/enrich`
+- **Health Check**: `GET http://localhost:8085/health`
+- **Root Endpoint**: `GET http://localhost:8085/`
+- **Enrichment Webhook**: `POST http://localhost:8085/enrich`
 
 ---
 
@@ -89,5 +89,5 @@ Build and run the container locally:
 
 ```powershell
 docker build -t enrichment-worker .
-docker run -p 8080:8080 --env-file .env enrichment-worker
+docker run -p 8085:8080 --env-file .env enrichment-worker
 ```

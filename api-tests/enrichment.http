@@ -1,0 +1,54 @@
+### Variables
+@enrichment_worker_url = http://localhost:8085
+
+### 1. Health Check
+GET {{enrichment_worker_url}}/health
+Accept: application/json
+
+### 2. Test Maps Geocoding API (GET with name and city)
+GET {{enrichment_worker_url}}/maps/test?name=Senso-ji&city=Tokyo
+Accept: application/json
+
+> {%
+    client.test("Status code is 200", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.test("Response contains geocoding results", function () {
+        client.assert(Array.isArray(response.body) && response.body.length > 0, "Expected non-empty array of geocoding results");
+    });
+%}
+
+### 3. Test Maps Geocoding API (GET with name only)
+GET {{enrichment_worker_url}}/maps/test?name=Kinkaku-ji
+Accept: application/json
+
+> {%
+    client.test("Status code is 200", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### 4. Test Maps Geocoding API (POST with JSON body)
+POST {{enrichment_worker_url}}/maps/test
+Content-Type: application/json
+
+{
+  "name": "Meiji Jingu",
+  "city": "Tokyo"
+}
+
+> {%
+    client.test("Status code is 200", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### 5. Test Maps Geocoding API - Missing Name (Validation Error 422)
+GET {{enrichment_worker_url}}/maps/test
+Accept: application/json
+
+> {%
+    client.test("Status code is 422", function () {
+        client.assert(response.status === 422, "Expected 422 Unprocessable Entity");
+    });
+%}

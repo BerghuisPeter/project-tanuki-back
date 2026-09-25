@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    port: int = int(os.getenv("PORT", "8085"))
     goshuin_service_url: str = os.getenv("GOSHUIN_SERVICE_URL", "http://localhost:8083")
     google_maps_api_key: str = os.getenv("GOOGLE_MAPS_API_KEY", "")
     google_gemini_api_key: str = os.getenv("GOOGLE_GEMINI_API_KEY", "")
