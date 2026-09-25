@@ -29,7 +29,7 @@ Project Tanuki.
 ### 1. Prerequisites
 
 - Python 3.12+
-- `pip`
+- `uv` (Fast Python package manager)
 
 ### 2. Environment Configuration
 
@@ -51,26 +51,20 @@ LOG_LEVEL=INFO
 
 ### 3. Install Dependencies
 
-Create a virtual environment and install required packages:
+Install project dependencies using `uv`:
 
 ```powershell
-python -m venv venv
-# On Windows (PowerShell):
-.\venv\Scripts\Activate.ps1
-# On macOS / Linux:
-# source venv/bin/activate
-
-pip install -r requirements.txt
+uv sync
 ```
 
 ---
 
 ## Running Locally
 
-Start the development server with hot reloading via Uvicorn:
+Start the development server with hot reloading via `uv`:
 
 ```powershell
-uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+uv run uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
 - **Health Check**: `GET http://localhost:8080/health`
@@ -81,10 +75,10 @@ uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 
 ## Testing
 
-Run unit tests using `pytest`:
+Run unit tests using `pytest` via `uv`:
 
 ```powershell
-pytest
+uv run pytest
 ```
 
 ---

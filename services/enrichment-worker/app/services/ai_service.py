@@ -4,7 +4,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 try:
-    import google.generativeai as genai
+    from google import genai
 
     GENAI_AVAILABLE = True
 except ImportError:
@@ -14,8 +14,12 @@ except ImportError:
 class AIService:
     def __init__(self):
         self.api_key = settings.google_gemini_api_key
+        self.client = None
         if self.api_key and GENAI_AVAILABLE:
-            genai.configure(api_key=self.api_key)
+            try:
+                self.client = genai.Client(api_key=self.api_key)
+            except Exception as e:
+                logger.error(f"Failed to initialize Gemini client: {e}")
 
     async def generate_description(self, name: str, category: str = "Temple", context: str = "") -> str:
         """
@@ -29,10 +33,12 @@ class AIService:
             "Describe its history, architectural significance, and spiritual atmosphere in 2-3 paragraphs."
         )
 
-        if self.api_key and GENAI_AVAILABLE:
+        if self.client:
             try:
-                model = genai.GenerativeModel("gemini-1.5-flash")
-                response = model.generate_content(prompt)
+                response = self.client.models.generate_content(
+                    model="gemini-1.5-flash",
+                    contents=prompt,
+                )
                 if response and response.text:
                     return response.text.strip()
             except Exception as e:

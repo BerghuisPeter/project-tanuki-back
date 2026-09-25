@@ -50,3 +50,46 @@ def test_handle_enrichment_valid(monkeypatch):
     data = response.json()
     assert data["status"] == "complete"
     assert data["id"] == payload["resourceId"]
+
+
+@pytest.mark.asyncio
+async def test_ai_service_fallback_without_client():
+    from app.services.ai_service import AIService
+    service = AIService()
+    service.client = None
+    description = await service.generate_description("Kinkaku-ji", category="Temple")
+    assert "Kinkaku-ji is a historic temple known for its serene grounds" in description
+
+
+@pytest.mark.asyncio
+async def test_ai_service_generate_content_success():
+    from app.services.ai_service import AIService
+    from unittest.mock import MagicMock
+
+    service = AIService()
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.text = "Generated description of Kinkaku-ji"
+    mock_client.models.generate_content.return_value = mock_response
+    service.client = mock_client
+
+    description = await service.generate_description("Kinkaku-ji", category="Temple", context="Golden Pavilion")
+    assert description == "Generated description of Kinkaku-ji"
+    mock_client.models.generate_content.assert_called_once_with(
+        model="gemini-1.5-flash",
+        contents="Write a comprehensive, culturally rich, and engaging description in Japanese for the Temple named 'Kinkaku-ji'. Additional context: Golden Pavilion. Describe its history, architectural significance, and spiritual atmosphere in 2-3 paragraphs."
+    )
+
+
+@pytest.mark.asyncio
+async def test_ai_service_generate_content_error_fallback():
+    from app.services.ai_service import AIService
+    from unittest.mock import MagicMock
+
+    service = AIService()
+    mock_client = MagicMock()
+    mock_client.models.generate_content.side_effect = RuntimeError("API rate limit")
+    service.client = mock_client
+
+    description = await service.generate_description("Kinkaku-ji", category="Temple")
+    assert "Kinkaku-ji is a historic temple known for its serene grounds" in description

@@ -9,7 +9,13 @@ logger = logging.getLogger(__name__)
 class GeocodingService:
     def __init__(self):
         self.api_key = settings.google_maps_api_key
-        self.client = googlemaps.Client(key=self.api_key) if self.api_key else None
+        self.client = None
+        if self.api_key:
+            try:
+                self.client = googlemaps.Client(key=self.api_key)
+            except Exception as e:
+                logger.warning(
+                    f"Failed to initialize Google Maps client (invalid or placeholder API key): {e}. Using mock geocoding.")
 
     async def geocode(self, query: str) -> GeocodingResult:
         """
