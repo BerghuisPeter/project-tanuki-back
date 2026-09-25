@@ -1,11 +1,11 @@
 name: Enrichment Worker CI/CD
 
 on:
-  # push:
-  #   branches: [ develop, master ]
-  #   paths:
-  #     - 'services/enrichment-worker/**'
-  #     - '.github/workflows/enrichment-worker.yml'
+  push:
+    branches: [ develop, master ]
+    paths:
+      - 'services/enrichment-worker/**'
+      - '.github/workflows/enrichment-worker.yml'
   workflow_dispatch:
 
 jobs:
