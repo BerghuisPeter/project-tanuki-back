@@ -43,6 +43,6 @@ jobs:
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v3
         with:
-          service: tanuki-back-enrichment-worker
+          service: tanuki-enrichment-worker
           image: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/enrichment-worker:${{ github.sha }}
           region: ${{ vars.GAR_LOCATION }}
