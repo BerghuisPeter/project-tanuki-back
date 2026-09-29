@@ -22,13 +22,63 @@ services:
     ports:
       - '8084:8080'
 
+  auth-service:
+    image: 'asia-northeast1-docker.pkg.dev/tanuki-dev/tanuki-back-repo/auth-service:latest'
+    ports:
+      - '8081:8081'
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://tanuki-db:5432/tanuki-db
+      - SPRING_DATASOURCE_USERNAME=myuser
+      - SPRING_DATASOURCE_PASSWORD=secret
+      - PROFILE_SERVICE_URL=http://profile-service:8082
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-583627204016-5o809inoo1hs877478cqtthd15h0a3hn.apps.googleusercontent.com}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - JWT_SECRET=${JWT_SECRET:-test-secret-key-that-needs-to-be-long-enough-to-be-secure-32-chars}
+    depends_on:
+      tanuki-db:
+        condition: service_healthy
+
+  profile-service:
+    image: 'asia-northeast1-docker.pkg.dev/tanuki-dev/tanuki-back-repo/profile-service:latest'
+    ports:
+      - '8082:8082'
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://tanuki-db:5432/tanuki-db
+      - SPRING_DATASOURCE_USERNAME=myuser
+      - SPRING_DATASOURCE_PASSWORD=secret
+      - GCP_STORAGE_BUCKET_NAME=${GCP_STORAGE_BUCKET_NAME}
+      - GCP_STORAGE_CREDENTIALS_JSON=${GCP_STORAGE_CREDENTIALS_JSON}
+      - JWT_SECRET=${JWT_SECRET:-test-secret-key-that-needs-to-be-long-enough-to-be-secure-32-chars}
+    depends_on:
+      tanuki-db:
+        condition: service_healthy
+
+  goshuin-service:
+    image: 'asia-northeast1-docker.pkg.dev/tanuki-dev/tanuki-back-repo/goshuin-service:latest'
+    ports:
+      - '8083:8083'
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://tanuki-db:5432/tanuki-db
+      - SPRING_DATASOURCE_USERNAME=myuser
+      - SPRING_DATASOURCE_PASSWORD=secret
+      - PROFILE_SERVICE_URL=http://profile-service:8082
+      - GCP_STORAGE_BUCKET_NAME=${GCP_STORAGE_BUCKET_NAME}
+      - GCP_STORAGE_CREDENTIALS_JSON=${GCP_STORAGE_CREDENTIALS_JSON}
+      - JWT_SECRET=${JWT_SECRET:-test-secret-key-that-needs-to-be-long-enough-to-be-secure-32-chars}
+    depends_on:
+      tanuki-db:
+        condition: service_healthy
+
   enrichment-worker:
-    build:
-      context: ./services/enrichment-worker
+    image: 'asia-northeast1-docker.pkg.dev/tanuki-dev/tanuki-back-repo/enrichment-worker:latest'
     ports:
       - '8085:8080'
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json # Placeholder for future AI/Maps integration
+      - GOSHUIN_SERVICE_URL=${GOSHUIN_SERVICE_URL:-http://goshuin-service:8083}
+      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_GEMINI_API_KEY=${GOOGLE_GEMINI_API_KEY:-${GEMINI_API_KEY}}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 30s
