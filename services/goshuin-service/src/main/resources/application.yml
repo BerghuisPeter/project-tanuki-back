@@ -33,7 +33,7 @@ spring:
 
 gcp:
   storage:
-    bucket-name: ${GCP_STORAGE_BUCKET_NAME}
+    bucket-name: ${GCP_STORAGE_BUCKET_NAME:}
     credentials-json: ${GCP_STORAGE_CREDENTIALS_JSON:}
     goshuin:
       max-size-bytes: 10485760 # 10MB
@@ -41,6 +41,12 @@ gcp:
         - image/jpeg
         - image/png
         - image/webp
+  pubsub:
+    project-id: ${GCP_PROJECT_ID:${GOOGLE_CLOUD_PROJECT:tanuki-dev}}
+    topic-name: ${ENRICHMENT_TOPIC_NAME:${GCP_PUBSUB_TOPIC_NAME:enrichment-requests}}
+    credentials-json: ${GCP_STORAGE_CREDENTIALS_JSON:${GCP_PUBSUB_CREDENTIALS_JSON:}}
+    enabled: ${GCP_PUBSUB_ENABLED:true}
+    emulator-host: ${PUBSUB_EMULATOR_HOST:}
 
 server:
   port: ${PORT:8083}

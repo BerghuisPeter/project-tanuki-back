@@ -3,8 +3,10 @@ from typing import Optional, Dict, Any
 
 
 class EnrichmentRequest(BaseModel):
-    resourceType: str = Field(..., description="Type of resource to enrich (e.g., TEMPLE, GOSHUIN)")
-    resourceId: str = Field(..., description="Unique identifier (UUID) of the resource")
+    jobId: Optional[str] = Field(default=None, description="Enrichment job ID")
+    resourceType: Optional[str] = Field(default="GOSHUIN",
+                                        description="Type of resource to enrich (e.g., TEMPLE, GOSHUIN)")
+    resourceId: Optional[str] = Field(default=None, description="Unique identifier (UUID) of the resource")
     originalLocale: str = Field(default="ja", description="Original locale of the resource data")
 
 

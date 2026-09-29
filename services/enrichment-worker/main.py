@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Goshuin Enrichment Worker",
     description="Asynchronous background worker for geocoding, translation, and AI description enrichment",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Include routers

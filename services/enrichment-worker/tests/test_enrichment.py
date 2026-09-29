@@ -24,15 +24,9 @@ def test_handle_enrichment_invalid_format():
     assert response.status_code == 400
 
 
-def test_handle_enrichment_valid(monkeypatch):
-    # Mock GoshuinClient and processor external calls so test doesn't require live services or keys
-    async def mock_process(self, request):
-        return None
-
-    from app.services.enrichment_processor import EnrichmentProcessor
-    monkeypatch.setattr(EnrichmentProcessor, "process", mock_process)
-
+def test_handle_enrichment_valid(capsys):
     payload = {
+        "jobId": "job-123",
         "resourceType": "TEMPLE",
         "resourceId": "123e4567-e89b-12d3-a456-426614174000",
         "originalLocale": "ja"
@@ -40,16 +34,44 @@ def test_handle_enrichment_valid(monkeypatch):
     encoded_data = base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
     envelope = {
         "message": {
+            "attributes": {
+                "jobId": "job-123",
+                "resourceType": "TEMPLE",
+                "resourceId": "123e4567-e89b-12d3-a456-426614174000"
+            },
             "data": encoded_data,
             "messageId": "test-msg-id"
-        }
+        },
+        "subscription": "projects/tanuki-dev/subscriptions/enrichment-requests-push-sub"
     }
 
     response = client.post("/enrich", json=envelope)
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "complete"
-    assert data["id"] == payload["resourceId"]
+    assert data["status"] == "received"
+    assert data["resourceId"] == payload["resourceId"]
+    assert data["jobId"] == "job-123"
+
+    captured = capsys.readouterr()
+    assert "job-123" in captured.out
+
+
+def test_handle_enrichment_direct_json(capsys):
+    payload = {
+        "jobId": "job-456",
+        "resourceType": "GOSHUIN",
+        "resourceId": "goshuin-789"
+    }
+
+    response = client.post("/enrich", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "received"
+    assert data["jobId"] == "job-456"
+    assert data["resourceId"] == "goshuin-789"
+
+    captured = capsys.readouterr()
+    assert "job-456" in captured.out
 
 
 @pytest.mark.asyncio

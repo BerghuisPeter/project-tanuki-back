@@ -1,6 +1,25 @@
 ### Variables
 @enrichment_worker_url = http://localhost:8085
 
+### Login with the test account (to get token for POST)
+POST http://localhost:8081/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Password123!"
+}
+
+> {%
+    if (response.status === 200 && response.body) {
+        client.global.set("access_token", response.body.accessToken);
+        client.global.set("refresh_token", response.body.refreshToken);
+    } else {
+        client.log("Request failed or returned empty body. Status: " + response.status);
+    }
+%}
+
+
 ### 1. Health Check
 GET {{enrichment_worker_url}}/health
 Accept: application/json
@@ -52,3 +71,31 @@ Accept: application/json
         client.assert(response.status === 422, "Expected 422 Unprocessable Entity");
     });
 %}
+
+### 6. Test Pub/Sub Push Subscription Endpoint (/enrich with Pub/Sub Envelope)
+POST {{enrichment_worker_url}}/enrich
+Content-Type: application/json
+
+{
+  "message": {
+    "attributes": {
+      "jobId": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+      "resourceType": "GOSHUIN",
+      "resourceId": "b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e"
+    },
+    "data": "eyJqb2JJZCI6ImExYjJjM2Q0LWU1ZjYtN2E4Yi05YzBkLTFlMmYzYTRiNWM2ZCIsInJlc291cmNlVHlwZSI6IkdPU0hVSU4iLCJyZXNvdXJjZUlkIjoiYjJjM2Q0ZTVtZjZhNy04YjljLTBkMWUtMmYzYTRiNWM2ZDdlIn0=",
+    "messageId": "136969346945"
+  },
+  "subscription": "projects/tanuki-dev/subscriptions/enrichment-requests-push-sub"
+}
+
+### 7. Test Enrichment Direct Payload (/enrich with direct JSON)
+POST {{enrichment_worker_url}}/enrich
+Content-Type: application/json
+
+{
+  "jobId": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+  "resourceType": "TEMPLE",
+  "resourceId": "b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+  "originalLocale": "ja"
+}

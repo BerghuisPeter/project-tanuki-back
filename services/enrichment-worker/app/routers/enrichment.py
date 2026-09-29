@@ -79,32 +79,86 @@ async def test_maps_api_post(
 async def handle_enrichment(envelope: dict):
     """
     Handle Pub/Sub push notifications.
-    Expected format from Pub/Sub:
+    Expected format from Google Cloud Pub/Sub Push Subscription:
     {
         "message": {
-            "data": "base64-encoded-payload",
+            "attributes": {
+                "jobId": "...",
+                "resourceType": "GOSHUIN",
+                "resourceId": "..."
+            },
+            "data": "eyJqb2JJZCI6Ii4uLiIsInJlc291cmNlVHlwZSI6IkdPU0hVSU4iLCJyZXNvdXJjZUlkIjoiLi4uIn0=",
             "messageId": "..."
-        }
+        },
+        "subscription": "..."
+    }
+    Or direct JSON payload for testing:
+    {
+        "jobId": "...",
+        "resourceType": "GOSHUIN",
+        "resourceId": "..."
     }
     """
-    if "message" not in envelope or "data" not in envelope["message"]:
-        logger.error("Invalid Pub/Sub message received: no 'message' or 'data' field")
+    if not isinstance(envelope, dict):
+        raise HTTPException(status_code=400, detail="Invalid request payload")
+
+    message = envelope.get("message")
+    attributes = message.get("attributes", {}) if isinstance(message, dict) else {}
+    payload = {}
+
+    if isinstance(message, dict) and "data" in message:
+        try:
+            data_bytes = base64.b64decode(message["data"])
+            data_str = data_bytes.decode("utf-8")
+            try:
+                payload = json.loads(data_str)
+            except Exception:
+                payload = data_str
+        except Exception as e:
+            logger.warning(f"Could not decode base64 data: {e}")
+    elif "data" in envelope and isinstance(envelope["data"], str):
+        try:
+            data_bytes = base64.b64decode(envelope["data"])
+            data_str = data_bytes.decode("utf-8")
+            try:
+                payload = json.loads(data_str)
+            except Exception:
+                payload = data_str
+        except Exception as e:
+            logger.warning(f"Could not decode base64 data: {e}")
+    elif "resourceId" in envelope or "jobId" in envelope or "resourceType" in envelope:
+        payload = envelope
+    else:
+        logger.error("Invalid Pub/Sub message received: no recognizable message or payload format")
         raise HTTPException(status_code=400, detail="Invalid Pub/Sub message format")
 
-    try:
-        # Decode base64 Pub/Sub data
-        data_bytes = base64.b64decode(envelope["message"]["data"])
-        data_str = data_bytes.decode("utf-8")
-        payload = json.loads(data_str)
-        request = EnrichmentRequest(**payload)
+    job_id = None
+    resource_type = "GOSHUIN"
+    resource_id = None
+    original_locale = "ja"
 
-        logger.info(f"Received enrichment request for {request.resourceType} with ID {request.resourceId}")
+    if attributes:
+        job_id = attributes.get("jobId") or attributes.get("job_id")
+        resource_type = attributes.get("resourceType") or attributes.get("resource_type") or resource_type
+        resource_id = attributes.get("resourceId") or attributes.get("resource_id")
+        original_locale = attributes.get("originalLocale") or attributes.get("original_locale") or original_locale
 
-        # Process enrichment asynchronously or synchronously in worker
-        await processor.process(request)
+    if isinstance(payload, dict):
+        job_id = payload.get("jobId") or payload.get("job_id") or job_id
+        resource_type = payload.get("resourceType") or payload.get("resource_type") or resource_type
+        resource_id = payload.get("resourceId") or payload.get("resource_id") or resource_id
+        original_locale = payload.get("originalLocale") or payload.get("original_locale") or original_locale
+    elif isinstance(payload, str):
+        if not job_id and not resource_id:
+            job_id = payload
+            resource_id = payload
 
-        return {"status": "complete", "id": request.resourceId}
+    if not job_id and not resource_id:
+        logger.error("Invalid enrichment request: missing both jobId and resourceId")
+        raise HTTPException(status_code=400, detail="Invalid Pub/Sub message: missing job or resource identification")
 
-    except Exception as e:
-        logger.error(f"Failed to process enrichment request: {str(e)}")
-        raise HTTPException(status_code=422, detail=f"Enrichment failed: {str(e)}")
+    # For now, simply print out the jobId and nothing else
+    print(f"Received Pub/Sub message - Job ID: {job_id}", flush=True)
+    logger.info(f"Received Pub/Sub message - Job ID: {job_id}")
+
+    return {"status": "received", "jobId": job_id, "resourceId": resource_id or job_id}

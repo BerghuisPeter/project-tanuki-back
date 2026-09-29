@@ -22,6 +22,39 @@ services:
     ports:
       - '8084:8080'
 
+  pubsub-emulator:
+    image: 'gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators'
+    ports:
+      - '8681:8681'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway' # lets push reach a worker running on the host (Linux)
+    environment:
+      - EMULATOR=http://localhost:8681
+      - PROJECT=${GCP_PROJECT_ID:-tanuki-dev}
+      - TOPIC=${ENRICHMENT_TOPIC_NAME:-enrichment-requests}
+      # Worker on the host via uv; use http://enrichment-worker:8080/enrich for the compose worker
+      - PUSH_ENDPOINT=${PUBSUB_PUSH_ENDPOINT:-http://host.docker.internal:8085/enrich}
+    init: true
+    # The emulator keeps no state, so the topic + push subscription are created on every container start
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        gcloud beta emulators pubsub start --project=$$PROJECT --host-port=0.0.0.0:8681 &
+        EMULATOR_PID=$$!
+        trap 'kill $$EMULATOR_PID' TERM INT
+        until curl -sf $$EMULATOR > /dev/null; do sleep 1; done
+        curl -s -X PUT "$$EMULATOR/v1/projects/$$PROJECT/topics/$$TOPIC"
+        curl -s -X PUT "$$EMULATOR/v1/projects/$$PROJECT/subscriptions/$$TOPIC-push-sub" \
+          -H 'Content-Type: application/json' \
+          -d "{\"topic\":\"projects/$$PROJECT/topics/$$TOPIC\",\"pushConfig\":{\"pushEndpoint\":\"$$PUSH_ENDPOINT\"},\"ackDeadlineSeconds\":60}"
+        echo "pubsub emulator ready: $$TOPIC -> $$PUSH_ENDPOINT"
+        wait $$EMULATOR_PID
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -sf $$EMULATOR/v1/projects/$$PROJECT/topics/$$TOPIC" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   auth-service:
     image: 'asia-northeast1-docker.pkg.dev/tanuki-dev/tanuki-back-repo/auth-service:latest'
     ports:
@@ -33,6 +66,8 @@ services:
       - PROFILE_SERVICE_URL=http://profile-service:8082
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-583627204016-5o809inoo1hs877478cqtthd15h0a3hn.apps.googleusercontent.com}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-http://localhost:8081/login/oauth2/code/google}
+      - FRONT_URL=${FRONT_URL:-http://localhost:4200}
       - JWT_SECRET=${JWT_SECRET:-test-secret-key-that-needs-to-be-long-enough-to-be-secure-32-chars}
     depends_on:
       tanuki-db:
@@ -64,9 +99,14 @@ services:
       - PROFILE_SERVICE_URL=http://profile-service:8082
       - GCP_STORAGE_BUCKET_NAME=${GCP_STORAGE_BUCKET_NAME}
       - GCP_STORAGE_CREDENTIALS_JSON=${GCP_STORAGE_CREDENTIALS_JSON}
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID:-tanuki-dev}
+      - ENRICHMENT_TOPIC_NAME=${ENRICHMENT_TOPIC_NAME:-enrichment-requests}
+      - PUBSUB_EMULATOR_HOST=pubsub-emulator:8681
       - JWT_SECRET=${JWT_SECRET:-test-secret-key-that-needs-to-be-long-enough-to-be-secure-32-chars}
     depends_on:
       tanuki-db:
+        condition: service_healthy
+      pubsub-emulator:
         condition: service_healthy
 
   enrichment-worker:
@@ -74,10 +114,13 @@ services:
     ports:
       - '8085:8080'
     environment:
+      - ENVIRONMENT=${ENVIRONMENT:-dev}
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID:-tanuki-dev}
       - GOSHUIN_SERVICE_URL=${GOSHUIN_SERVICE_URL:-http://goshuin-service:8083}
       - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GOOGLE_GEMINI_API_KEY=${GOOGLE_GEMINI_API_KEY:-${GEMINI_API_KEY}}
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT:-${GCP_PROJECT_ID:-tanuki-dev}}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
