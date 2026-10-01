@@ -1,8 +1,10 @@
 import logging
 from app.config import settings
-from typing import Dict
+from typing import Dict, Optional, Tuple
 
 logger = logging.getLogger(__name__)
+
+SUPPORTED_LOCALES = ("ja", "en")
 
 
 class TranslationService:
@@ -30,21 +32,32 @@ class TranslationService:
             return f"[En] {text}"
         return text
 
-    async def translate_entity(self, name: str, description: str, source_locale: str = "ja") -> Dict[
-        str, Dict[str, str]]:
+    async def translate_missing(
+            self,
+            fields: Tuple[str, ...],
+            existing: Dict[str, Dict[str, Optional[str]]],
+            original_locale: str,
+    ) -> Dict[str, Dict[str, str]]:
         """
-        Translate entity name and description into supported locales (e.g. 'en').
+        Translate the given fields into every supported locale where they are still empty.
+
+        `existing` is the locale -> {field: value} map read from goshuin-service. Each field is translated from the
+        original locale if it has a value there, otherwise from any other locale that does. Fields that are already
+        populated, or that have no source text anywhere, are left out of the result.
         """
-        translations = {}
-        # Target locales to support: 'en' (if source is 'ja')
-        target_locales = ["en"] if source_locale == "ja" else ["ja"]
-
-        for locale in target_locales:
-            translated_name = await self.translate_text(name, locale, source_locale)
-            translated_desc = await self.translate_text(description, locale, source_locale) if description else ""
-            translations[locale] = {
-                "name": translated_name,
-                "description": translated_desc
-            }
-
-        return translations
+        result: Dict[str, Dict[str, str]] = {}
+        for locale in SUPPORTED_LOCALES:
+            row = existing.get(locale) or {}
+            for field in fields:
+                if row.get(field):
+                    continue
+                source_locale = next(
+                    (candidate for candidate in (original_locale, *existing)
+                     if (existing.get(candidate) or {}).get(field)),
+                    None,
+                )
+                if source_locale is None or source_locale == locale:
+                    continue
+                translated = await self.translate_text(existing[source_locale][field], locale, source_locale)
+                result.setdefault(locale, {})[field] = translated
+        return result

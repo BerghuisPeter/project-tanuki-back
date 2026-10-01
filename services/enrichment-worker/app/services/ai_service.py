@@ -10,6 +10,8 @@ try:
 except ImportError:
     GENAI_AVAILABLE = False
 
+LANGUAGE_NAMES = {"ja": "Japanese", "en": "English"}
+
 
 class AIService:
     def __init__(self):
@@ -21,14 +23,16 @@ class AIService:
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini client: {e}")
 
-    async def generate_description(self, name: str, category: str = "Temple", context: str = "") -> str:
+    async def generate_description(self, name: str, category: str = "Temple", context: str = "",
+                                   locale: str = "ja") -> str:
         """
-        Generate a rich AI description for a temple or goshuin using Gemini.
+        Generate a rich AI description for a temple or goshuin using Gemini, written in the given locale.
         """
         logger.info(f"Generating AI description for {category}: {name}")
 
+        language = LANGUAGE_NAMES.get(locale, "Japanese")
         prompt = (
-            f"Write a comprehensive, culturally rich, and engaging description in Japanese for the {category} named '{name}'. "
+            f"Write a comprehensive, culturally rich, and engaging description in {language} for the {category} named '{name}'. "
             f"Additional context: {context}. "
             "Describe its history, architectural significance, and spiritual atmosphere in 2-3 paragraphs."
         )

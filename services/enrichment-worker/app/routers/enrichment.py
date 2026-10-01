@@ -135,19 +135,16 @@ async def handle_enrichment(envelope: dict):
     job_id = None
     resource_type = "GOSHUIN"
     resource_id = None
-    original_locale = "ja"
 
     if attributes:
         job_id = attributes.get("jobId") or attributes.get("job_id")
         resource_type = attributes.get("resourceType") or attributes.get("resource_type") or resource_type
         resource_id = attributes.get("resourceId") or attributes.get("resource_id")
-        original_locale = attributes.get("originalLocale") or attributes.get("original_locale") or original_locale
 
     if isinstance(payload, dict):
         job_id = payload.get("jobId") or payload.get("job_id") or job_id
         resource_type = payload.get("resourceType") or payload.get("resource_type") or resource_type
         resource_id = payload.get("resourceId") or payload.get("resource_id") or resource_id
-        original_locale = payload.get("originalLocale") or payload.get("original_locale") or original_locale
     elif isinstance(payload, str):
         if not job_id and not resource_id:
             job_id = payload

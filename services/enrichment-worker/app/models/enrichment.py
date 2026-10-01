@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict
 
 
 class EnrichmentRequest(BaseModel):
@@ -7,7 +7,6 @@ class EnrichmentRequest(BaseModel):
     resourceType: Optional[str] = Field(default="GOSHUIN",
                                         description="Type of resource to enrich (e.g., TEMPLE, GOSHUIN)")
     resourceId: Optional[str] = Field(default=None, description="Unique identifier (UUID) of the resource")
-    originalLocale: str = Field(default="ja", description="Original locale of the resource data")
 
 
 class PubSubMessage(BaseModel):
@@ -27,10 +26,14 @@ class GeocodingResult(BaseModel):
 
 
 class EnrichmentUpdate(BaseModel):
-    status: str = Field(..., description="Enrichment status: COMPLETE, FAILED, etc.")
-    address: Optional[str] = None
+    """
+    Body of PATCH /internal/v1/{temples|goshuins}/{id}/enrichment (see ENRICHMENT.md, section 5).
+    Fields that are None are omitted when sent. A missing status means a data-only write.
+    """
+    jobId: Optional[str] = None
+    status: Optional[str] = Field(default=None, description="PROCESSING, COMPLETE or FAILED")
+    error: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
-    translations: Optional[Dict[str, Dict[str, str]]] = None
-    description: Optional[str] = None
-    error: Optional[str] = None
+    translations: Optional[Dict[str, Dict[str, str]]] = Field(
+        default=None, description="locale -> {field: value}, filled in only where the stored value is empty")

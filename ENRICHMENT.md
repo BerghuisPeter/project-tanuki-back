@@ -101,11 +101,13 @@ Using **GCP Pub/Sub** is the superior choice for this architecture.
 - **Message Format**:
   ```json
   {
+    "jobId": "01990c1e-...",
     "resourceType": "TEMPLE",
-    "resourceId": "3490-afde-...",
-    "originalLocale": "ja"
+    "resourceId": "3490-afde-..."
   }
   ```
+  The message deliberately carries identifiers only. The worker reads `originalLocale` and everything else from the
+  internal API (section 5).
 
 ### 2. The Worker: Separate Python Service (Cloud Run)
 
@@ -129,6 +131,12 @@ Both entities and DTOs use a common `EnrichmentMetadata` structure (mapped to `e
 - `attempts`: Counter to prevent infinite loops.
 - `lastAt`: Timestamp for auditing.
 
+Each enrichment request is also tracked as a row in the `enrichment_job` table (`jobId`, `resourceType`, `resourceId`,
+`status`, `error`, `attempts`, `completedAt`). This is intentional: the sweep (section 6) can find stuck work by
+querying one small table instead of scanning `temple` and `goshuin`. The job row and the `enrichment` metadata on the
+resource must always agree, so every status change is applied to both **in the same transaction**. The status endpoints
+in section 5 do this.
+
 ### 4. Integration Flow
 
 1. **Creation**: `goshuin-service` receives a minimal `TempleCreate` (Name + City).
@@ -138,10 +146,192 @@ Both entities and DTOs use a common `EnrichmentMetadata` structure (mapped to `e
     - **Geocoding**: Python worker uses `googlemaps` to find Lat/Lng and full address.
     - **Translation**: Uses `google-cloud-translate` to fill missing `TempleI18nEntity` records.
     - **Description**: Uses **Gemini (Vertex AI)** to generate a summary based on the temple name and affiliation.
-5. **Callback**: The worker calls a secured **Internal API** in `goshuin-service` (e.g.,
-   `PATCH /internal/v1/temples/{id}/enrichment`) to update the fields and set status to `COMPLETE`.
+5. **Callback**: The worker calls the secured **Internal API** in `goshuin-service` (see section 5) to read the
+   record, report progress, and write the enriched fields and final status.
 
-### 5. Resilience: The Background Sweep
+### 5. Internal API (`goshuin-service`)
+
+The Pub/Sub message only carries identifiers, so the worker reads everything else from `goshuin-service` and writes its
+results back through the same internal API. These endpoints are not part of the public `openapi.yaml` contract for
+frontend clients; they live under `/internal/v1` and are only called by the enrichment worker. The path convention is
+`/internal/v1/{temples|goshuins}/{id}`, which is what `resourceType` (`TEMPLE` / `GOSHUIN`) maps to.
+
+| Method  | Path                                    | Purpose                                                                             |
+|:--------|:----------------------------------------|:------------------------------------------------------------------------------------|
+| `GET`   | `/internal/v1/temples/{id}`             | Read a temple with its i18n variants and enrichment metadata                        |
+| `GET`   | `/internal/v1/goshuins/{id}`            | Read a goshuin with its i18n variants, enrichment metadata and its temple           |
+| `PATCH` | `/internal/v1/temples/{id}/enrichment`  | Report progress and write enriched temple data (address, coordinates, translations) |
+| `PATCH` | `/internal/v1/goshuins/{id}/enrichment` | Report progress and write enriched goshuin data (translations)                      |
+
+Common behaviour:
+
+- `{id}` is the resource UUID from the Pub/Sub message (`resourceId`).
+- Unknown IDs return `404`; malformed bodies return `400`. Errors use the shared `ErrorResponse`.
+- Locale keys are locale codes such as `ja` and `en`, matching the `locale` column of the i18n tables.
+
+#### 5.1 `GET /internal/v1/temples/{id}`
+
+Returns everything the worker needs to decide which steps to run. A step is skipped when its target is already
+populated.
+
+```json
+{
+  "id": "3490-afde-...",
+  "originalLocale": "ja",
+  "latitude": null,
+  "longitude": null,
+  "affiliationType": "Shingon",
+  "enrichment": {
+    "status": "PROCESSING",
+    "error": null,
+    "attempts": 1,
+    "lastAt": "2026-01-01T10:00:00Z"
+  },
+  "translations": {
+    "ja": {
+      "name": "浅草寺",
+      "region": null,
+      "postalCode": null,
+      "prefecture": null,
+      "city": "東京",
+      "address": null,
+      "description": null
+    }
+  }
+}
+```
+
+| Worker step            | Reads                                                                                                         |
+|:-----------------------|:--------------------------------------------------------------------------------------------------------------|
+| Geocoding              | `latitude` / `longitude` (skip if both set); `translations[originalLocale].name` + `.city` to build the query |
+| Translation            | Which locales exist in `translations`, and the source text in `translations[originalLocale]`                  |
+| Description generation | `translations[*].description` (skip if any locale has one); `name` and `affiliationType` as prompt input      |
+
+#### 5.2 `GET /internal/v1/goshuins/{id}`
+
+Same shape as the temple read, with goshuin fields and the parent temple embedded. Embedding the temple lets the
+worker check whether the temple already has coordinates, and use its name for description generation, without a second
+call.
+
+```json
+{
+  "id": "7710-c2d1-...",
+  "originalLocale": "ja",
+  "format": "KAMIGATA",
+  "enrichment": { "status": "PROCESSING", "error": null, "attempts": 1, "lastAt": "2026-01-01T10:00:00Z" },
+  "translations": {
+    "ja": { "label": "本尊", "description": null }
+  },
+  "temple": {
+    "id": "3490-afde-...",
+    "latitude": 35.7148,
+    "longitude": 139.7967,
+    "affiliationType": "Shingon",
+    "translations": {
+      "ja": { "name": "浅草寺", "city": "東京", "address": "東京都台東区浅草2-3-1", "description": "..." }
+    }
+  }
+}
+```
+
+The embedded `temple` is read-only context. The worker never writes temple data through the goshuin endpoints.
+
+#### 5.3 `PATCH /internal/v1/temples/{id}/enrichment`
+
+A single endpoint carries the whole lifecycle for a temple. The worker calls it up to twice per attempt: once to
+mark the record `PROCESSING`, and once with the result (`COMPLETE` or `FAILED`).
+
+Request body (every field is optional):
+
+```json
+{
+  "jobId": "01990c1e-...",
+  "status": "COMPLETE",
+  "error": null,
+  "latitude": 35.7148,
+  "longitude": 139.7967,
+  "translations": {
+    "ja": { "address": "東京都台東区浅草2-3-1", "description": "..." },
+    "en": { "name": "Senso-ji", "city": "Tokyo", "address": "2-3-1 Asakusa, Taito City, Tokyo", "description": "..." }
+  }
+}
+```
+
+| Field                    | Rule                                                                                                                                                                                              |
+|:-------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `jobId`                  | Optional. When present, the matching `enrichment_job` row gets the same status, error, attempts and completion time, in the same transaction as the temple's `enrichment` metadata                |
+| `status`                 | Optional. `PROCESSING`, `COMPLETE` or `FAILED`. `PENDING` is set only by `goshuin-service`. When omitted, the data is written and the lifecycle (`enrichment` metadata and job) is left untouched |
+| `error`                  | Stored as `enrichment.error` on `FAILED`. Cleared on `PROCESSING` and `COMPLETE`                                                                                                                  |
+| `latitude` / `longitude` | Written only if the temple's coordinates are currently null. Must be sent together                                                                                                                |
+| `translations`           | Map of `locale` to `{name, region, postalCode, prefecture, city, address, description}`                                                                                                           |
+
+Write semantics are **fill-only** so the endpoint stays idempotent and never overwrites human-entered data:
+
+- Coordinates and every i18n column are written only where the stored value is currently null or blank.
+- A locale row that does not exist is created. `name` is `NOT NULL` on `temple_i18n`, so a new locale row requires
+  `name`; otherwise the request is rejected with `400`.
+- Existing non-null values are left untouched, even if the request carries a different value.
+- Replaying the same request produces the same stored state.
+
+Status handling:
+
+| Incoming status | Effect on `enrichment`                                                                    |
+|:----------------|:------------------------------------------------------------------------------------------|
+| `PROCESSING`    | `status = PROCESSING`, `attempts += 1`, `lastAt = now`, `error = null`                    |
+| `COMPLETE`      | `status = COMPLETE`, `lastAt = now`, `error = null`                                       |
+| `FAILED`        | `status = FAILED`, `lastAt = now`, `error` stored (field data in the body is not applied) |
+
+Response: `204 No Content`.
+
+#### 5.4 `PATCH /internal/v1/goshuins/{id}/enrichment`
+
+Same lifecycle fields (`jobId`, `status`, `error`) and the same status handling as the temple endpoint, including the
+dual update of the goshuin's `enrichment` metadata and its `enrichment_job` row. Goshuins have no coordinates or
+address, so the data part is translations only:
+
+```json
+{
+  "jobId": "01990c1e-...",
+  "status": "COMPLETE",
+  "translations": {
+    "en": { "label": "Main Hall", "description": "..." }
+  }
+}
+```
+
+- `translations` maps `locale` to `{label, description}`, with the same fill-only rules. `label` is the only
+  i18n column besides `description`, and a new locale row is created when it does not exist.
+- Geocoding results for a goshuin belong to its **temple**. The worker writes them with
+  `PATCH /internal/v1/temples/{templeId}/enrichment`, using the `temple.id` returned by the goshuin read. It does this
+  only when the temple's coordinates are still null, which is how a second goshuin on an already-enriched temple
+  avoids a redundant geocoding call. That request has no `status`, so it writes the data without touching the temple's
+  own enrichment lifecycle.
+- Response: `204 No Content`.
+
+#### 5.5 Authentication
+
+These endpoints read and change data without a user context, so only the enrichment worker may call them.
+`goshuin-service` has to stay publicly invokable on Cloud Run because the frontend calls it, and Cloud Run IAM applies
+to a whole service, not to a path. `/internal/**` is therefore protected inside the application:
+
+- The worker runs on Cloud Run as its own service account and sends a Google-signed **OIDC identity token** with every
+  call: `Authorization: Bearer <id token>`, with the audience set to the `goshuin-service` URL.
+- `goshuin-service` validates that token on `/internal/**` only: signature (Google's public keys), issuer
+  (`https://accounts.google.com`), expiry, audience (its own URL), and that `email` is verified and equals the
+  configured worker service account. Anything else gets `401`/`403`.
+- The user-facing JWT filter is not involved, so a user token, even an admin one, can never call `/internal/**`.
+- No shared secret is distributed. Configuration is the expected audience and the allowed caller email.
+- The worker's service account and its identity are provisioned in the separate Terraform repository, not here.
+- Locally the check is disabled with a profile flag and the worker calls `goshuin-service` without a token.
+
+The same mechanism applies to the other service-to-service `/internal/**` endpoints (for example `profile-service`).
+
+#### 5.6 Not an endpoint: the sweep
+
+The resilience sweep in section 6 runs inside `goshuin-service` and re-publishes events directly, so it needs no
+internal endpoint.
+
+### 6. Resilience: The Background Sweep
 
 Even with Pub/Sub, messages can occasionally be lost or stuck in `PROCESSING` if a worker crashes.
 
@@ -150,7 +340,7 @@ Even with Pub/Sub, messages can occasionally be lost or stuck in `PROCESSING` if
     - Records in `PENDING` state older than 5 minutes.
 - **Action**: It re-publishes the Pub/Sub event to ensure no record is left in an incomplete state.
 
-### 6. API Changes (Minimal Info)
+### 7. API Changes (Minimal Info)
 
 The current `openapi.yaml` requires many fields (e.g., `longitude`, `latitude`, `address`) for `TempleCreate`. These
 should be marked as **optional** (nullable) to support the "minimal information" goal, allowing the enrichment process

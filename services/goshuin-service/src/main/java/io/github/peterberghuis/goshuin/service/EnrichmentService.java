@@ -39,8 +39,4 @@ public class EnrichmentService {
 
         return savedJob;
     }
-
-    public void enrich(UUID goshuinId) {
-        return;
-    }
 }
