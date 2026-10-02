@@ -48,6 +48,12 @@ gcp:
     enabled: ${GCP_PUBSUB_ENABLED:true}
     emulator-host: ${PUBSUB_EMULATOR_HOST:}
 
+app:
+  internal-auth:
+    enabled: true
+    audience: ${INTERNAL_AUTH_AUDIENCE:}
+    allowed-email: ${INTERNAL_AUTH_ALLOWED_EMAIL:}
+
 server:
   port: ${PORT:8083}
 

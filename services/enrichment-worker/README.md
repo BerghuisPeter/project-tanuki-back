@@ -43,6 +43,8 @@ Edit `.env` to set your keys:
 
 ```env
 GOSHUIN_SERVICE_URL=http://localhost:8083
+# Set to true on Cloud Run: sends a Google OIDC identity token to goshuin-service's /internal/** (not needed locally)
+GOSHUIN_AUTH_ENABLED=false
 GOOGLE_MAPS_API_KEY=your-google-maps-api-key
 GOOGLE_GEMINI_API_KEY=your-google-gemini-api-key
 GOOGLE_CLOUD_PROJECT=your-gcp-project-id

@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     environment: str = os.getenv("ENVIRONMENT", "dev")
     port: int = int(os.getenv("PORT", "8085"))
     goshuin_service_url: str = os.getenv("GOSHUIN_SERVICE_URL", "http://localhost:8083")
+    # Send a Google OIDC identity token to goshuin-service's /internal/**. Off by default so local runs need no token.
+    goshuin_auth_enabled: bool = os.getenv("GOSHUIN_AUTH_ENABLED", "false").lower() == "true"
     google_maps_api_key: str = os.getenv("GOOGLE_MAPS_API_KEY", "")
     gemini_api_key: str = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_GEMINI_API_KEY", "")
     google_gemini_api_key: str = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_GEMINI_API_KEY", "")

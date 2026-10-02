@@ -16,6 +16,8 @@ jwt:
   refresh-expiration: 604800000
 
 app:
+  internal-auth:
+    enabled: false # local: the worker calls /internal/** without a token
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:5173}
 

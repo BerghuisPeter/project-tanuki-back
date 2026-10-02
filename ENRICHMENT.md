@@ -324,6 +324,18 @@ to a whole service, not to a path. `/internal/**` is therefore protected inside 
 - The worker's service account and its identity are provisioned in the separate Terraform repository, not here.
 - Locally the check is disabled with a profile flag and the worker calls `goshuin-service` without a token.
 
+Configuration:
+
+| Where               | Setting                                                                          | Effect                                                                                                                           |
+|:--------------------|:---------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------|
+| `goshuin-service`   | `app.internal-auth.enabled` (default `true`, `false` in `application-local.yml`) | `false` leaves `/internal/**` open. When `true` the service refuses to start without the two settings below                      |
+| `goshuin-service`   | `INTERNAL_AUTH_AUDIENCE`                                                         | Expected `aud`: the `goshuin-service` URL, identical to the worker's `GOSHUIN_SERVICE_URL` (no trailing slash)                   |
+| `goshuin-service`   | `INTERNAL_AUTH_ALLOWED_EMAIL`                                                    | Email of the worker's service account                                                                                            |
+| `enrichment-worker` | `GOSHUIN_AUTH_ENABLED` (default `false`)                                         | `true` sends the identity token (fetched from the Cloud Run metadata server, `format=full` so `email` is included) on every call |
+
+Responses: `401` for a missing, malformed, expired or wrongly signed token or wrong audience; `403` for a valid token
+of any other caller than the allowed service account.
+
 The same mechanism applies to the other service-to-service `/internal/**` endpoints (for example `profile-service`).
 
 #### 5.6 Not an endpoint: the sweep
