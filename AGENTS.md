@@ -126,7 +126,10 @@ project-tanuki-back/
     - Cursor-based pagination and proximity search (`CreatedAtCursor`, `CommentCountCursor`, `ProximityCursor`).
     - Goshuin image signed upload URLs (`POST /api/v1/goshuins/upload-url`, max 10MB).
     - Temple & Goshuin comments management.
-    - Internal enrichment status tracking and callbacks (`EnrichmentController`).
+  - Internal enrichment API for the worker (`InternalTempleController`, `InternalGoshuinController`): reads and
+    fill-only enrichment writes under `/internal/v1/{temples|goshuins}/{id}[/enrichment]`. Defined in
+    `services/goshuin-service/internal-openapi.yaml` (generated into `...goshuin.internal.api` / `...internal.dto`),
+    separate from the public `openapi.yaml`. See `ENRICHMENT.md`, section 5.
 - **Inter-Service Communication**:
     - Calls `profile-service` via OpenFeign to fetch author profile details.
     - Publishes enrichment requests to GCP Pub/Sub topic `enrichment-requests`.
@@ -411,6 +414,7 @@ Use the HTTP Client files in `api-tests/`:
 - `api-tests/profile.http`: Profile update, avatar upload URL generation.
 - `api-tests/temple.http`: Create temple, search temples, get temple details.
 - `api-tests/goshuin.http`: Create goshuin, upload goshuin image, query goshuins.
+- `api-tests/internal.http`: Internal enrichment API (worker reads and callbacks) on `goshuin-service`.
 
 ---
 

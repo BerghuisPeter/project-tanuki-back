@@ -1,0 +1,116 @@
+### Variables
+@goshuin_service_url = http://localhost:8083
+# Replace with ids returned by temple.http / goshuin.http (and the job id from the enrichment_job table)
+@temple_id = 00000000-0000-0000-0000-000000000001
+@goshuin_id = 00000000-0000-0000-0000-000000000002
+@job_id = 00000000-0000-0000-0000-000000000003
+
+### 1. Read a temple (worker input)
+GET {{goshuin_service_url}}/internal/v1/temples/{{temple_id}}
+Accept: application/json
+
+### 2. Read a goshuin, with its temple embedded
+GET {{goshuin_service_url}}/internal/v1/goshuins/{{goshuin_id}}
+Accept: application/json
+
+### 3. Mark a temple as PROCESSING (attempts += 1)
+PATCH {{goshuin_service_url}}/internal/v1/temples/{{temple_id}}/enrichment
+Content-Type: application/json
+
+{
+  "jobId": "{{job_id}}",
+  "status": "PROCESSING"
+}
+
+### 4. Write geocoding and translations, mark the temple COMPLETE (fill-only)
+PATCH {{goshuin_service_url}}/internal/v1/temples/{{temple_id}}/enrichment
+Content-Type: application/json
+
+{
+  "jobId": "{{job_id}}",
+  "status": "COMPLETE",
+  "latitude": 35.7148,
+  "longitude": 139.7967,
+  "translations": {
+    "ja": {
+      "address": "東京都台東区浅草2-3-1"
+    },
+    "en": {
+      "name": "Senso-ji",
+      "city": "Tokyo",
+      "address": "2-3-1 Asakusa, Taito City, Tokyo",
+      "description": "..."
+    }
+  }
+}
+
+### 5. Report a failure (data in the body is not applied)
+PATCH {{goshuin_service_url}}/internal/v1/temples/{{temple_id}}/enrichment
+Content-Type: application/json
+
+{
+  "jobId": "{{job_id}}",
+  "status": "FAILED",
+  "error": "Geocoding returned no results"
+}
+
+### 6. Data-only write without touching the lifecycle (geocoding result for a goshuin's temple)
+PATCH {{goshuin_service_url}}/internal/v1/temples/{{temple_id}}/enrichment
+Content-Type: application/json
+
+{
+  "latitude": 35.7148,
+  "longitude": 139.7967
+}
+
+### 7. Write goshuin translations and mark it COMPLETE
+PATCH {{goshuin_service_url}}/internal/v1/goshuins/{{goshuin_id}}/enrichment
+Content-Type: application/json
+
+{
+  "status": "COMPLETE",
+  "translations": {
+    "en": {
+      "label": "Main Hall",
+      "description": "..."
+    }
+  }
+}
+
+### 8. Validation: latitude without longitude (400)
+PATCH {{goshuin_service_url}}/internal/v1/temples/{{temple_id}}/enrichment
+Content-Type: application/json
+
+{
+  "latitude": 35.7148
+}
+
+> {%
+    client.test("Status code is 400", function () {
+        client.assert(response.status === 400, "Expected 400 Bad Request");
+    });
+%}
+
+### 9. Validation: PENDING cannot be set by the worker (400)
+PATCH {{goshuin_service_url}}/internal/v1/temples/{{temple_id}}/enrichment
+Content-Type: application/json
+
+{
+  "status": "PENDING"
+}
+
+> {%
+    client.test("Status code is 400", function () {
+        client.assert(response.status === 400, "Expected 400 Bad Request");
+    });
+%}
+
+### 10. Unknown temple (404)
+GET {{goshuin_service_url}}/internal/v1/temples/ffffffff-ffff-ffff-ffff-ffffffffffff
+Accept: application/json
+
+> {%
+    client.test("Status code is 404", function () {
+        client.assert(response.status === 404, "Expected 404 Not Found");
+    });
+%}

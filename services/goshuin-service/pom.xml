@@ -52,6 +52,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
@@ -100,6 +105,7 @@
                 <version>${openapi-generator.version}</version>
                 <executions>
                     <execution>
+                        <id>public-api</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
@@ -118,6 +124,33 @@
                                 <typeMapping>ErrorResponse=io.github.peterberghuis.common.dto.ErrorResponse
                                 </typeMapping>
                                 <typeMapping>UploadUrlResponse=io.github.peterberghuis.common.dto.UploadUrlResponse
+                                </typeMapping>
+                            </typeMappings>
+                            <configOptions>
+                                <interfaceOnly>true</interfaceOnly>
+                                <useSpringBoot3>true</useSpringBoot3>
+                                <useJakartaEe>true</useJakartaEe>
+                                <unhandledException>true</unhandledException>
+                                <useTags>true</useTags>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>internal-api</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/internal-openapi.yaml</inputSpec>
+                            <generatorName>spring</generatorName>
+                            <apiPackage>io.github.peterberghuis.goshuin.internal.api</apiPackage>
+                            <modelPackage>io.github.peterberghuis.goshuin.internal.dto</modelPackage>
+                            <importMappings>
+                                <importMapping>ErrorResponse=io.github.peterberghuis.common.dto.ErrorResponse
+                                </importMapping>
+                            </importMappings>
+                            <typeMappings>
+                                <typeMapping>ErrorResponse=io.github.peterberghuis.common.dto.ErrorResponse
                                 </typeMapping>
                             </typeMappings>
                             <configOptions>

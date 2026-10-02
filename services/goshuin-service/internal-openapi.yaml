@@ -1,0 +1,311 @@
+openapi: 3.0.3
+info:
+  title: Goshuin Service Internal API
+  description: >
+    Service-to-service API used by the enrichment worker (see ENRICHMENT.md, section 5).
+    Not part of the public contract in openapi.yaml and not meant for frontend clients.
+  version: 0.0.1-SNAPSHOT
+servers:
+  - url: http://localhost:8083
+    description: Local development server
+paths:
+  /internal/v1/temples/{id}:
+    get:
+      summary: Read a temple with its i18n variants and enrichment metadata
+      operationId: getInternalTemple
+      tags:
+        - InternalTemple
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalTemple'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /internal/v1/temples/{id}/enrichment:
+    patch:
+      summary: Report progress and write enriched temple data
+      operationId: updateInternalTempleEnrichment
+      tags:
+        - InternalTemple
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TempleEnrichmentUpdate'
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /internal/v1/goshuins/{id}:
+    get:
+      summary: Read a goshuin with its i18n variants, enrichment metadata and its temple
+      operationId: getInternalGoshuin
+      tags:
+        - InternalGoshuin
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalGoshuin'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /internal/v1/goshuins/{id}/enrichment:
+    patch:
+      summary: Report progress and write enriched goshuin data
+      operationId: updateInternalGoshuinEnrichment
+      tags:
+        - InternalGoshuin
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoshuinEnrichmentUpdate'
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  parameters:
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    InternalTemple:
+      type: object
+      required:
+        - id
+        - originalLocale
+        - enrichment
+        - translations
+      properties:
+        id:
+          type: string
+          format: uuid
+        originalLocale:
+          type: string
+          example: "ja"
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        affiliationType:
+          type: string
+        enrichment:
+          $ref: '#/components/schemas/EnrichmentMetadata'
+        translations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/TempleTranslation'
+
+    InternalGoshuin:
+      type: object
+      required:
+        - id
+        - originalLocale
+        - format
+        - enrichment
+        - translations
+        - temple
+      properties:
+        id:
+          type: string
+          format: uuid
+        originalLocale:
+          type: string
+          example: "ja"
+        format:
+          type: string
+        enrichment:
+          $ref: '#/components/schemas/EnrichmentMetadata'
+        translations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/GoshuinTranslation'
+        temple:
+          $ref: '#/components/schemas/InternalTempleContext'
+
+    InternalTempleContext:
+      description: Read-only temple context embedded in a goshuin.
+      type: object
+      required:
+        - id
+        - translations
+      properties:
+        id:
+          type: string
+          format: uuid
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        affiliationType:
+          type: string
+        translations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/TempleTranslation'
+
+    TempleEnrichmentUpdate:
+      type: object
+      properties:
+        jobId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/EnrichmentUpdateStatus'
+        error:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        translations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/TempleTranslation'
+
+    GoshuinEnrichmentUpdate:
+      type: object
+      properties:
+        jobId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/EnrichmentUpdateStatus'
+        error:
+          type: string
+        translations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/GoshuinTranslation'
+
+    TempleTranslation:
+      type: object
+      properties:
+        name:
+          type: string
+        region:
+          type: string
+        postalCode:
+          type: string
+        prefecture:
+          type: string
+        city:
+          type: string
+        address:
+          type: string
+        description:
+          type: string
+
+    GoshuinTranslation:
+      type: object
+      properties:
+        label:
+          type: string
+        description:
+          type: string
+
+    EnrichmentMetadata:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/EnrichmentStatus'
+        error:
+          type: string
+        attempts:
+          type: integer
+        lastAt:
+          type: string
+          format: date-time
+
+    EnrichmentStatus:
+      type: string
+      enum:
+        - PENDING
+        - PROCESSING
+        - COMPLETE
+        - FAILED
+
+    EnrichmentUpdateStatus:
+      description: Statuses the worker may report. PENDING is only ever set by goshuin-service.
+      type: string
+      enum:
+        - PROCESSING
+        - COMPLETE
+        - FAILED
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
