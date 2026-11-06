@@ -1,5 +1,11 @@
 # Use a lightweight JRE for the final image
-FROM eclipse-temurin:25-jre-jammy
+FROM eclipse-temurin:25-jre-noble
+
+# Pick up Ubuntu security updates published since the base image was built
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Use an argument to specify which service is being built

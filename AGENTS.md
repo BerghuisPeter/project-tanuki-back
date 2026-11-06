@@ -27,9 +27,9 @@ and map explorations with automated asynchronous data enrichment (geocoding, tra
 | Component / Layer        | Technology                            | Key Details & Version                                                 |
 |:-------------------------|:--------------------------------------|:----------------------------------------------------------------------|
 | **Java Platform**        | Java 25 / Eclipse Temurin             | Modern Java features (records, pattern matching, sealed types)        |
-| **Framework**            | Spring Boot 4.0.1                     | Spring Framework 7, Spring Security 7, Hibernate 7, Jackson 3         |
+| **Framework**            | Spring Boot 4.0.9                     | Spring Framework 7, Spring Security 7, Hibernate 7, Jackson 3         |
 | **Microservice Client**  | Spring Cloud OpenFeign + Resilience4j | Declarative REST clients with circuit breakers                        |
-| **Security / Auth**      | Spring Security + JJWT 0.12.6         | Stateless JWT authentication, Google OAuth2 Client                    |
+| **Security / Auth**      | Spring Security + JJWT 0.13.0         | Stateless JWT authentication, Google OAuth2 Client                    |
 | **Python Worker**        | Python 3.12 / FastAPI / Pydantic      | Asynchronous event processing, Google Cloud SDKs                      |
 | **Database**             | PostgreSQL 16+                        | Schema-per-service isolation, Liquibase migrations                    |
 | **Mapping / Tiles**      | TileServer-GL (MapTiler)              | Serves Japan OSM vector map tiles (`.mbtiles`)                        |
@@ -83,7 +83,7 @@ project-tanuki-back/
 ### 1. `auth-service`
 
 - **Location**: `services/auth-service`
-- **Stack**: Java 25, Spring Boot 4.0.1, Spring Data JPA, Spring Security, Spring Cloud OpenFeign
+- **Stack**: Java 25, Spring Boot 4.0.9, Spring Data JPA, Spring Security, Spring Cloud OpenFeign
 - **Default Port**: `8081` (`${PORT:8081}`)
 - **Database Schema**: `auth_schema`
 - **Key Responsibilities**:
@@ -101,7 +101,7 @@ project-tanuki-back/
 ### 2. `profile-service`
 
 - **Location**: `services/profile-service`
-- **Stack**: Java 25, Spring Boot 4.0.1, Spring Data JPA, Spring Security, Google Cloud Storage
+- **Stack**: Java 25, Spring Boot 4.0.9, Spring Data JPA, Spring Security, Google Cloud Storage
 - **Default Port**: `8082` (`${PORT:8082}`)
 - **Database Schema**: `profile_schema`
 - **Key Responsibilities**:
@@ -115,7 +115,7 @@ project-tanuki-back/
 ### 3. `goshuin-service`
 
 - **Location**: `services/goshuin-service`
-- **Stack**: Java 25, Spring Boot 4.0.1, Spring Data JPA, Spring Security, Google Cloud Storage, OpenFeign
+- **Stack**: Java 25, Spring Boot 4.0.9, Spring Data JPA, Spring Security, Google Cloud Storage, OpenFeign
 - **Default Port**: `8083` (`${PORT:8083}`)
 - **Database Schema**: `goshuin_schema`
 - **Key Responsibilities**:
@@ -181,7 +181,7 @@ All Java services depend on shared libraries located in the `libs/` directory.
 - **Artifact**: `io.github.peterberghuis:security`
 - **Package**: `io.github.peterberghuis.security`
 - **Contents**:
-    - `JwtUtils.java`: Cryptographic token parser and validator using JJWT `0.12.6`. Extracts user ID (`UUID`), email,
+    - `JwtUtils.java`: Cryptographic token parser and validator using JJWT `0.13.0`. Extracts user ID (`UUID`), email,
       and roles (`ROLE_USER`, `ROLE_ADMIN`, `ROLE_SYSTEM`).
     - `JwtAuthenticationFilter.java`: `OncePerRequestFilter` that intercepts incoming requests, reads
       `Authorization: Bearer <token>`, validates the token via `JwtUtils`, and populates
@@ -208,8 +208,10 @@ All Java services depend on shared libraries located in the `libs/` directory.
 - **Contents**:
     - Contains all database migration changelogs in `src/main/resources/db/changelog/`.
     - Subdirectories per service: `auth-service/`, `profile-service/`, `goshuin-service/`.
-    - Standalone Dockerfile (`libs/liquibase/Dockerfile`) built from `liquibase/liquibase:latest` with PostgreSQL CLI
-      drivers (`lpm add postgresql --global`).
+    - Standalone Dockerfile (`libs/liquibase/Dockerfile`) built from the pinned `liquibase/liquibase:5.0.4` image (keep
+      it in line with the `liquibase.version` Spring Boot manages). The PostgreSQL JDBC driver is downloaded from Maven
+      Central (`POSTGRES_DRIVER_VERSION`, keep it in line with the `postgresql.version` Spring Boot manages), OS
+      packages are patched with `apt-get upgrade`, and the unused `lpm` binary is removed.
 
 ---
 
@@ -328,7 +330,7 @@ GitHub Actions workflows are located in `.github/workflows/`.
     - Runs before application service deployment to ensure zero downtime schema compatibility.
 4. **`_build-push.yml`**:
     - Builds service JAR with `./mvnw clean package -pl services/${{ inputs.service_name }} -am`.
-    - Uses root `Dockerfile` (`eclipse-temurin:25-jre-jammy`) with
+    - Uses root `Dockerfile` (`eclipse-temurin:25-jre-noble`) with
       `--build-arg SERVICE_NAME=${{ inputs.service_name }}`.
     - Pushes image to GAR and deploys service to Cloud Run `tanuki-back-${{ inputs.image_name }}`.
 5. **`enrichment-worker.yml`**:
@@ -467,3 +469,9 @@ Use the HTTP Client files in `api-tests/`:
    files. Always add a new changeset file.
 7. **Windows vs Linux path compatibility**: Maven wrapper is `mvnw.cmd` on Windows (PowerShell) and `./mvnw` on Unix. In
    CI/CD scripts and Dockerfiles, use Unix paths.
+8. **Dependency updates**: Spring Cloud must stay on the train that matches the Spring Boot minor (Cloud `2025.1.x` <->
+   Boot `4.0.x`; check the `spring-boot.version` in the `spring-cloud-dependencies` BOM before moving Boot to a new
+   minor). Prefer bumping the Boot/Cloud BOMs over pinning individual transitives; the few overrides in the root
+   `pom.xml` (`opentelemetry.version`, `guava.version`) are commented with the advisory they fix and should be removed
+   once the BOMs catch up. After a bump, run the full test suite and re-scan (e.g. OSV.dev against `mvnw
+   dependency:list`, `pip-audit` on the exported `uv.lock`, Trivy on the built images).

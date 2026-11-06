@@ -79,7 +79,7 @@ Add the dependency to your `pom.xml`:
 ## Prerequisites
 
 - **Java 25**: The project uses the latest Java features.
-- **Spring Boot 4.0.1**: Utilizing the next generation of Spring.
+- **Spring Boot 4.0.9**: Utilizing the next generation of Spring.
 - **Docker**: Required for running the database and other infrastructure.
 - **Maven**: (Optional) You can use the included `mvnw` wrapper.
 
@@ -193,6 +193,6 @@ When defining foreign keys across schemas in Liquibase, use `addForeignKeyConstr
 ### Reference Documentation
 
 * [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/4.0.1/maven-plugin)
+* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/4.0.9/maven-plugin)
 * [Liquibase Documentation](https://docs.liquibase.com/home.html)
 
