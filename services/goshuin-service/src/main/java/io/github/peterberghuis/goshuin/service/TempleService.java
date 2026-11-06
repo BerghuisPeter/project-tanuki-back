@@ -70,7 +70,8 @@ public class TempleService {
         TempleEntity entity = new TempleEntity();
         entity.setLongitude(templeCreate.getLongitude());
         entity.setLatitude(templeCreate.getLatitude());
-        entity.setAffiliationType(templeCreate.getAffiliationType().toString());
+        // affiliationType, latitude and longitude are optional: enrichment fills them in later
+        entity.setAffiliationType(templeCreate.getAffiliationType() != null ? templeCreate.getAffiliationType().getValue() : null);
         entity.setWebsiteUrl(templeCreate.getWebsiteUrl() != null ? templeCreate.getWebsiteUrl().toString() : null);
         entity.setPhoneNumber(templeCreate.getPhoneNumber());
         if (templeCreate.getGoshuinServiceOpenUntil() != null) {
@@ -106,9 +107,11 @@ public class TempleService {
     private Temple mapToDto(TempleEntity entity) {
         Temple dto = new Temple();
         dto.setId(entity.getId());
-        dto.setLongitude(entity.getLongitude().doubleValue());
-        dto.setLatitude(entity.getLatitude().doubleValue());
-        dto.setAffiliationType(io.github.peterberghuis.goshuin.dto.AffiliationType.fromValue(entity.getAffiliationType()));
+        dto.setLongitude(entity.getLongitude());
+        dto.setLatitude(entity.getLatitude());
+        dto.setAffiliationType(entity.getAffiliationType() != null
+                ? io.github.peterberghuis.goshuin.dto.AffiliationType.fromValue(entity.getAffiliationType())
+                : null);
         dto.setWebsiteUrl(entity.getWebsiteUrl() != null ? java.net.URI.create(entity.getWebsiteUrl()) : null);
         dto.setPhoneNumber(entity.getPhoneNumber());
         if (entity.getGoshuinServiceOpenUntil() != null) {

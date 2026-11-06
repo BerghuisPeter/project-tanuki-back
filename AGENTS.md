@@ -105,10 +105,12 @@ project-tanuki-back/
 - **Default Port**: `8082` (`${PORT:8082}`)
 - **Database Schema**: `profile_schema`
 - **Key Responsibilities**:
-    - User profile management (`GET /api/v1/profiles/me`, `PUT /api/v1/profiles/me`).
-    - Public profile retrieval (`GET /api/v1/profiles/{id}`, `GET /api/v1/profiles/batch`).
-    - Internal API for profile creation (`POST /internal/v1/profiles`).
-    - Avatar management: Generating GCS V4 signed upload URLs (`POST /api/v1/profiles/me/avatar/upload-url`) with
+    - Own profile management (`GET /api/v1/profile`, `PUT /api/v1/profile`); the user ID always comes from the JWT.
+    - Internal API used by other services, hand-written in `ProfileController` (not part of `openapi.yaml`):
+      `GET /internal/profiles/{userId}`, `POST /internal/profiles/{userId}` (create or update) and
+      `POST /internal/profiles/bulk` (profiles for a list of user IDs). Note that `SharedSecurityConfig` currently
+      permits `/internal/**` without authentication, so access must be restricted at the network / Cloud Run level.
+    - Avatar management: Generating GCS V4 signed upload URLs (`GET /api/v1/profile/upload-url?contentType=...`) with
       content-type restrictions (`image/jpeg`, `image/png`, `image/webp`) and size limits (max 5MB).
     - Asynchronous old avatar cleanup in GCS upon avatar updates (`AvatarChangedEvent` -> `AvatarCleanupService`).
 
@@ -119,13 +121,15 @@ project-tanuki-back/
 - **Default Port**: `8083` (`${PORT:8083}`)
 - **Database Schema**: `goshuin_schema`
 - **Key Responsibilities**:
-    - Goshuin (temple seal) CRUD operations (`/api/v1/goshuins`).
-    - Temple record CRUD operations (`/api/v1/temples`).
+    - Goshuin (temple seal) listing and creation (`GET`/`POST /api/v1/goshuin`).
+    - Temple search and creation (`GET`/`POST /api/v1/temples`). `affiliationType`, `latitude` and `longitude` are
+      optional (the enrichment worker fills them in later), so code reading a temple must treat them as nullable.
     - Multi-language localization (i18n): `TempleI18nEntity` and `GoshuinI18nEntity` supporting Japanese, English, and
       other locales.
-    - Cursor-based pagination and proximity search (`CreatedAtCursor`, `CommentCountCursor`, `ProximityCursor`).
-    - Goshuin image signed upload URLs (`POST /api/v1/goshuins/upload-url`, max 10MB).
-    - Temple & Goshuin comments management.
+    - Cursor-based pagination and proximity search (`CreatedAtCursor`, `CommentCountCursor`, `ProximityCursor`);
+      `limit` is required on `GET /api/v1/goshuin`, `sort` is optional and defaults to `createdAt`.
+    - Goshuin image signed upload URLs (`GET /api/v1/goshuin/upload-url`, max 10MB).
+    - Goshuin comments (`GET /api/v1/goshuin/{id}/comments`).
   - Internal enrichment API for the worker (`InternalTempleController`, `InternalGoshuinController`): reads and
     fill-only enrichment writes under `/internal/v1/{temples|goshuins}/{id}[/enrichment]`. Defined in
     `services/goshuin-service/internal-openapi.yaml` (generated into `...goshuin.internal.api` / `...internal.dto`),
@@ -172,9 +176,12 @@ All Java services depend on shared libraries located in the `libs/` directory.
       validation `errors`.
     - `UploadUrlResponse.java`: Unified DTO containing `uploadUrl` (GCS signed PUT URL) and `publicUrl` (final public
       URL).
-    - `GlobalExceptionHandler.java`: `@RestControllerAdvice` providing uniform HTTP status codes and structured
-      `ErrorResponse` payloads for `MethodArgumentNotValidException`, `EntityNotFoundException`,
-      `AccessDeniedException`, `IllegalArgumentException`, and unhandled exceptions.
+    - `GlobalExceptionHandler.java`: `@RestControllerAdvice` (extends `ResponseEntityExceptionHandler`) providing
+      uniform HTTP status codes and structured `ErrorResponse` payloads: `400` for `MethodArgumentNotValidException`,
+      `HttpMessageNotReadableException` and `IllegalArgumentException`, `401` for `BadCredentialsException`, `403` for
+      `AccessDeniedException`, the exception's own status for `ResponseStatusException`, `500` with a generic message
+      for anything unexpected. Spring MVC's built-in exceptions keep their standard status (`404` unmapped route,
+      `405`, `415`, missing or mistyped request parameters). `auth-service` extends it with `AuthExceptionHandler`.
 
 ### 2. `libs/security`
 

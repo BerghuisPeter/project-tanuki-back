@@ -10,19 +10,28 @@ import io.github.peterberghuis.goshuin.entity.EnrichmentResourceType;
 import io.github.peterberghuis.goshuin.entity.GoshuinEntity;
 import io.github.peterberghuis.goshuin.entity.TempleEntity;
 import io.github.peterberghuis.goshuin.mapper.GoshuinMapper;
+import io.github.peterberghuis.goshuin.model.CreatedAtCursor;
 import io.github.peterberghuis.goshuin.repository.GoshuinRepository;
 import io.github.peterberghuis.goshuin.repository.GoshuinRepositoryCustom;
+import io.github.peterberghuis.goshuin.repository.GoshuinSpecifications;
+import io.github.peterberghuis.goshuin.util.CursorUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.net.URL;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -91,6 +100,48 @@ class GoshuinServiceTest {
         assertTrue(result.getFileName().startsWith("goshuins/" + userId));
         assertEquals(5242880L, result.getMaxSizeBytes());
         assertEquals(List.of("image/jpeg", "image/png"), result.getAllowedContentTypes());
+    }
+
+    @Test
+    void searchGoshuins_WithoutSort_ShouldDefaultToNewestFirst() {
+        // Arrange: `sort` is optional in the API
+        when(goshuinRepository.findAll(ArgumentMatchers.<Specification<GoshuinEntity>>any(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        // Act
+        GoshuinSearchResponse result = goshuinService.searchGoshuins(
+                null, null, null, null, null, 10, null, null, null, null, null);
+
+        // Assert
+        assertTrue(result.getGoshuins().isEmpty());
+        assertNull(result.getNextPageToken());
+        verify(goshuinRepository).findAll(
+                ArgumentMatchers.<Specification<GoshuinEntity>>any(),
+                eq(PageRequest.of(0, 11, GoshuinSpecifications.CREATED_AT_SORT)));
+    }
+
+    @Test
+    void searchGoshuins_WithoutSortAndMoreResultsThanLimit_ShouldReturnCreatedAtPageToken() {
+        // Arrange: limit + 1 rows means there is a next page
+        List<GoshuinEntity> rows = List.of(goshuinEntity(), goshuinEntity(), goshuinEntity());
+        when(goshuinRepository.findAll(ArgumentMatchers.<Specification<GoshuinEntity>>any(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(rows));
+
+        // Act
+        GoshuinSearchResponse result = goshuinService.searchGoshuins(
+                null, null, null, null, null, 2, null, null, null, null, null);
+
+        // Assert
+        assertEquals(2, result.getGoshuins().size());
+        assertInstanceOf(CreatedAtCursor.class, CursorUtils.decode(result.getNextPageToken()));
+    }
+
+    private static GoshuinEntity goshuinEntity() {
+        GoshuinEntity entity = new GoshuinEntity();
+        entity.setId(UUID.randomUUID());
+        entity.setUserId(UUID.randomUUID());
+        entity.setCreatedAt(OffsetDateTime.now());
+        return entity;
     }
 
     @Test

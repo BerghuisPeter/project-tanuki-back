@@ -67,6 +67,9 @@ public class GoshuinService {
 //        lat = 35.634732;
 //        lng = 139.615286;
 
+        // `sort` is optional in the API: newest first unless the client asks otherwise
+        GoshuinSort effectiveSort = sort != null ? sort : GoshuinSort.CREATED_AT;
+
         GoshuinCursor cursor = cursorToken != null && !cursorToken.isBlank()
                 ? CursorUtils.decode(cursorToken)
                 : null;
@@ -74,10 +77,10 @@ public class GoshuinService {
         Specification<GoshuinEntity> spec = GoshuinSpecifications.buildSpec(
                 format, pages, affiliation, query, cursor, userId, enrichmentStatuses);
 
-        List<GoshuinEntity> entities = fetchSorted(spec, sort, limit, lat, lng, cursor);
+        List<GoshuinEntity> entities = fetchSorted(spec, effectiveSort, limit, lat, lng, cursor);
         List<Goshuin> goshuins = toGoshuinDtos(entities);
 
-        return paginatedResponse(goshuins, entities, limit, sort, lat, lng, cursor);
+        return paginatedResponse(goshuins, entities, limit, effectiveSort, lat, lng, cursor);
     }
 
     public UploadUrlResponse getGoshuinUploadUrl(UUID userId, String contentType) {

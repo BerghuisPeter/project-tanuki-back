@@ -39,4 +39,26 @@ class GoshuinMapperTest {
         assertNull(result.getTemple().getLongitude());
         assertNull(result.getTemple().getLatitude());
     }
+
+    @Test
+    void mapToDto_WithNullTempleAffiliationType_ShouldMapToNull() {
+        // Arrange: a temple that has not been enriched yet has no affiliation type
+        TempleEntity temple = new TempleEntity();
+        temple.setId(UUID.randomUUID());
+        temple.setAffiliationType(null);
+        temple.setTranslations(Collections.emptySet());
+
+        GoshuinEntity goshuin = new GoshuinEntity();
+        goshuin.setId(UUID.randomUUID());
+        goshuin.setTemple(temple);
+        goshuin.setFormat("written");
+        goshuin.setTranslations(Collections.emptySet());
+        goshuin.setImages(Collections.emptyList());
+
+        // Act
+        Goshuin result = goshuinMapper.mapToDto(goshuin, null);
+
+        // Assert
+        assertNull(result.getTemple().getAffiliationType());
+    }
 }
